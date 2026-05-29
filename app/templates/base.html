@@ -127,6 +127,8 @@
             color: #f3f4f6;
             overflow-x: hidden;
             font-family: 'Outfit', sans-serif;
+            opacity: 0;
+            transition: opacity 0.25s ease-in-out;
         }
 
         /* Glassmorphism custom styling */
@@ -378,5 +380,14 @@
             <a class="hover:text-cyberPink transition-all"><i class="fa-solid fa-code-fork"></i></a>
         </div>
     </footer>
+
+    <!-- Anti-shuffling layout flash guard -->
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 60);
+        });
+    </script>
 </body>
 </html>
