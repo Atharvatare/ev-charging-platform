@@ -73,7 +73,27 @@ class QueryAttribute:
     def __ge__(self, other):
         return QueryExpression(self.attr_name, '>=', other)
 
-class SQLModel(pydantic.BaseModel):
+import pydantic._internal._model_construction
+
+class SQLModelMetaclass(pydantic._internal._model_construction.ModelMetaclass):
+    def __getattr__(cls, name):
+        if name.startswith('_') or name.startswith('model_') or name == 'model_fields':
+            try:
+                return super().__getattr__(name)
+            except AttributeError:
+                raise AttributeError(f"type object '{cls.__name__}' has no attribute '{name}'")
+        
+        if hasattr(cls, '__annotations__') and name in cls.__annotations__:
+            return QueryAttribute(cls, name)
+            
+        try:
+            return super().__getattr__(name)
+        except AttributeError:
+            raise AttributeError(f"type object '{cls.__name__}' has no attribute '{name}'")
+
+_defined_models = []
+
+class SQLModel(pydantic.BaseModel, metaclass=SQLModelMetaclass):
     # Enable field assignment validation and compatibility
     model_config = pydantic.ConfigDict(
         arbitrary_types_allowed=True,
@@ -82,9 +102,7 @@ class SQLModel(pydantic.BaseModel):
 
     def __init_subclass__(cls, table: bool = False, **kwargs):
         super().__init_subclass__(**kwargs)
-        # Create class-level query attributes for all defined fields
-        for field_name in cls.model_fields:
-            setattr(cls, field_name, QueryAttribute(cls, field_name))
+        _defined_models.append(cls)
 
 def Field(
     default: Any = _sentinel,
@@ -196,7 +214,34 @@ class SelectQuery:
                 return self.res_list[0] if self.res_list else None
         return QueryResult(filtered_items)
 
+def rebuild_all_models():
+    try:
+        from app.models.user import User
+        from app.models.station import Station, Port, SolarInsight
+        from app.models.booking import Reservation, WalletTransaction
+        from app.models.routing import RouteTrip
+    except Exception:
+        return
+        
+    for model in _defined_models:
+        try:
+            model.model_rebuild(
+                raise_errors=False,
+                _types_namespace={
+                    'User': User,
+                    'Station': Station,
+                    'Port': Port,
+                    'SolarInsight': SolarInsight,
+                    'Reservation': Reservation,
+                    'WalletTransaction': WalletTransaction,
+                    'RouteTrip': RouteTrip
+                }
+            )
+        except Exception:
+            pass
+
 def select(model_class):
+    rebuild_all_models()
     return SelectQuery(model_class)
 
 class text:
@@ -206,6 +251,7 @@ class text:
 class Session:
     # Expose Session class that delegates to InMemorySession or acts as a placeholder
     def __init__(self, engine=None):
+        rebuild_all_models()
         from app.core.database import InMemorySession
         self.session = InMemorySession()
 

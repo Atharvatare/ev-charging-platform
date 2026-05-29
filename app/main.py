@@ -73,22 +73,22 @@ def on_startup():
 @app.get("/")
 def get_landing_page(request: Request):
     """Serves the animated futuristic landing hero view."""
-    return templates.TemplateResponse("landing.html", {"request": request})
+    return templates.TemplateResponse(request, "landing.html", {"request": request})
 
 @app.get("/portal")
 def get_map_portal_page(request: Request):
     """Serves the full-width CartoDB Dark Matter map planner portal."""
-    return templates.TemplateResponse("portal.html", {"request": request})
+    return templates.TemplateResponse(request, "portal.html", {"request": request})
 
 @app.get("/dashboard")
 def get_user_dashboard_page(request: Request):
     """Serves the wallet billing deposits and bookings dashboard."""
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    return templates.TemplateResponse(request, "dashboard.html", {"request": request})
 
 @app.get("/admin")
 def get_admin_dashboard_page(request: Request):
     """Serves the admin socket health monitoring control grid."""
-    return templates.TemplateResponse("admin.html", {"request": request})
+    return templates.TemplateResponse(request, "admin.html", {"request": request})
 
 # -------------------------------------------------------------
 # WEBSOCKET REAL-TIME STREAMING
