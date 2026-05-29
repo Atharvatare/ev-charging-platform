@@ -1,7 +1,7 @@
 import os
 
 class Settings:
-    PROJECT_NAME: str = "AURA EV - Smart Route & Charging Platform"
+    PROJECT_NAME: str = "goVolt - Premium EV Route Optimizer & Charging Platform"
     SECRET_KEY: str = os.getenv("SECRET_KEY", "7d4b4a11f26a11394c8b2d41b8a5d3c8c24f6ae9bcfd9f4e244fe7ad54b51815")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours

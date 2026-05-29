@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AURA EV - Smart Route & Charging Platform{% endblock %}</title>
+    <title>{% block title %}goVolt - Global EV Route & Charging Platform{% endblock %}</title>
     
     <!-- Google Fonts: Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -152,6 +152,46 @@
             animation: pulseGlowBlue 2.5s infinite;
         }
     </style>
+    <!-- goVolt Global Store for Currency & Unit switches -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('global', {
+                currency: localStorage.getItem('global_currency') || 'INR',
+                unit: localStorage.getItem('global_unit') || 'km',
+                rates: {
+                    'INR': 1.0,
+                    'USD': 0.012,
+                    'EUR': 0.011
+                },
+                symbols: {
+                    'INR': '₹',
+                    'USD': '$',
+                    'EUR': '€'
+                },
+                setCurrency(c) {
+                    this.currency = c;
+                    localStorage.setItem('global_currency', c);
+                    window.dispatchEvent(new CustomEvent('currency-changed', { detail: c }));
+                },
+                setUnit(u) {
+                    this.unit = u;
+                    localStorage.setItem('global_unit', u);
+                    window.dispatchEvent(new CustomEvent('unit-changed', { detail: u }));
+                },
+                formatMoney(value) {
+                    const rate = this.rates[this.currency] || 1.0;
+                    const symbol = this.symbols[this.currency] || '₹';
+                    return symbol + (value * rate).toFixed(2);
+                },
+                formatDistance(km) {
+                    if (this.unit === 'mi') {
+                        return (km * 0.621371).toFixed(1) + ' mi';
+                    }
+                    return km.toFixed(1) + ' km';
+                }
+            });
+        });
+    </script>
     {% block head %}{% endblock %}
 </head>
 <body class="min-h-screen flex flex-col justify-between">
@@ -164,8 +204,8 @@
                     <i class="fa-solid fa-bolt text-lg text-black font-extrabold"></i>
                 </div>
                 <div>
-                    <span class="text-xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-neutral-100 to-neutral-400">AURA</span>
-                    <span class="text-xl font-bold tracking-widest text-cyberGreen glow-text-green">EV</span>
+                    <span class="text-xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-neutral-100 to-neutral-400">go</span>
+                    <span class="text-xl font-extrabold tracking-widest text-cyberGreen glow-text-green">Volt</span>
                 </div>
             </a>
         </div>
@@ -197,6 +237,29 @@
                 email = localStorage.getItem('user_email') || 'alex@ev.com';
             }
         ">
+            <!-- Global Currency Selector -->
+            <div class="dropdown dropdown-end" x-data="{ open: false }">
+                <label tabindex="0" class="btn btn-outline border-neutral-800 hover:border-cyberGreen btn-sm px-2.5 rounded-lg text-xs font-semibold text-neutral-300">
+                    <i class="fa-solid fa-coins text-cyberGreen mr-0.5"></i> <span x-text="$store.global.currency"></span>
+                </label>
+                <ul tabindex="0" class="dropdown-content menu p-2 shadow-2xl bg-neutral-900 border border-neutral-800 rounded-xl w-24 mt-2 text-xs text-white z-[60]">
+                    <li><a @click="$store.global.setCurrency('INR')" class="hover:text-cyberGreen py-1.5"><span class="font-bold text-[10px]">INR (₹)</span></a></li>
+                    <li><a @click="$store.global.setCurrency('USD')" class="hover:text-cyberGreen py-1.5"><span class="font-bold text-[10px]">USD ($)</span></a></li>
+                    <li><a @click="$store.global.setCurrency('EUR')" class="hover:text-cyberGreen py-1.5"><span class="font-bold text-[10px]">EUR (€)</span></a></li>
+                </ul>
+            </div>
+
+            <!-- Global Distance Unit Selector -->
+            <div class="dropdown dropdown-end" x-data="{ open: false }">
+                <label tabindex="0" class="btn btn-outline border-neutral-800 hover:border-cyberBlue btn-sm px-2.5 rounded-lg text-xs font-semibold text-neutral-300">
+                    <i class="fa-solid fa-gauge text-cyberBlue mr-0.5"></i> <span x-text="$store.global.unit === 'km' ? 'KM' : 'MI'"></span>
+                </label>
+                <ul tabindex="0" class="dropdown-content menu p-2 shadow-2xl bg-neutral-900 border border-neutral-800 rounded-xl w-24 mt-2 text-xs text-white z-[60]">
+                    <li><a @click="$store.global.setUnit('km')" class="hover:text-cyberBlue py-1.5"><span class="font-bold text-[10px]">KM (km)</span></a></li>
+                    <li><a @click="$store.global.setUnit('mi')" class="hover:text-cyberBlue py-1.5"><span class="font-bold text-[10px]">MILES (mi)</span></a></li>
+                </ul>
+            </div>
+
             <!-- Auth State UI Toggle -->
             <template x-if="!loggedIn">
                 <a href="/dashboard" class="btn btn-outline border-cyberGreen text-cyberGreen hover:bg-cyberGreen hover:text-black hover:border-cyberGreen btn-sm px-5 rounded-lg transition-all duration-300 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
@@ -228,7 +291,7 @@
     <footer id="global-footer" class="footer items-center p-6 border-t border-neutral-900 bg-[#070709] text-neutral-500 text-xs">
         <div class="items-center grid-flow-col">
             <i class="fa-solid fa-circle-nodes text-cyberBlue text-sm"></i>
-            <p>© 2026 AURA EV Inc. All Systems Operational. Decarbonizing Mobility with AI.</p>
+            <p>© 2026 goVolt Inc. All Systems Operational. Decarbonizing Mobility with AI.</p>
         </div> 
         <div class="grid-flow-col gap-4 md:place-self-center md:justify-self-end text-sm">
             <a class="hover:text-cyberGreen transition-all"><i class="fa-brands fa-twitter"></i></a> 
@@ -261,7 +324,7 @@
             <div class="px-5 py-4 border-b border-neutral-900 bg-neutral-950 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <div class="w-2.5 h-2.5 rounded-full bg-cyberGreen shadow-[0_0_6px_#22c55e]"></div>
-                    <span class="text-xs font-extrabold tracking-widest text-white uppercase">AURA AI Assistant</span>
+                    <span class="text-xs font-extrabold tracking-widest text-white uppercase">goVolt AI Assistant</span>
                 </div>
                 <button @click="toggleChat()" class="text-neutral-500 hover:text-white transition-all"><i class="fa-solid fa-xmark"></i></button>
             </div>
@@ -307,7 +370,7 @@
 
             initChatbot() {
                 this.chatLogs = [
-                    { sender: 'aura', text: 'Hi! I am AURA, your EV optimization companion. Ask me anything about San Francisco stations, elevation maps, or your battery range!' }
+                    { sender: 'aura', text: 'Hi! I am goVolt, your EV optimization companion. Ask me anything about Indian highway stations, BKC hubs, elevation profiles, or battery ranges!' }
                 ];
             },
 

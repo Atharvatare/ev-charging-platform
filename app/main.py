@@ -54,7 +54,7 @@ app.include_router(chatbot.router)
 def on_startup():
     """Triggers PostgreSQL schema build and spatial coordinates seeding."""
     print("--------------------------------------------------")
-    print("BOOTING AURA EV DATABASE ENGINE...")
+    print("BOOTING GOVOLT EV DATABASE ENGINE...")
     try:
         init_db()
         print("DATABASE INIT SUCCESS: PostGIS Loaded, Tables Synced!")
@@ -104,7 +104,7 @@ async def websocket_telemetry_endpoint(websocket: WebSocket):
         # Initial greeting broadcast
         await websocket.send_json({
             "type": "SYSTEM",
-            "message": "Connected to AURA EV Telemetry Stream."
+            "message": "Connected to goVolt EV Telemetry Stream."
         })
         
         while True:

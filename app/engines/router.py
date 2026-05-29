@@ -2,52 +2,42 @@ import networkx as nx
 from typing import Dict, Any, List, Tuple
 from app.engines.battery import EVEnergyModel, default_ev_model
 
-# Definition of nodes in the SF road network with latitude, longitude, and elevation
+# Definition of nodes in the Mumbai-Pune road network with latitude, longitude, and elevation
 SF_GRAPH_NODES = {
-    "Rincon_Center": {"lat": 37.7915, "lng": -122.3923, "elev": 5.0, "type": "station"},
-    "Union_Square": {"lat": 37.7865, "lng": -122.4098, "elev": 15.0, "type": "station"},
-    "Salesforce_Transit": {"lat": 37.7892, "lng": -122.3970, "elev": 6.0, "type": "station"},
-    "Civic_Center": {"lat": 37.7798, "lng": -122.4178, "elev": 14.0, "type": "station"},
-    "Mission_District": {"lat": 37.7554, "lng": -122.4190, "elev": 20.0, "type": "station"},
-    "Golden_Gate_Eco_Hub": {"lat": 37.7702, "lng": -122.4702, "elev": 65.0, "type": "station"},
-    "Embarcadero": {"lat": 37.8000, "lng": -122.3980, "elev": 2.0, "type": "road"},
-    "Chinatown": {"lat": 37.7940, "lng": -122.4080, "elev": 45.0, "type": "road"},
-    "Nob_Hill": {"lat": 37.7930, "lng": -122.4140, "elev": 110.0, "type": "road"},
-    "SOMA": {"lat": 37.7780, "lng": -122.4050, "elev": 8.0, "type": "road"},
-    "Castro": {"lat": 37.7620, "lng": -122.4350, "elev": 40.0, "type": "road"},
-    "Richmond_District": {"lat": 37.7780, "lng": -122.4850, "elev": 50.0, "type": "road"},
-    "Sunset_District": {"lat": 37.7500, "lng": -122.4850, "elev": 40.0, "type": "road"},
-    "Twin_Peaks": {"lat": 37.7540, "lng": -122.4470, "elev": 280.0, "type": "road"}
+    "Gateway_of_India": {"lat": 18.9220, "lng": 72.8347, "elev": 2.0, "type": "road"},
+    "Lower_Parel": {"lat": 18.9950, "lng": 72.8300, "elev": 6.0, "type": "road"},
+    "BKC_Hub": {"lat": 19.0600, "lng": 72.8600, "elev": 4.0, "type": "station"},
+    "Bandra_Reclamation": {"lat": 19.0430, "lng": 72.8340, "elev": 5.0, "type": "station"},
+    "Andheri_West": {"lat": 19.1200, "lng": 72.8300, "elev": 10.0, "type": "road"},
+    "Powai_Lake": {"lat": 19.1300, "lng": 72.9100, "elev": 25.0, "type": "station"},
+    "Navi_Mumbai_Vashi": {"lat": 19.0650, "lng": 73.0000, "elev": 8.0, "type": "station"},
+    "Chembur_Junction": {"lat": 19.0600, "lng": 72.9000, "elev": 9.0, "type": "road"},
+    "Lonavala_Expressway_Stop": {"lat": 18.7500, "lng": 73.4000, "elev": 620.0, "type": "station"},
+    "Pune_Aundh": {"lat": 18.5600, "lng": 73.8000, "elev": 560.0, "type": "road"},
+    "Expressway_Toll_East": {"lat": 18.8000, "lng": 73.3000, "elev": 420.0, "type": "road"},
+    "Expressway_Toll_West": {"lat": 18.9000, "lng": 73.1500, "elev": 120.0, "type": "road"}
 }
 
 # Driving connections (edges) with physical distances (km) and base limits (km/h)
 SF_GRAPH_EDGES = [
-    # Downtown grid
-    ("Embarcadero", "Rincon_Center", 1.1, 40),
-    ("Rincon_Center", "Salesforce_Transit", 0.6, 35),
-    ("Salesforce_Transit", "SOMA", 1.3, 45),
-    ("Salesforce_Transit", "Union_Square", 1.2, 40),
-    ("Embarcadero", "Chinatown", 1.2, 35),
+    # Mumbai Suburban grid
+    ("Gateway_of_India", "Lower_Parel", 9.5, 45),
+    ("Lower_Parel", "BKC_Hub", 8.2, 50),
+    ("Lower_Parel", "Bandra_Reclamation", 6.8, 50),
+    ("Bandra_Reclamation", "BKC_Hub", 4.5, 40),
+    ("Bandra_Reclamation", "Andheri_West", 11.2, 50),
     
-    # Chinatown & Nob Hill steep sections
-    ("Chinatown", "Union_Square", 0.9, 30),
-    ("Chinatown", "Nob_Hill", 0.7, 30),
-    ("Union_Square", "Nob_Hill", 0.8, 30),
-    ("Nob_Hill", "Civic_Center", 1.8, 40),
+    # Suburbs to Highway entry
+    ("Andheri_West", "Powai_Lake", 9.8, 40),
+    ("BKC_Hub", "Chembur_Junction", 6.5, 45),
+    ("Chembur_Junction", "Navi_Mumbai_Vashi", 12.4, 60),
+    ("Powai_Lake", "Chembur_Junction", 7.8, 40),
     
-    # SOMA to Mission & Civic Center
-    ("SOMA", "Civic_Center", 1.2, 45),
-    ("SOMA", "Mission_District", 2.6, 50),
-    ("Civic_Center", "Castro", 2.2, 45),
-    ("Mission_District", "Castro", 1.8, 40),
-    
-    # Hills & Outer Districts
-    ("Castro", "Twin_Peaks", 2.1, 45),
-    ("Twin_Peaks", "Sunset_District", 3.8, 50),
-    ("Civic_Center", "Golden_Gate_Eco_Hub", 4.9, 60),
-    ("Golden_Gate_Eco_Hub", "Richmond_District", 1.4, 45),
-    ("Golden_Gate_Eco_Hub", "Sunset_District", 2.5, 45),
-    ("Richmond_District", "Sunset_District", 3.2, 50)
+    # Mumbai-Pune Expressway segments (topography-heavy!)
+    ("Navi_Mumbai_Vashi", "Expressway_Toll_West", 22.5, 80),
+    ("Expressway_Toll_West", "Expressway_Toll_East", 18.2, 80),
+    ("Expressway_Toll_East", "Lonavala_Expressway_Stop", 12.8, 70),  # Steep climb to Lonavala (420m to 620m)
+    ("Lonavala_Expressway_Stop", "Pune_Aundh", 55.4, 90)              # Expressway terminal run to Pune
 ]
 
 def build_road_network(ev_model: EVEnergyModel) -> nx.DiGraph:

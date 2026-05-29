@@ -49,27 +49,27 @@ def test_battery_physics_regen():
 def test_router_solver_direct():
     """
     Asserts that the NetworkX Dijkstra router plans valid path coordinate chains 
-    between San Francisco junctions.
+    between Mumbai junctions.
     """
-    # Plan route from SOMA to Castro
-    res = compute_route(origin="SOMA", destination="Castro", start_soc=90.0)
+    # Plan route from Lower Parel to BKC Hub
+    res = compute_route(origin="Lower_Parel", destination="BKC_Hub", start_soc=90.0)
     
     assert "error" not in res
     assert res["rerouted"] is False
-    assert len(res["nodes"]) >= 3
-    assert res["nodes"][0] == "SOMA"
-    assert res["nodes"][-1] == "Castro"
+    assert len(res["nodes"]) >= 2
+    assert res["nodes"][0] == "Lower_Parel"
+    assert res["nodes"][-1] == "BKC_Hub"
     assert res["final_soc"] < 90.0  # Consumed battery
     print("SUCCESS: Router computed valid direct route nodes.")
 
 def test_router_low_battery_reroute():
     """
     Asserts that the Emergency Low-Battery fallback system automatically intercepts 
-    route calculation when the vehicle start SoC is critically low (e.g. 15% SoC) 
+    route calculation when the vehicle start SoC is critically low (e.g. 11% SoC) 
     and injects a charging stop.
     """
-    # Plan long steep route with starting SoC of only 11% (e.g. Rincon to Twin Peaks)
-    res = compute_route(origin="Rincon_Center", destination="Twin_Peaks", start_soc=11.0)
+    # Plan long steep route with starting SoC of only 11% (e.g. Gateway of India to Lonavala)
+    res = compute_route(origin="Gateway_of_India", destination="Lonavala_Expressway_Stop", start_soc=11.0)
     
     assert "error" not in res
     assert res["rerouted"] is True

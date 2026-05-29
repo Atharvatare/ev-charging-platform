@@ -71,11 +71,11 @@ def reserve_charger_port(
         )
 
     # 2. Check and charge wallet balance
-    reserve_fee = 2.00
+    reserve_fee = 100.00
     if current_user.wallet_balance < reserve_fee:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"Insufficient wallet balance. Lockout requires a ${reserve_fee:.2f} starting fee."
+            detail=f"Insufficient wallet balance. Lockout requires a ₹{reserve_fee:.2f} starting fee."
         )
 
     # Deduct funds and save transaction
@@ -93,7 +93,7 @@ def reserve_charger_port(
     # 3. Create Reservation
     start = datetime.utcnow()
     end = start + timedelta(hours=req.duration_hours)
-    qr_token = f"AURA_RES_{secrets.token_hex(4).upper()}_ACTIVE_{port.connector_type}"
+    qr_token = f"GOVOLT_RES_{secrets.token_hex(4).upper()}_ACTIVE_{port.connector_type}"
 
     reservation = Reservation(
         user_id=current_user.id,
@@ -147,7 +147,7 @@ def cancel_reservation(
     session.add(res)
 
     # 3. Refund wallet balance
-    refund = 2.00
+    refund = 100.00
     current_user.wallet_balance += refund
     session.add(current_user)
 

@@ -7,83 +7,83 @@ from app.core.security import get_password_hash
 from app.models.user import User
 from app.models.station import Station, Port, SolarInsight
 
-# High-fidelity charging station profiles centered around San Francisco (37.7749, -122.4194)
+# High-fidelity charging station profiles centered around Mumbai and Lonavala
 SEED_STATIONS = [
     {
-        "name": "Tesla Supercharger - Rincon Center",
-        "address": "121 Spear St, San Francisco, CA 94105",
-        "lat": 37.7915,
-        "lng": -122.3923,
+        "name": "Jio-bp Pulse - BKC Hub",
+        "address": "G Block BKC, Bandra Kurla Complex, Mumbai, MH 400051",
+        "lat": 19.0600,
+        "lng": 72.8600,
         "rating": 4.9,
         "solar": {"output": 45.5, "storage": 120.0, "score": 92},
         "ports": [
-            {"connector": "CCS2", "power": 250.0, "price": 0.42, "status": "AVAILABLE"},
-            {"connector": "CCS2", "power": 250.0, "price": 0.42, "status": "OCCUPIED"},
-            {"connector": "CCS2", "power": 250.0, "price": 0.42, "status": "CHARGING"},
-            {"connector": "Type 2 AC", "power": 22.0, "price": 0.28, "status": "AVAILABLE"}
+            {"connector": "CCS2", "power": 250.0, "price": 18.5, "status": "AVAILABLE"},
+            {"connector": "CCS2", "power": 250.0, "price": 18.5, "status": "OCCUPIED"},
+            {"connector": "CCS2", "power": 250.0, "price": 18.5, "status": "CHARGING"},
+            {"connector": "Type 2 AC", "power": 22.0, "price": 12.0, "status": "AVAILABLE"}
         ]
     },
     {
-        "name": "Electrify America - Union Square",
-        "address": "325 Mason St, San Francisco, CA 94102",
-        "lat": 37.7865,
-        "lng": -122.4098,
+        "name": "Tata Power EZ Charge - Bandra Reclamation",
+        "address": "KC Marg, Bandra West, Mumbai, MH 400050",
+        "lat": 19.0430,
+        "lng": 72.8340,
         "rating": 4.7,
         "solar": {"output": 25.0, "storage": 80.0, "score": 85},
         "ports": [
-            {"connector": "CCS2", "power": 350.0, "price": 0.48, "status": "AVAILABLE"},
-            {"connector": "CCS2", "power": 150.0, "price": 0.38, "status": "OCCUPIED"},
-            {"connector": "CHAdeMO", "power": 100.0, "price": 0.35, "status": "AVAILABLE"}
+            {"connector": "CCS2", "power": 150.0, "price": 19.0, "status": "AVAILABLE"},
+            {"connector": "CCS2", "power": 150.0, "price": 19.0, "status": "OCCUPIED"},
+            {"connector": "CHAdeMO", "power": 50.0, "price": 15.0, "status": "AVAILABLE"}
         ]
     },
     {
-        "name": "Rivian Waypoint - Salesforce Transit Center",
-        "address": "425 Mission St, San Francisco, CA 94105",
-        "lat": 37.7892,
-        "lng": -122.3970,
+        "name": "Magenta ChargeGrid - Lower Parel",
+        "address": "Senapati Bapat Marg, Lower Parel, Mumbai, MH 400013",
+        "lat": 18.9950,
+        "lng": 72.8300,
         "rating": 4.8,
         "solar": {"output": 60.0, "storage": 200.0, "score": 98},
         "ports": [
-            {"connector": "CCS2", "power": 150.0, "price": 0.39, "status": "AVAILABLE"},
-            {"connector": "CCS2", "power": 150.0, "price": 0.39, "status": "AVAILABLE"},
-            {"connector": "Type 2 AC", "power": 22.0, "price": 0.25, "status": "AVAILABLE"}
+            {"connector": "CCS2", "power": 150.0, "price": 18.0, "status": "AVAILABLE"},
+            {"connector": "CCS2", "power": 150.0, "price": 18.0, "status": "AVAILABLE"},
+            {"connector": "Type 2 AC", "power": 22.0, "price": 11.5, "status": "AVAILABLE"}
         ]
     },
     {
-        "name": "ChargePoint Hub - Civic Center",
-        "address": "355 McAllister St, San Francisco, CA 94102",
-        "lat": 37.7798,
-        "lng": -122.4178,
+        "name": "Ather Grid - Powai Tech Park",
+        "address": "Central Ave, Hiranandani Gardens, Powai, Mumbai, MH 400076",
+        "lat": 19.1300,
+        "lng": 72.9100,
         "rating": 4.4,
         "solar": {"output": 12.0, "storage": 40.0, "score": 72},
         "ports": [
-            {"connector": "Type 2 AC", "power": 22.0, "price": 0.24, "status": "AVAILABLE"},
-            {"connector": "Type 2 AC", "power": 22.0, "price": 0.24, "status": "OCCUPIED"},
-            {"connector": "CHAdeMO", "power": 50.0, "price": 0.30, "status": "MAINTENANCE"}
+            {"connector": "Type 2 AC", "power": 22.0, "price": 11.0, "status": "AVAILABLE"},
+            {"connector": "Type 2 AC", "power": 22.0, "price": 11.0, "status": "OCCUPIED"},
+            {"connector": "CHAdeMO", "power": 50.0, "price": 14.5, "status": "MAINTENANCE"}
         ]
     },
     {
-        "name": "EVgo Station - Mission District",
-        "address": "2351 Mission St, San Francisco, CA 94110",
-        "lat": 37.7554,
-        "lng": -122.4190,
+        "name": "Tata Power EZ Charge - Navi Mumbai Vashi",
+        "address": "Vashi Rd, Sector 17, Vashi, Navi Mumbai, MH 400703",
+        "lat": 19.0650,
+        "lng": 73.0000,
         "rating": 4.5,
         "solar": {"output": 35.0, "storage": 100.0, "score": 88},
         "ports": [
-            {"connector": "CCS2", "power": 150.0, "price": 0.40, "status": "AVAILABLE"},
-            {"connector": "CHAdeMO", "power": 100.0, "price": 0.36, "status": "AVAILABLE"}
+            {"connector": "CCS2", "power": 150.0, "price": 19.5, "status": "AVAILABLE"},
+            {"connector": "CHAdeMO", "power": 100.0, "price": 16.0, "status": "AVAILABLE"}
         ]
     },
     {
-        "name": "GreenGrid - Golden Gate Park",
-        "address": "50 Hagiwara Tea Garden Dr, San Francisco, CA 94118",
-        "lat": 37.7702,
-        "lng": -122.4702,
+        "name": "Magenta ChargeGrid - Lonavala Hill Station",
+        "address": "Mumbai-Pune Expressway Food Plaza, Lonavala, MH 410401",
+        "lat": 18.7500,
+        "lng": 73.4000,
         "rating": 4.6,
-        "solar": {"output": 75.0, "storage": 250.0, "score": 100},  # 100% green solar
+        "solar": {"output": 75.0, "storage": 250.0, "score": 100},
         "ports": [
-            {"connector": "CCS2", "power": 150.0, "price": 0.35, "status": "AVAILABLE"},
-            {"connector": "Type 2 AC", "power": 22.0, "price": 0.22, "status": "AVAILABLE"}
+            {"connector": "CCS2", "power": 150.0, "price": 20.0, "status": "AVAILABLE"},
+            {"connector": "Type 2 AC", "power": 22.0, "price": 13.0, "status": "AVAILABLE"}
         ]
     }
 ]

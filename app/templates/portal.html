@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}AURA EV - Interactive Portal{% endblock %}
+{% block title %}goVolt - Interactive Map Portal{% endblock %}
 
 {% block head %}
 <!-- Leaflet.js CSS & JS for Stunning Open-Source Map Canvas -->
@@ -147,7 +147,7 @@
                     <div class="grid grid-cols-3 gap-2">
                         <div class="bg-neutral-900/60 border border-neutral-800/80 rounded-xl p-3 text-center">
                             <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block">Distance</span>
-                            <span class="text-base font-extrabold text-white" x-text="routeResult.total_distance_km + ' km'"></span>
+                            <span class="text-base font-extrabold text-white" x-text="$store.global.formatDistance(routeResult.total_distance_km)"></span>
                         </div>
                         <div class="bg-neutral-900/60 border border-neutral-800/80 rounded-xl p-3 text-center">
                             <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block">Travel Time</span>
@@ -226,7 +226,7 @@
         <h3 class="text-xl font-bold flex items-center gap-2 mb-2">
             <i class="fa-solid fa-calendar-check text-cyberGreen"></i> Reserve Charging Port
         </h3>
-        <p class="text-neutral-400 text-xs mb-6">Select reservation timeslots. Port lockouts decrement your wallet balance by $2.00 starting fee.</p>
+        <p class="text-neutral-400 text-xs mb-6">Select reservation timeslots. Port lockouts decrement your wallet balance by a <span class="text-cyberGreen font-bold" x-text="$store.global.formatMoney(100.00)"></span> starting fee.</p>
         
         <div class="space-y-4">
             <div class="form-control w-full">
@@ -282,6 +282,7 @@ function portalController() {
         loading: false,
         routeLayers: [],
         markerLayers: [],
+        stationMarkers: [],
 
         async initPortal() {
             // Check auth token
@@ -293,7 +294,7 @@ function portalController() {
             }
 
             // Initialize Map using CartoDB Dark tiles
-            this.map = L.map('map', { zoomControl: false }).setView([37.7800, -122.4180], 13);
+            this.map = L.map('map', { zoomControl: false }).setView([19.0430, 72.8340], 11);
             
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '© OpenStreetMap, © CARTO',
@@ -313,10 +314,26 @@ function portalController() {
 
             // Fetch All Stations & Plot on map
             await this.loadStations();
+
+            // Reactive UI overrides
+            window.addEventListener('currency-changed', () => {
+                this.loadStations();
+            });
+            window.addEventListener('unit-changed', () => {
+                if (this.routeResult) {
+                    this.planRoute();
+                }
+            });
         },
 
         async loadStations() {
             try {
+                // Clear existing station markers if any
+                if (this.stationMarkers) {
+                    this.stationMarkers.forEach(m => this.map.removeLayer(m));
+                }
+                this.stationMarkers = [];
+
                 const response = await fetch('/api/stations/');
                 this.stations = await response.json();
                 
@@ -342,15 +359,21 @@ function portalController() {
                         iconAnchor: [16, 16]
                     });
 
-                    // Port information compiler
-                    let portsHtml = st.ports.map(p => `
-                        <div class="flex justify-between items-center text-xs bg-neutral-900 border border-neutral-800/60 p-2 rounded-lg mt-1.5">
-                            <span class="font-bold text-white">${p.connector_type} (${p.power_kw}kW)</span>
-                            <span class="badge badge-xs border-none font-bold text-[9px]" style="background-color: ${p.status === 'AVAILABLE' ? '#22c55e' : '#f97316'}; color: #000;">
-                                ${p.status}
-                            </span>
-                        </div>
-                    `).join('');
+                    // Port information compiler with dynamically converted pricing
+                    let portsHtml = st.ports.map(p => {
+                        const priceFormatted = Alpine.store('global').formatMoney(p.price_per_kwh);
+                        return `
+                            <div class="flex justify-between items-center text-xs bg-neutral-900 border border-neutral-800/60 p-2 rounded-lg mt-1.5">
+                                <div>
+                                    <span class="font-bold text-white block">${p.connector_type} (${p.power_kw}kW)</span>
+                                    <span class="text-[9px] text-neutral-400 font-semibold">${priceFormatted}/kWh</span>
+                                </div>
+                                <span class="badge badge-xs border-none font-bold text-[9px] px-2 py-1" style="background-color: ${p.status === 'AVAILABLE' ? '#22c55e' : '#f97316'}; color: #000;">
+                                    ${p.status}
+                                </span>
+                            </div>
+                        `;
+                    }).join('');
 
                     let solarHtml = st.solar_insights && st.solar_insights[0] ? `
                         <div class="mt-2 border-t border-neutral-800 pt-2 flex items-center justify-between text-[10px]">
@@ -360,6 +383,7 @@ function portalController() {
                     ` : '';
 
                     const marker = L.marker([st.latitude, st.longitude], { icon: stationIcon }).addTo(this.map);
+                    this.stationMarkers.push(marker);
                     
                     marker.bindPopup(`
                         <div class="w-[240px] text-white bg-neutral-950 p-1.5 rounded-xl">

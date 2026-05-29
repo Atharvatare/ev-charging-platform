@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}AURA EV - Dashboard{% endblock %}
+{% block title %}goVolt - Dynamic Driver Dashboard{% endblock %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto py-12 px-6" x-data="dashboardController()" x-init="initDashboard()">
@@ -36,7 +36,7 @@
                 <div class="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-cyberGreen/10 blur-xl group-hover:scale-125 transition-all"></div>
                 
                 <span class="text-xs text-neutral-400 font-semibold uppercase tracking-wider block">Available Balance</span>
-                <span class="text-5xl font-extrabold text-white mt-2 block glow-text-green" x-text="'$' + walletBalance.toFixed(2)"></span>
+                <span class="text-5xl font-extrabold text-white mt-2 block glow-text-green" x-text="$store.global.formatMoney(walletBalance)"></span>
                 <span class="text-[10px] text-neutral-500 font-bold block mt-1">Simulated Credit Reserve</span>
             </div>
 
@@ -47,7 +47,7 @@
                     <span class="loading loading-spinner loading-xs text-black"></span>
                 </template>
                 <template x-if="!depositing">
-                    <span><i class="fa-solid fa-circle-plus mr-1"></i> Add $25.00 via Stripe</span>
+                    <span><i class="fa-solid fa-circle-plus mr-1"></i> Add <span x-text="$store.global.formatMoney(250.00)"></span> via Stripe</span>
                 </template>
             </button>
 
@@ -63,7 +63,7 @@
                             </div>
                             <span class="text-xs font-extrabold" 
                                   :class="tx.amount > 0 ? 'text-cyberGreen' : 'text-cyberPink'" 
-                                  x-text="(tx.amount > 0 ? '+' : '') + '$' + tx.amount.toFixed(2)"></span>
+                                  x-text="(tx.amount > 0 ? '+' : '') + $store.global.formatMoney(tx.amount)"></span>
                         </div>
                     </template>
                 </div>
@@ -76,7 +76,7 @@
             <!-- Reservation Section -->
             <div class="card glass-panel border border-neutral-800 rounded-3xl p-6">
                 <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                    <i class="fa-solid fa-clock text-cyberGreen glow-text-green"></i> Active Reservation Lockouts
+                    <i class="fa-solid fa-clock text-cyberGreen glow-text-green"></i> Active Charger Reservations
                 </h3>
 
                 <template x-if="reservations.length === 0">
@@ -182,7 +182,7 @@
 function dashboardController() {
     return {
         userName: 'Alex Mercer',
-        walletBalance: 150.0,
+        walletBalance: 1000.0,
         depositing: false,
         transactions: [],
         reservations: [],
@@ -216,33 +216,33 @@ function dashboardController() {
         loadTransactions() {
             // Mock transaction logs for high visual fidelity
             this.transactions = [
-                { id: '1', description: 'Stripe Deposit - Wallet Top-up', amount: 25.0, created_at: new Date(Date.now() - 3600000).toISOString() },
-                { id: '2', description: 'Charger Booking Reserve - CCS2 Port Rincon', amount: -2.00, created_at: new Date(Date.now() - 7200000).toISOString() },
-                { id: '3', description: 'Simulated EV charging fee - Civic Center', amount: -14.35, created_at: new Date(Date.now() - 86400000).toISOString() }
+                { id: '1', description: 'Stripe Deposit - Wallet Top-up', amount: 250.0, created_at: new Date(Date.now() - 3600000).toISOString() },
+                { id: '2', description: 'Charger Booking Reserve - Bandra Reclamation', amount: -100.00, created_at: new Date(Date.now() - 7200000).toISOString() },
+                { id: '3', description: 'Simulated EV charging fee - BKC Hub', amount: -350.50, created_at: new Date(Date.now() - 86400000).toISOString() }
             ];
         },
 
         loadReservations() {
-            // Seed a high-fidelity reservation mockup showing actual CCS2 charger at Rincon
+            // Seed a high-fidelity reservation mockup showing actual CCS2 charger at Bandra
             this.reservations = [
                 {
                     id: 'res_99a8bc43d1',
-                    station_name: 'Tesla Supercharger - Rincon Center',
+                    station_name: 'Tata Power EZ Charge - Bandra Reclamation',
                     port_id: 'port_cc55',
                     connector_type: 'CCS2',
-                    power_kw: 250.0,
-                    qr_code: 'AURA_RES_99a8bc43d1_ACTIVE_CCS2_RINCON',
+                    power_kw: 150.0,
+                    qr_code: 'GOVOLT_RES_99a8bc43d1_ACTIVE_CCS2_BANDRA',
                     created_at: new Date().toISOString()
                 }
             ];
         },
 
         loadTrips() {
-            // Mock historical computed trips
+            // Mock historical computed trips (Mumbai-Pune corridor)
             this.trips = [
-                { id: 't1', origin_name: 'Civic Center', destination_name: 'Salesforce Transit', start_soc: 100.0, predicted_arrival_soc: 94.2, created_at: new Date(Date.now() - 7200000).toISOString() },
-                { id: 't2', origin_name: 'Castro', destination_name: 'Twin Peaks', start_soc: 45.0, predicted_arrival_soc: 28.5, created_at: new Date(Date.now() - 86400000).toISOString() },
-                { id: 't3', origin_name: 'Embarcadero', destination_name: 'Sunset District', start_soc: 85.0, predicted_arrival_soc: 61.4, created_at: new Date(Date.now() - 172800000).toISOString() }
+                { id: 't1', origin_name: 'Gateway of India', destination_name: 'BKC Hub', start_soc: 100.0, predicted_arrival_soc: 94.2, created_at: new Date(Date.now() - 7200000).toISOString() },
+                { id: 't2', origin_name: 'Lower Parel', destination_name: 'Lonavala Hill Station', start_soc: 85.0, predicted_arrival_soc: 34.5, created_at: new Date(Date.now() - 86400000).toISOString() },
+                { id: 't3', origin_name: 'Navi Mumbai Vashi', destination_name: 'Pune Aundh', start_soc: 90.0, predicted_arrival_soc: 51.4, created_at: new Date(Date.now() - 172800000).toISOString() }
             ];
         },
 
@@ -251,11 +251,11 @@ function dashboardController() {
             
             // Call simulated Stripe deposit balance API
             setTimeout(() => {
-                this.walletBalance += 25.0;
+                this.walletBalance += 250.0;
                 this.transactions.unshift({
                     id: String(Date.now()),
                     description: 'Stripe Deposit - Wallet Top-up',
-                    amount: 25.00,
+                    amount: 250.00,
                     created_at: new Date().toISOString()
                 });
                 this.depositing = false;
@@ -268,10 +268,10 @@ function dashboardController() {
                 this.transactions.unshift({
                     id: String(Date.now()),
                     description: 'Cancelled Reservation Refund',
-                    amount: 2.00,
+                    amount: 100.00,
                     created_at: new Date().toISOString()
                 });
-                this.walletBalance += 2.00;
+                this.walletBalance += 100.00;
             }
         },
 
@@ -282,10 +282,10 @@ function dashboardController() {
             this.transactions.unshift({
                 id: String(Date.now()),
                 description: 'OCPP Charging Session Settlement',
-                amount: -12.40,
+                amount: -340.40,
                 created_at: new Date().toISOString()
             });
-            this.walletBalance -= 12.40;
+            this.walletBalance -= 340.40;
         },
 
         formatDate(dateStr) {

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}AURA EV - Fleet Admin Panel{% endblock %}
+{% block title %}goVolt - Fleet Admin Console{% endblock %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto py-12 px-6" x-data="adminController()" x-init="initAdmin()">
@@ -96,7 +96,7 @@
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-neutral-900/40 border border-neutral-950 p-3 rounded-xl">
                                 <div>
                                     <span class="text-xs font-bold text-white block" x-text="port.connector_type + ' - ' + port.power_kw + 'kW'"></span>
-                                    <span class="text-[9px] text-neutral-400" x-text="'Fee: $' + port.price_per_kwh + '/kWh'"></span>
+                                    <span class="text-[9px] text-neutral-400" x-text="'Fee: ' + $store.global.formatMoney(port.price_per_kwh) + '/kWh'"></span>
                                 </div>
 
                                 <!-- Real-time Actions & Badges -->

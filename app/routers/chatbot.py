@@ -21,12 +21,12 @@ def query_chatbot(
     
     # Context-aware intelligent responses based on keyword queries
     if "hello" in msg or "hi" in msg:
-        response = f"Hello {current_user.full_name or 'Driver'}! I am AURA, your AI Route Coordinator. How can I optimize your EV journey in San Francisco today?"
+        response = f"Hello {current_user.full_name or 'Driver'}! I am goVolt, your Global EV Route & Charging Coordinator. I am optimized for Indian highways like the Mumbai-Pune Expressway as well as global routes! You can toggle currencies between ₹, $, and € and units between km and miles in real-time. How can I optimize your journey today?"
     
     elif "battery" in msg or "soc" in msg:
         response = (
             f"Your vehicle profile is set up as a standard Tesla Model 3 (75 kWh battery). "
-            f"Currently, your wallet balance is ${current_user.wallet_balance:.2f}. "
+            f"Currently, your wallet balance is ₹{current_user.wallet_balance:.2f}. "
             f"Our A* physics router will actively forecast your State of Charge (SoC) along any planned routes, factoring in aerodynamic drag and topographic slope gradients."
         )
         
@@ -34,13 +34,13 @@ def query_chatbot(
         response = (
             "You can use our 'Interactive Map Portal' to plan topography-aware routes. "
             "Select a Departure and Destination node, adjust your start SoC, and click 'Solve Optimal Path'. "
-            "If your battery drops below 12% at any node, our Emergency Low-Battery fallback system will automatically inject the nearest DC fast charger as an optimal stop!"
+            "If your battery drops below 12% at any node, our Emergency Low-Battery fallback system will automatically inject the nearest fast charger as an optimal stop!"
         )
         
     elif "solar" in msg or "green" in msg or "renewable" in msg:
         response = (
             "We track renewable energy scoring at all stations! "
-            "For example, GreenGrid - Golden Gate Park has 100% solar self-sufficiency from its solar panels. "
+            "For example, Tata Power EZ Charge - Bandra Reclamation has highly efficient solar setups. "
             "Our routing edge weight formula gives eco-preference to stations with higher solar outputs."
         )
         
@@ -52,13 +52,13 @@ def query_chatbot(
         
     elif "wallet" in msg or "balance" in msg or "stripe" in msg:
         response = (
-            f"Your active wallet balance is ${current_user.wallet_balance:.2f}. "
-            f"You can deposit additional funds in increments of $25.00 via Stripe Sandbox directly inside the Wallet section on your Dashboard."
+            f"Your active wallet balance is ₹{current_user.wallet_balance:.2f}. "
+            f"You can deposit additional funds in increments of ₹250.00 via Stripe Sandbox directly inside the Wallet section on your Dashboard."
         )
         
     else:
         response = (
-            "I am AURA EV, your AI route coordinator. I can help you compute optimal paths across San Francisco, "
+            "I am goVolt, your AI EV coordinator. I can help you compute optimal paths across India, "
             "verify active port reservations, analyze physical battery energy dissipation, or oversee solar output loads. What can I do for you?"
         )
 
