@@ -9,7 +9,7 @@ class Settings:
     # DB Configurations
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL", 
-        "postgresql://postgres:ev_charging_password@localhost:5432/ev_charging"
+        "postgresql+psycopg://postgres:ev_charging_password@localhost:5432/ev_charging"
     )
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     

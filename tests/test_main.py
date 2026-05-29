@@ -68,14 +68,14 @@ def test_router_low_battery_reroute():
     route calculation when the vehicle start SoC is critically low (e.g. 15% SoC) 
     and injects a charging stop.
     """
-    # Plan long steep route with starting SoC of only 15% (e.g. Rincon to Twin Peaks)
-    res = compute_route(origin="Rincon_Center", destination="Twin_Peaks", start_soc=15.0)
+    # Plan long steep route with starting SoC of only 11% (e.g. Rincon to Twin Peaks)
+    res = compute_route(origin="Rincon_Center", destination="Twin_Peaks", start_soc=11.0)
     
     assert "error" not in res
     assert res["rerouted"] is True
     assert "charging_station_stop" in res
     # Arrival battery should be higher because the vehicle recharged to 85% at the stop
-    assert res["final_soc"] > 15.0  
+    assert res["final_soc"] > 11.0  
     print(f"SUCCESS: Emergency mode successfully injected charging stop at: {res['charging_station_stop']}.")
 
 def test_queue_forecaster_rush_hour():

@@ -180,10 +180,16 @@ def compute_route(
         
         # Re-calculate absolute telemetry for combined path
         current_soc = start_soc
-        telemetry = []
         total_distance = 0.0
         total_duration = 0.0
         
+        # Check if the starting node itself is the charging stop
+        start_is_charger = (combined_nodes[0] == charger_node)
+        if start_is_charger:
+            current_soc = 85.0
+            total_duration += 30.0
+            
+        telemetry = []
         # Start node
         telemetry.append({
             "node": combined_nodes[0],
@@ -191,7 +197,7 @@ def compute_route(
             "lng": graph.nodes[combined_nodes[0]]["lng"],
             "elev": graph.nodes[combined_nodes[0]]["elev"],
             "soc": round(current_soc, 1),
-            "charging_stop": False,
+            "charging_stop": start_is_charger,
             "segment_duration_mins": 0.0
         })
 
