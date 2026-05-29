@@ -7,6 +7,7 @@ from app.core.database import get_session
 from app.models.station import Station, Port, SolarInsight
 from app.routers.auth import get_current_user, require_role
 from app.models.user import User
+from app.ws.connection_manager import manager
 
 router = APIRouter(prefix="/api/stations", tags=["Charging Stations"])
 
@@ -136,7 +137,7 @@ def get_station_details(station_id: UUID, session: Session = Depends(get_session
     }
 
 @router.patch("/{station_id}/ports/{port_id}/status")
-def update_port_status(
+async def update_port_status(
     station_id: UUID, 
     port_id: UUID, 
     new_status: str, 
@@ -170,7 +171,14 @@ def update_port_status(
     session.commit()
     session.refresh(port)
     
-    # In Phase 5, we will hook this update to stream live broadcasts to all active maps.
+    # Real-time WebSocket broadcast to update all active map markers and operator grids
+    await manager.broadcast({
+        "type": "PORT_STATUS_UPDATE",
+        "station_id": str(station_id),
+        "port_id": str(port_id),
+        "status": port.status
+    })
+    
     return {"message": "Port status updated successfully", "port_id": port.id, "status": port.status}
 
 @router.post("/reseed")

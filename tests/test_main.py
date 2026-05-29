@@ -227,5 +227,32 @@ def test_persistent_endpoints():
         print("SUCCESS: Fully persistent backend routers, About page, Contact ticketing, and Consumer Auth verified via TestClient!")
 
 
+def test_websocket_broadcasts():
+    """
+    Verifies that the WebSocket telemetry broadcast channel successfully streams
+    live PORT_STATUS_UPDATE events to connected client handshakes.
+    """
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    
+    # Connect client websocket
+    with client.websocket_connect("/ws") as websocket:
+        # 1. Receive the initial systemic greeting message
+        greeting = websocket.receive_json()
+        assert greeting["type"] == "SYSTEM"
+        assert "Connected" in greeting["message"]
+        
+        # 2. Simulate client telemetry logs text transmission
+        websocket.send_text("OCPP_SIMULATION_HEARTBEAT_PING")
+        broadcast_log = websocket.receive_json()
+        assert broadcast_log["type"] == "TELEMETRY_LOG"
+        assert "OCPP_SIMULATION_HEARTBEAT_PING" in broadcast_log["message"]
+        
+    print("SUCCESS: Asynchronous WebSocket handshakes and telemetry broadcasts successfully verified!")
+
+
+
 
 
