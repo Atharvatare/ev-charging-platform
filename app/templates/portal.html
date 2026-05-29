@@ -309,6 +309,7 @@ function portalController() {
         markerLayers: [],
         stationMarkers: [],
         stationMarkersMap: {},
+        pollingInterval: null,
 
         async initPortal() {
             // Check auth token
@@ -535,24 +536,43 @@ function portalController() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUri = `${protocol}//${window.location.host}/ws`;
             console.log("Portal WS connecting:", wsUri);
-            const ws = new WebSocket(wsUri);
             
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'PORT_STATUS_UPDATE') {
-                        console.log("Portal received port status update:", data);
-                        this.handlePortStatusUpdate(data);
+            try {
+                const ws = new WebSocket(wsUri);
+                
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'PORT_STATUS_UPDATE') {
+                            console.log("Portal received port status update:", data);
+                            this.handlePortStatusUpdate(data);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing WS message:", e);
                     }
-                } catch (e) {
-                    console.error("Error parsing WS message:", e);
-                }
-            };
+                };
 
-            ws.onclose = () => {
-                console.log("Portal WS closed. Reconnecting...");
-                setTimeout(() => this.initWebSocket(), 5000);
-            };
+                ws.onerror = (err) => {
+                    console.warn("WebSocket connection error. Falling back to periodic API polling...", err);
+                    if (!this.pollingInterval) {
+                        this.pollingInterval = setInterval(() => {
+                            console.log("Polling stations grid...");
+                            this.loadStations();
+                        }, 8000);
+                    }
+                };
+
+                ws.onclose = () => {
+                    console.log("Portal WS closed.");
+                };
+            } catch (e) {
+                console.warn("WebSocket initiation failed. Falling back to periodic API polling...", e);
+                if (!this.pollingInterval) {
+                    this.pollingInterval = setInterval(() => {
+                        this.loadStations();
+                    }, 8000);
+                }
+            }
         },
 
         handlePortStatusUpdate(data) {

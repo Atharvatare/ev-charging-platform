@@ -250,6 +250,7 @@ function dashboardController() {
         userName: 'Alex Mercer',
         walletBalance: 1000.0,
         selectedAmount: 250,
+        pollingInterval: null,
         depositing: false,
         paymentMethod: 'card',
         upiPulsing: false,
@@ -499,26 +500,47 @@ function dashboardController() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUri = `${protocol}//${window.location.host}/ws`;
             console.log("Dashboard WS connecting:", wsUri);
-            const ws = new WebSocket(wsUri);
             
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'PORT_STATUS_UPDATE') {
-                        console.log("Dashboard received port status update:", data);
-                        // Reload active reservations and wallet transactions to match the live server state
+            try {
+                const ws = new WebSocket(wsUri);
+                
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'PORT_STATUS_UPDATE') {
+                            console.log("Dashboard received port status update:", data);
+                            // Reload active reservations and wallet transactions to match the live server state
+                            this.loadReservations();
+                            this.loadTransactions();
+                        }
+                    } catch (e) {
+                        console.error("Error parsing WS message:", e);
+                    }
+                };
+
+                ws.onerror = (err) => {
+                    console.warn("WebSocket connection error. Falling back to periodic API polling...", err);
+                    if (!this.pollingInterval) {
+                        this.pollingInterval = setInterval(() => {
+                            console.log("Polling dashboard data...");
+                            this.loadReservations();
+                            this.loadTransactions();
+                        }, 8000);
+                    }
+                };
+
+                ws.onclose = () => {
+                    console.log("Dashboard WS closed.");
+                };
+            } catch (e) {
+                console.warn("WebSocket initiation failed. Falling back to periodic API polling...", e);
+                if (!this.pollingInterval) {
+                    this.pollingInterval = setInterval(() => {
                         this.loadReservations();
                         this.loadTransactions();
-                    }
-                } catch (e) {
-                    console.error("Error parsing WS message:", e);
+                    }, 8000);
                 }
-            };
-
-            ws.onclose = () => {
-                console.log("Dashboard WS closed. Reconnecting...");
-                setTimeout(() => this.initWebSocket(), 5000);
-            };
+            }
         }
     };
 }
