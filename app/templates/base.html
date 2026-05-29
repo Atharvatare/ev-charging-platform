@@ -387,11 +387,7 @@
     <!-- AI FLOATING SUPPORT CHATBOT ASSISTANT -->
     <div x-data="chatbotController()" x-init="initChatbot()" @toggle-chatbot.window="toggleChat()" class="relative">
         
-        <!-- Pulsing Floating Circular Chat Button -->
-        <button @click="toggleChat()" 
-                class="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-tr from-cyberGreen to-cyberBlue text-black flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.4)] hover:shadow-[0_0_30px_rgba(34,197,94,0.6)] hover:scale-105 transition-all duration-300">
-            <i class="fa-solid fa-comment-dots text-xl"></i>
-        </button>
+
 
         <!-- Glassmorphism Chat Panel Widget -->
         <div x-show="chatOpen" x-cloak
