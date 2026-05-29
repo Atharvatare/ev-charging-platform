@@ -9,7 +9,7 @@ SF_GRAPH_NODES = {
     "Salesforce_Transit": {"lat": 37.7892, "lng": -122.3970, "elev": 6.0, "type": "station"},
     "Civic_Center": {"lat": 37.7798, "lng": -122.4178, "elev": 14.0, "type": "station"},
     "Mission_District": {"lat": 37.7554, "lng": -122.4190, "elev": 20.0, "type": "station"},
-    "Golden_Gate_Park": {"lat": 37.7702, "lng": -122.4702, "elev": 65.0, "type": "station"},
+    "Golden_Gate_Eco_Hub": {"lat": 37.7702, "lng": -122.4702, "elev": 65.0, "type": "station"},
     "Embarcadero": {"lat": 37.8000, "lng": -122.3980, "elev": 2.0, "type": "road"},
     "Chinatown": {"lat": 37.7940, "lng": -122.4080, "elev": 45.0, "type": "road"},
     "Nob_Hill": {"lat": 37.7930, "lng": -122.4140, "elev": 110.0, "type": "road"},
@@ -44,9 +44,9 @@ SF_GRAPH_EDGES = [
     # Hills & Outer Districts
     ("Castro", "Twin_Peaks", 2.1, 45),
     ("Twin_Peaks", "Sunset_District", 3.8, 50),
-    ("Civic_Center", "Golden_Gate_Park", 4.9, 60),
-    ("Golden_Gate_Park", "Richmond_District", 1.4, 45),
-    ("Golden_Gate_Park", "Sunset_District", 2.5, 45),
+    ("Civic_Center", "Golden_Gate_Eco_Hub", 4.9, 60),
+    ("Golden_Gate_Eco_Hub", "Richmond_District", 1.4, 45),
+    ("Golden_Gate_Eco_Hub", "Sunset_District", 2.5, 45),
     ("Richmond_District", "Sunset_District", 3.2, 50)
 ]
 
