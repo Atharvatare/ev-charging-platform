@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}GoBharat EV - Consumer Login & Register Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto py-16 px-6" x-data="authController()">
+    
+    <!-- Outer Cyber Card Glass Panel -->
+    <div class="card glass-panel border border-neutral-850 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+        
+        <!-- Futuristic background decorative grids -->
+        <div class="absolute -right-24 -top-24 w-48 h-48 rounded-full bg-cyberGreen/5 blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-24 -bottom-24 w-48 h-48 rounded-full bg-cyberBlue/5 blur-3xl pointer-events-none"></div>
+
+        <!-- Brand Title HUD -->
+        <div class="text-center mb-8">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyberGreen to-cyberBlue flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.3)] mx-auto mb-4">
+                <i class="fa-solid fa-bolt text-lg text-black font-extrabold"></i>
+            </div>
+            <h2 class="text-2xl font-extrabold text-white">
+                GoBharat <span class="text-cyberGreen glow-text-green">EV</span> Portal
+            </h2>
+            <p class="text-neutral-400 text-xs mt-1">Access India's topography-aware solar charging platform.</p>
+        </div>
+
+        <!-- Custom Sliding Auth Tabs -->
+        <div class="grid grid-cols-2 gap-2 bg-neutral-900/60 p-1.5 rounded-xl border border-neutral-855 mb-6">
+            <button @click="setTab('login')" 
+                    :class="activeTab === 'login' ? 'bg-gradient-to-r from-cyberGreen/10 to-cyberBlue/10 text-white border-cyberGreen/30 shadow-[0_0_10px_rgba(34,197,94,0.08)]' : 'text-neutral-400 border-transparent hover:text-white'"
+                    class="btn btn-xs py-2.5 border rounded-lg h-auto font-bold text-xs uppercase tracking-wider transition-all">
+                <i class="fa-solid fa-lock-open mr-1"></i> Sign In
+            </button>
+            <button @click="setTab('register')" 
+                    :class="activeTab === 'register' ? 'bg-gradient-to-r from-cyberGreen/10 to-cyberBlue/10 text-white border-cyberGreen/30 shadow-[0_0_10px_rgba(34,197,94,0.08)]' : 'text-neutral-400 border-transparent hover:text-white'"
+                    class="btn btn-xs py-2.5 border rounded-lg h-auto font-bold text-xs uppercase tracking-wider transition-all">
+                <i class="fa-solid fa-user-plus mr-1"></i> Register
+            </button>
+        </div>
+
+        <!-- Custom Error & Warning Notifications -->
+        <template x-if="errorMessage">
+            <div class="alert alert-error bg-cyberPink/10 border border-cyberPink/30 text-cyberPink text-xs py-3.5 px-4 rounded-xl mb-6 flex gap-2 animate-fade-in">
+                <i class="fa-solid fa-circle-exclamation text-base shrink-0"></i>
+                <span x-text="errorMessage"></span>
+            </div>
+        </template>
+
+        <template x-if="successMessage">
+            <div class="alert alert-success bg-cyberGreen/10 border border-cyberGreen/30 text-cyberGreen text-xs py-3.5 px-4 rounded-xl mb-6 flex gap-2 animate-fade-in">
+                <i class="fa-solid fa-circle-check text-base shrink-0 animate-bounce"></i>
+                <span x-text="successMessage"></span>
+            </div>
+        </template>
+
+        <!-- 1. SIGN IN INTERACTIVE FORM -->
+        <div class="space-y-4 animate-fade-in" x-show="activeTab === 'login'">
+            
+            <div class="form-control w-full">
+                <label class="label"><span class="label-text text-neutral-300 font-bold text-[10px] uppercase tracking-wider">Email Address</span></label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500"><i class="fa-solid fa-envelope text-xs"></i></span>
+                    <input type="email" x-model="loginForm.email" placeholder="driver@ev.com" class="input input-bordered input-sm bg-neutral-900 border-neutral-800 focus:border-cyberGreen text-xs rounded-xl w-full pl-9" />
+                </div>
+            </div>
+
+            <div class="form-control w-full">
+                <label class="label"><span class="label-text text-neutral-300 font-bold text-[10px] uppercase tracking-wider">Password</span></label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500"><i class="fa-solid fa-key text-xs"></i></span>
+                    <input type="password" x-model="loginForm.password" placeholder="••••••••" class="input input-bordered input-sm bg-neutral-900 border-neutral-800 focus:border-cyberGreen text-xs rounded-xl w-full pl-9" />
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button @click="submitLogin()" :disabled="submitting || !loginForm.email || !loginForm.password"
+                        class="btn btn-block bg-gradient-to-r from-cyberGreen to-cyberBlue text-black font-extrabold border-none hover:from-white hover:to-white rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.18)] py-2.5 transition-all">
+                    <span x-show="submitting" class="loading loading-spinner loading-xs text-black"></span>
+                    <span x-show="!submitting"><i class="fa-solid fa-right-to-bracket mr-0.5"></i> Sign In to Account</span>
+                </button>
+            </div>
+            
+            <!-- Quick Link / Mock Tester Bypass -->
+            <div class="text-center pt-4 border-t border-neutral-900 mt-6">
+                <button @click="triggerDeveloperBypass()" class="btn btn-link btn-xs text-neutral-500 hover:text-cyberGreen font-bold uppercase tracking-wider no-underline text-[9px]">
+                    <i class="fa-solid fa-flaskmr-0.5"></i> Trigger Fast Developer Bypass
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. REGISTRATION INTERACTIVE FORM -->
+        <div class="space-y-4 animate-fade-in" x-show="activeTab === 'register'">
+            
+            <div class="form-control w-full">
+                <label class="label"><span class="label-text text-neutral-300 font-bold text-[10px] uppercase tracking-wider">Full Name</span></label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500"><i class="fa-solid fa-user text-xs"></i></span>
+                    <input type="text" x-model="registerForm.name" placeholder="Alex Mercer" class="input input-bordered input-sm bg-neutral-900 border-neutral-800 focus:border-cyberGreen text-xs rounded-xl w-full pl-9" />
+                </div>
+            </div>
+
+            <div class="form-control w-full">
+                <label class="label"><span class="label-text text-neutral-300 font-bold text-[10px] uppercase tracking-wider">Email Address</span></label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500"><i class="fa-solid fa-envelope text-xs"></i></span>
+                    <input type="email" x-model="registerForm.email" placeholder="alex@mercer.com" class="input input-bordered input-sm bg-neutral-900 border-neutral-800 focus:border-cyberGreen text-xs rounded-xl w-full pl-9" />
+                </div>
+            </div>
+
+            <div class="form-control w-full">
+                <label class="label"><span class="label-text text-neutral-300 font-bold text-[10px] uppercase tracking-wider">Contact / Mobile Details</span></label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500"><i class="fa-solid fa-phone text-xs"></i></span>
+                    <input type="tel" x-model="registerForm.phone" placeholder="+91 98765 43210" class="input input-bordered input-sm bg-neutral-900 border-neutral-800 focus:border-cyberGreen text-xs rounded-xl w-full pl-9" />
+                </div>
+            </div>
+
+            <div class="form-control w-full">
+                <label class="label"><span class="label-text text-neutral-300 font-bold text-[10px] uppercase tracking-wider">Choose Password</span></label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500"><i class="fa-solid fa-key text-xs"></i></span>
+                    <input type="password" x-model="registerForm.password" placeholder="Min. 8 characters" class="input input-bordered input-sm bg-neutral-900 border-neutral-800 focus:border-cyberGreen text-xs rounded-xl w-full pl-9" />
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button @click="submitRegister()" :disabled="submitting || !registerForm.name || !registerForm.email || !registerForm.phone || !registerForm.password"
+                        class="btn btn-block bg-gradient-to-r from-cyberGreen to-cyberBlue text-black font-extrabold border-none hover:from-white hover:to-white rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.18)] py-2.5 transition-all">
+                    <span x-show="submitting" class="loading loading-spinner loading-xs text-black"></span>
+                    <span x-show="!submitting"><i class="fa-solid fa-circle-check mr-0.5"></i> Register Account</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Alpine Form Controllers -->
+<script>
+function authController() {
+    return {
+        activeTab: 'login',
+        errorMessage: '',
+        successMessage: '',
+        submitting: false,
+
+        loginForm: {
+            email: '',
+            password: ''
+        },
+
+        registerForm: {
+            name: '',
+            email: '',
+            phone: '',
+            password: ''
+        },
+
+        setTab(tab) {
+            this.activeTab = tab;
+            this.errorMessage = '';
+            this.successMessage = '';
+        },
+
+        async submitLogin() {
+            this.submitting = true;
+            this.errorMessage = '';
+            this.successMessage = '';
+
+            try {
+                // OAuth2PasswordRequestForm expects application/x-www-form-urlencoded
+                const payload = new URLSearchParams();
+                payload.append('username', this.loginForm.email);
+                payload.append('password', this.loginForm.password);
+
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: payload
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    this.successMessage = 'Login successful! Syncing session...';
+                    
+                    // Seed local storage with actual JWT token
+                    localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('user_email', this.loginForm.email);
+
+                    // Redirect to driver dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1200);
+                } else {
+                    this.errorMessage = data.detail || 'Incorrect email or password.';
+                }
+            } catch (err) {
+                console.error("Login fault:", err);
+                this.errorMessage = 'Network connection failed. Try again.';
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        async submitRegister() {
+            this.submitting = true;
+            this.errorMessage = '';
+            this.successMessage = '';
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: this.registerForm.email,
+                        password: this.registerForm.password,
+                        full_name: this.registerForm.name,
+                        phone: this.registerForm.phone,
+                        role: 'user' // Default to consumer role
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    this.successMessage = 'Registration complete! Starting wallet seeded with ₹100. Logging you in...';
+                    
+                    // Automatically log in the newly registered user
+                    this.loginForm.email = this.registerForm.email;
+                    this.loginForm.password = this.registerForm.password;
+                    
+                    setTimeout(() => {
+                        this.submitLogin();
+                    }, 1500);
+                } else {
+                    this.errorMessage = data.detail || 'Failed to register account.';
+                }
+            } catch (err) {
+                console.error("Register fault:", err);
+                this.errorMessage = 'Network connection failed. Try again.';
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        triggerDeveloperBypass() {
+            this.errorMessage = '';
+            this.successMessage = 'Developer bypass triggered! Logging in as operator...';
+            localStorage.setItem('access_token', 'mock_testing_token');
+            localStorage.setItem('user_email', 'user@ev.com');
+            
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 1000);
+        }
+    };
+}
+</script>
+{% endblock %}

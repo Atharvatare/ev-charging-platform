@@ -266,8 +266,11 @@ function dashboardController() {
         trips: [],
 
         async initDashboard() {
-            const token = localStorage.getItem('access_token') || 'mock_testing_token';
-            localStorage.setItem('user_email', 'user@ev.com');
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
 
             // 1. Fetch user profile for live wallet persistently from DB
             try {
