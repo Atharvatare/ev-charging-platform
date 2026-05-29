@@ -11,6 +11,7 @@ from app.routers.auth import get_current_user
 from app.models.user import User
 from app.models.station import Port
 from app.models.booking import Reservation, WalletTransaction
+from app.ws.connection_manager import manager
 
 router = APIRouter(prefix="/api/bookings", tags=["Charger Reservations"])
 
@@ -50,7 +51,7 @@ def list_active_reservations(
     return active_bookings
 
 @router.post("/reserve")
-def reserve_charger_port(
+async def reserve_charger_port(
     req: ReserveRequest,
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
@@ -112,6 +113,14 @@ def reserve_charger_port(
     session.commit()
     session.refresh(reservation)
 
+    # Real-time WebSocket broadcast to sync interactive map and operator grids
+    await manager.broadcast({
+        "type": "PORT_STATUS_UPDATE",
+        "station_id": str(port.station_id),
+        "port_id": str(port.id),
+        "status": port.status
+    })
+
     return {
         "message": "Charger port reserved successfully.",
         "reservation_id": reservation.id,
@@ -120,7 +129,7 @@ def reserve_charger_port(
     }
 
 @router.post("/{reservation_id}/cancel")
-def cancel_reservation(
+async def cancel_reservation(
     reservation_id: UUID,
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
@@ -161,13 +170,21 @@ def cancel_reservation(
     
     session.commit()
     
+    if port:
+        await manager.broadcast({
+            "type": "PORT_STATUS_UPDATE",
+            "station_id": str(port.station_id),
+            "port_id": str(port.id),
+            "status": port.status
+        })
+    
     return {"message": "Reservation cancelled successfully and fee refunded.", "new_balance": current_user.wallet_balance}
 
 class SettleSessionRequest(BaseModel):
     cost: float
 
 @router.post("/{reservation_id}/complete")
-def complete_charging_session(
+async def complete_charging_session(
     reservation_id: UUID,
     req: SettleSessionRequest,
     session: Session = Depends(get_session),
@@ -207,6 +224,14 @@ def complete_charging_session(
     session.add(ledger)
     
     session.commit()
+    
+    if port:
+        await manager.broadcast({
+            "type": "PORT_STATUS_UPDATE",
+            "station_id": str(port.station_id),
+            "port_id": str(port.id),
+            "status": port.status
+        })
     
     return {"message": "Session completed and settled persistently.", "new_balance": current_user.wallet_balance}
 
