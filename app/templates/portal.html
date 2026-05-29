@@ -308,6 +308,7 @@ function portalController() {
         routeLayers: [],
         markerLayers: [],
         stationMarkers: [],
+        stationMarkersMap: {},
 
         async initPortal() {
             // Check auth token
@@ -340,6 +341,9 @@ function portalController() {
             // Fetch All Stations & Plot on map
             await this.loadStations();
 
+            // Initialize WebSocket Telemetry Sync Channel
+            this.initWebSocket();
+
             // Reactive UI overrides
             window.addEventListener('currency-changed', () => {
                 this.loadStations();
@@ -358,6 +362,7 @@ function portalController() {
                     this.stationMarkers.forEach(m => this.map.removeLayer(m));
                 }
                 this.stationMarkers = [];
+                this.stationMarkersMap = {};
 
                 const response = await fetch('/api/stations/');
                 this.stations = await response.json();
@@ -409,6 +414,7 @@ function portalController() {
 
                     const marker = L.marker([st.latitude, st.longitude], { icon: stationIcon }).addTo(this.map);
                     this.stationMarkers.push(marker);
+                    this.stationMarkersMap[st.id] = marker;
                     
                     marker.bindPopup(`
                         <div class="w-[240px] text-white bg-neutral-950 p-1.5 rounded-xl">
@@ -523,6 +529,105 @@ function portalController() {
             
             const encoded = encodeURIComponent(message);
             window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+        },
+
+        initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUri = `${protocol}//${window.location.host}/ws`;
+            console.log("Portal WS connecting:", wsUri);
+            const ws = new WebSocket(wsUri);
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'PORT_STATUS_UPDATE') {
+                        console.log("Portal received port status update:", data);
+                        this.handlePortStatusUpdate(data);
+                    }
+                } catch (e) {
+                    console.error("Error parsing WS message:", e);
+                }
+            };
+
+            ws.onclose = () => {
+                console.log("Portal WS closed. Reconnecting...");
+                setTimeout(() => this.initWebSocket(), 5000);
+            };
+        },
+
+        handlePortStatusUpdate(data) {
+            // Find target station
+            const station = this.stations.find(s => s.id === data.station_id);
+            if (!station) return;
+            
+            // Find target port
+            const port = station.ports.find(p => p.id === data.port_id);
+            if (!port) return;
+            
+            // Update port status reactively
+            port.status = data.status;
+            
+            // Get marker reference
+            const marker = this.stationMarkersMap[data.station_id];
+            if (marker) {
+                const availablePorts = station.ports.filter(p => p.status === 'AVAILABLE').length;
+                const batteryColor = availablePorts > 0 ? '#22c55e' : '#f97316';
+                
+                const newIcon = L.divIcon({
+                    className: '',
+                    html: `
+                        <div class="w-8 h-8 rounded-xl bg-neutral-950 border border-neutral-800 flex items-center justify-center shadow-lg relative group transition-all" style="border-color: ${batteryColor}; box-shadow: 0 0 10px ${batteryColor}44;">
+                            <i class="fa-solid fa-charging-station text-xs" style="color: ${batteryColor};"></i>
+                            <span class="absolute -top-2 -right-2 bg-neutral-900 border border-neutral-800 text-[8px] font-bold text-white w-4.5 h-4.5 rounded-full flex items-center justify-center" style="border-color: ${batteryColor};">
+                                ${availablePorts}
+                            </span>
+                        </div>
+                    `,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+                
+                marker.setIcon(newIcon);
+                
+                // Recompile popup contents reactively
+                let portsHtml = station.ports.map(p => {
+                    const priceFormatted = Alpine.store('global').formatMoney(p.price_per_kwh);
+                    return `
+                        <div class="flex justify-between items-center text-xs bg-neutral-900 border border-neutral-800/60 p-2 rounded-lg mt-1.5">
+                            <div>
+                                <span class="font-bold text-white block">${p.connector_type} (${p.power_kw}kW)</span>
+                                <span class="text-[9px] text-neutral-400 font-semibold">${priceFormatted}/kWh</span>
+                            </div>
+                            <span class="badge badge-xs border-none font-bold text-[9px] px-2 py-1" style="background-color: ${p.status === 'AVAILABLE' ? '#22c55e' : '#f97316'}; color: #000;">
+                                ${p.status}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+
+                let solarHtml = station.solar_insights && station.solar_insights[0] ? `
+                    <div class="mt-2 border-t border-neutral-800 pt-2 flex items-center justify-between text-[10px]">
+                        <span class="text-neutral-400 uppercase font-bold"><i class="fa-solid fa-sun text-yellow-500 mr-0.5"></i> Solar Score</span>
+                        <span class="text-cyberGreen font-bold">${station.solar_insights[0].renewable_percentage}% Green</span>
+                    </div>
+                ` : '';
+
+                marker.setPopupContent(`
+                    <div class="w-[240px] text-white bg-neutral-950 p-1.5 rounded-xl">
+                        <h4 class="font-bold text-sm leading-tight text-white mb-0.5">${station.name}</h4>
+                        <p class="text-neutral-400 text-[10px] leading-tight mb-3">${station.address}</p>
+                        
+                        <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-1">Available Chargers</span>
+                        ${portsHtml}
+                        ${solarHtml}
+                        
+                        <button onclick="document.getElementById('reserve_modal').showModal()" 
+                                class="btn btn-block btn-xs bg-cyberGreen border-none text-black font-extrabold hover:bg-white rounded-lg mt-4 py-2 flex items-center justify-center">
+                            Reserve Port <i class="fa-solid fa-calendar text-[10px] ml-1"></i>
+                        </button>
+                    </div>
+                `);
+            }
         }
     };
 }
