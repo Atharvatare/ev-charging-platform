@@ -43,6 +43,85 @@
 
     <!-- Global Cyber CSS Styles -->
     <style>
+        /* Bulletproof Layout Fallbacks to prevent JIT CDN race condition shuffling */
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .grid {
+            display: grid !important;
+        }
+        .flex {
+            display: flex !important;
+        }
+        .flex-col {
+            flex-direction: column !important;
+        }
+        .items-center {
+            align-items: center !important;
+        }
+        .justify-between {
+            justify-content: space-between !important;
+        }
+        
+        .gap-8 {
+            gap: 2rem !important;
+        }
+        .gap-6 {
+            gap: 1.5rem !important;
+        }
+        .gap-4 {
+            gap: 1rem !important;
+        }
+        .gap-3 {
+            gap: 0.75rem !important;
+        }
+        .gap-2 {
+            gap: 0.5rem !important;
+        }
+
+        /* Core Grid splits to prevent stretching */
+        @media (min-width: 1024px) {
+            .lg\:grid-cols-3 {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            }
+            .lg\:col-span-1 {
+                grid-column: span 1 / span 1 !important;
+            }
+            .lg\:col-span-2 {
+                grid-column: span 2 / span 2 !important;
+            }
+            .lg\:grid-cols-4 {
+                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            }
+            .lg\:flex {
+                display: flex !important;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .md\:grid-cols-2 {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            .md\:flex-row {
+                flex-direction: row !important;
+            }
+            .md\:items-center {
+                align-items: center !important;
+            }
+        }
+        
+        .max-w-6xl {
+            max-width: 72rem !important;
+        }
+        .max-w-5xl {
+            max-width: 64rem !important;
+        }
+        .mx-auto {
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
         body {
             background-color: #0a0a0c;
             color: #f3f4f6;
