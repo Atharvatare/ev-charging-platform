@@ -156,6 +156,76 @@ def test_persistent_endpoints():
         nodes_res = client.get("/api/routing/nodes")
         assert nodes_res.status_code == 200
         assert len(nodes_res.json()) > 0
-        print("SUCCESS: Fully persistent backend routers verified via TestClient!")
+        
+        # 3. Get About Company & Support Page
+        about_res = client.get("/about")
+        assert about_res.status_code == 200
+        assert "GoBharat EV" in about_res.text
+        assert "About Company & Support Hub" in about_res.text
+        
+        # 4. Submit Support Ticket Successfully
+        ticket_payload = {
+            "name": "Jane Doe",
+            "email": "jane@ev.com",
+            "subject": "Incline calculation feedback",
+            "message": "The Western Ghats slope algorithm works beautifully! Very accurate depletions."
+        }
+        submit_res = client.post("/api/contact/submit", json=ticket_payload)
+        assert submit_res.status_code == 200
+        assert "submitted successfully" in submit_res.json()["message"]
+        
+        # 5. Submit Invalid Support Ticket (Empty field validations)
+        invalid_payload = {
+            "name": "",
+            "email": "jane@ev.com",
+            "subject": "Incline calculation feedback",
+            "message": "Empty name."
+        }
+        submit_invalid_res = client.post("/api/contact/submit", json=invalid_payload)
+        # Pydantic validates empty strings if we check length, or they might be accepted as strings but let's test FastAPI pydantic validation behavior or manual check
+        # Wait, app/main.py checks: if not req.name or not req.email or not req.subject or not req.message: raise HTTPException(status_code=400, detail="All contact form fields are required.")
+        # So it returns 400!
+        assert submit_invalid_res.status_code == 400
+        assert "All contact form fields are required." in submit_invalid_res.json()["detail"]
+        
+        # 6. Get Login & Register Page
+        login_res = client.get("/login")
+        assert login_res.status_code == 200
+        assert "Consumer Login & Register Portal" in login_res.text
+        assert "authController()" in login_res.text
+        
+        # 7. Register a New Consumer Account Dynamically
+        import random
+        random_num = random.randint(100000, 999999)
+        new_consumer_email = f"consumer_{random_num}@test.com"
+        register_payload = {
+            "email": new_consumer_email,
+            "password": "securepassword123",
+            "full_name": "John Doe",
+            "phone": "+91 99999 88888",
+            "role": "user"
+        }
+        reg_res = client.post("/api/auth/register", json=register_payload)
+        assert reg_res.status_code == 200
+        registered_data = reg_res.json()
+        assert registered_data["email"] == new_consumer_email
+        assert registered_data["full_name"] == "John Doe"
+        assert registered_data["phone"] == "+91 99999 88888"
+        assert registered_data["wallet_balance"] == 100.0
+        
+        # 8. Log In with Form Data (x-www-form-urlencoded) to Retrieve Token
+        login_payload = {
+            "username": new_consumer_email,
+            "password": "securepassword123"
+        }
+        login_token_res = client.post("/api/auth/login", data=login_payload)
+        assert login_token_res.status_code == 200
+        token_data = login_token_res.json()
+        assert "access_token" in token_data
+        assert token_data["token_type"] == "bearer"
+        
+        print("SUCCESS: Fully persistent backend routers, About page, Contact ticketing, and Consumer Auth verified via TestClient!")
+
+
 
 

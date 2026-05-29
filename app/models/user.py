@@ -10,6 +10,7 @@ class User(SQLModel, table=True):
     email: str = Field(unique=True, index=True, nullable=False)
     hashed_password: str = Field(nullable=False)
     full_name: Optional[str] = Field(default=None)
+    phone: Optional[str] = Field(default=None)
     role: str = Field(default="user")  # "user" or "admin"
     wallet_balance: float = Field(default=100.0)  # Seed with a default $100 starting balance
     created_at: datetime = Field(default_factory=datetime.utcnow)

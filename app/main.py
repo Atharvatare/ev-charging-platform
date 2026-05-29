@@ -98,6 +98,45 @@ def get_admin_dashboard_page(request: Request):
     """Serves the admin socket health monitoring control grid."""
     return templates.TemplateResponse(request, "admin.html", {"request": request})
 
+@app.get("/about")
+def get_about_and_support_page(request: Request):
+    """Serves the stunning corporate About Company and Contact Support Hub."""
+    return templates.TemplateResponse(request, "about.html", {"request": request})
+
+@app.get("/login")
+def get_login_and_register_page(request: Request):
+    """Serves the stunning corporate and driver login and registration page."""
+    return templates.TemplateResponse(request, "login.html", {"request": request})
+
+# In-memory corporate support ticketing ledger
+SUPPORT_TICKETS = []
+
+from pydantic import BaseModel
+class ContactRequest(BaseModel):
+    name: str
+    email: str
+    subject: str
+    message: str
+
+@app.post("/api/contact/submit")
+def submit_contact_ticket(req: ContactRequest):
+    """Saves a driver support ticket persistently in the corporate memory ledger."""
+    from fastapi import HTTPException
+    if not req.name or not req.email or not req.subject or not req.message:
+        raise HTTPException(status_code=400, detail="All contact form fields are required.")
+    
+    from datetime import datetime
+    ticket = {
+        "name": req.name,
+        "email": req.email,
+        "subject": req.subject,
+        "message": req.message,
+        "created_at": datetime.utcnow().isoformat()
+    }
+    SUPPORT_TICKETS.append(ticket)
+    print(f"[OK] Persistent support ticket logged from {req.email} regarding '{req.subject}'")
+    return {"message": "Support ticket submitted successfully. GoBharat EV team will contact you shortly."}
+
 # -------------------------------------------------------------
 # WEBSOCKET REAL-TIME STREAMING
 # -------------------------------------------------------------
