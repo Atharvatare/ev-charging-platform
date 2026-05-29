@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}goVolt - Interactive Map Portal{% endblock %}
+{% block title %}GoBharat EV - Interactive Map Portal{% endblock %}
 
 {% block head %}
 <!-- Leaflet.js CSS & JS for Stunning Open-Source Map Canvas -->
@@ -107,6 +107,18 @@
                     </select>
                 </div>
 
+                <!-- EV Vehicle Profile Selector -->
+                <div class="form-control w-full">
+                    <label class="label"><span class="label-text text-neutral-300 font-bold text-xs uppercase tracking-wider">EV Vehicle Profile</span></label>
+                    <select x-model="routeForm.vehicle" class="select select-bordered select-md bg-neutral-900 border-neutral-800 focus:border-cyberGreen text-sm rounded-xl">
+                        <option value="tata_nexon_ev_max">Tata Nexon EV Max (40.5 kWh SUV)</option>
+                        <option value="ather_450x">Ather 450X (3.7 kWh Scooter)</option>
+                        <option value="tata_tiago_ev">Tata Tiago EV (24.0 kWh Hatchback)</option>
+                        <option value="hyundai_ioniq_5">Hyundai Ioniq 5 (72.6 kWh Crossover)</option>
+                        <option value="ola_s1_pro">Ola S1 Pro (4.0 kWh Scooter)</option>
+                    </select>
+                </div>
+
                 <!-- Starting SoC Slider -->
                 <div class="form-control w-full">
                     <div class="flex justify-between items-center mb-1">
@@ -157,6 +169,18 @@
                             <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block">Arrival SoC</span>
                             <span class="text-base font-extrabold text-cyberBlue glow-text-blue" x-text="routeResult.final_soc + '%'"></span>
                         </div>
+                    </div>
+
+                    <!-- WhatsApp Share and Eco Impact (Indian Local Feature) -->
+                    <div class="bg-neutral-900/40 border border-neutral-800/50 p-4 rounded-xl space-y-3">
+                        <div class="flex justify-between items-center text-[10px] font-bold text-neutral-400 uppercase">
+                            <span>🌿 Carbon Offset Saved</span>
+                            <span class="text-cyberGreen glow-text-green font-extrabold" x-text="(routeResult.total_distance_km * 0.12).toFixed(1) + ' kg CO₂'"></span>
+                        </div>
+                        <button @click="shareRouteToWhatsapp()" 
+                                class="btn btn-xs btn-block bg-gradient-to-r from-emerald-500 to-green-600 border-none text-white font-extrabold hover:brightness-110 rounded-lg py-2 flex items-center justify-center gap-1.5 transition-all shadow-[0_0_10px_rgba(16,185,129,0.15)]">
+                            <i class="fa-brands fa-whatsapp text-xs"></i> Share Trip to WhatsApp
+                        </button>
                     </div>
 
                     <!-- Step-by-Step Telemetry Ledger -->
@@ -276,7 +300,8 @@ function portalController() {
         routeForm: {
             origin: '',
             destination: '',
-            startSoc: 100
+            startSoc: 100,
+            vehicle: 'tata_nexon_ev_max'
         },
         routeResult: null,
         loading: false,
@@ -467,6 +492,37 @@ function portalController() {
             } finally {
                 this.loading = false;
             }
+        },
+
+        shareRouteToWhatsapp() {
+            if (!this.routeResult) return;
+            const originText = this.routeForm.origin.replace(/_/g, ' ');
+            const destText = this.routeForm.destination.replace(/_/g, ' ');
+            const distText = Alpine.store('global').formatDistance(this.routeResult.total_distance_km);
+            const timeText = this.routeResult.total_duration_mins + ' mins';
+            const finalSoc = this.routeResult.final_soc + '%';
+            const co2Saved = (this.routeResult.total_distance_km * 0.12).toFixed(1) + ' kg';
+            
+            const vehicleNames = {
+                'tata_nexon_ev_max': 'Tata Nexon EV Max',
+                'ather_450x': 'Ather 450X',
+                'tata_tiago_ev': 'Tata Tiago EV',
+                'hyundai_ioniq_5': 'Hyundai Ioniq 5',
+                'ola_s1_pro': 'Ola S1 Pro'
+            };
+            const selectedVehicle = vehicleNames[this.routeForm.vehicle] || 'EV';
+
+            const message = `⚡ *GoBharat EV - Topographic Trip Summary* 🇮🇳\n\n` +
+                            `🚗 *Vehicle:* ${selectedVehicle}\n` +
+                            `📍 *Route:* ${originText} ➔ ${destText}\n` +
+                            `📏 *Distance:* ${distText}\n` +
+                            `⏱️ *Travel Duration:* ${timeText}\n` +
+                            `🔋 *Forecasted Arrival Battery:* ${finalSoc}\n` +
+                            `🌿 *Carbon Offset Saved:* ${co2Saved} CO₂\n\n` +
+                            `Plan your next eco-friendly journey with *GoBharat EV*! ⚡`;
+            
+            const encoded = encodeURIComponent(message);
+            window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
         }
     };
 }

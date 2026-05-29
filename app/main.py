@@ -16,7 +16,7 @@ from app.routers import auth, stations, routing, bookings, wallet, chatbot
 # Initialize FastAPI App
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="Futuristic AI-powered EV Route Coordinator & Charging Station Locator Platform API",
+    description="Futuristic AI-powered GoBharat EV Route Coordinator & Charging Station Locator Platform API",
     version="1.0.0"
 )
 
@@ -52,16 +52,24 @@ app.include_router(chatbot.router)
 # -------------------------------------------------------------
 @app.on_event("startup")
 def on_startup():
-    """Triggers PostgreSQL schema build and spatial coordinates seeding."""
+    """Triggers PostgreSQL schema build and spatial coordinates seeding with environment audits."""
     print("--------------------------------------------------")
-    print("BOOTING GOVOLT EV DATABASE ENGINE...")
+    print("BOOTING GOBHARAT EV DATABASE ENGINE...")
+    
+    # Secure API Keys Audit
+    secret = os.getenv("SECRET_KEY")
+    if not secret or secret == "7d4b4a11f26a11394c8b2d41b8a5d3c8c24f6ae9bcfd9f4e244fe7ad54b51815":
+        print("[WARNING] SECURITY: Using default or empty SECRET_KEY. Configure a strong SECRET_KEY in environment variable!")
+    else:
+        print("[OK] Security Check: Backend SECRET_KEY configured securely.")
+        
     try:
         init_db()
         print("DATABASE INIT SUCCESS: PostGIS Loaded, Tables Synced!")
         
         print("SEEDING TELEMETRY STATIONS GRID...")
         seed_database()
-        print("DATABASE SEED SUCCESS: SF Stations Seeding complete!")
+        print("DATABASE SEED SUCCESS: Seeding complete!")
     except Exception as e:
         print(f"DATABASE STARTUP FAULT: {e}")
         print("Proceeding with API runtime stubs...")
@@ -104,7 +112,7 @@ async def websocket_telemetry_endpoint(websocket: WebSocket):
         # Initial greeting broadcast
         await websocket.send_json({
             "type": "SYSTEM",
-            "message": "Connected to goVolt EV Telemetry Stream."
+            "message": "Connected to GoBharat EV Telemetry Stream."
         })
         
         while True:

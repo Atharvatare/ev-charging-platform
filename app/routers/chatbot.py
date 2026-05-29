@@ -21,7 +21,7 @@ def query_chatbot(
     
     # Context-aware intelligent responses based on keyword queries
     if "hello" in msg or "hi" in msg:
-        response = f"Hello {current_user.full_name or 'Driver'}! I am goVolt, your Global EV Route & Charging Coordinator. I am optimized for Indian highways like the Mumbai-Pune Expressway as well as global routes! You can toggle currencies between ₹, $, and € and units between km and miles in real-time. How can I optimize your journey today?"
+        response = f"Hello {current_user.full_name or 'Driver'}! I am GoBharat EV, your Global EV Route & Charging Coordinator. I am optimized for Indian highways like the Mumbai-Pune Expressway as well as global routes! You can toggle currencies between ₹, $, and € and units between km and miles in real-time. How can I optimize your journey today?"
     
     elif "battery" in msg or "soc" in msg:
         response = (
@@ -58,7 +58,7 @@ def query_chatbot(
         
     else:
         response = (
-            "I am goVolt, your AI EV coordinator. I can help you compute optimal paths across India, "
+            "I am GoBharat EV, your AI EV coordinator. I can help you compute optimal paths across India, "
             "verify active port reservations, analyze physical battery energy dissipation, or oversee solar output loads. What can I do for you?"
         )
 

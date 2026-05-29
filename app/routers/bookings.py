@@ -93,7 +93,7 @@ def reserve_charger_port(
     # 3. Create Reservation
     start = datetime.utcnow()
     end = start + timedelta(hours=req.duration_hours)
-    qr_token = f"GOVOLT_RES_{secrets.token_hex(4).upper()}_ACTIVE_{port.connector_type}"
+    qr_token = f"BHARAT_RES_{secrets.token_hex(4).upper()}_ACTIVE_{port.connector_type}"
 
     reservation = Reservation(
         user_id=current_user.id,

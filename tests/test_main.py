@@ -91,3 +91,49 @@ def test_queue_forecaster_rush_hour():
     assert peak["predicted_wait_minutes"] > off_peak["predicted_wait_minutes"]
     assert peak["demand_status"] == "CRITICAL"
     print("SUCCESS: Queue forecaster calculated peak wait time coefficients.")
+
+def test_vehicle_profiles_physics():
+    """
+    Verifies that different vehicle models (Ather 450X scooter vs Hyundai Ioniq 5 Crossover)
+    exhibit distinct physics-based battery depletion and weight impact behavior.
+    """
+    from app.engines.battery import VEHICLE_PROFILES
+    
+    ather_profile = VEHICLE_PROFILES["ather_450x"]
+    ioniq_profile = VEHICLE_PROFILES["hyundai_ioniq_5"]
+    
+    # Ather 450X (Lightweight, low auxiliary draw)
+    ather_model = EVEnergyModel(
+        mass_kg=ather_profile["mass_kg"],
+        drag_coeff=ather_profile["drag_coeff"],
+        frontal_area=ather_profile["frontal_area"],
+        rolling_coeff=ather_profile["rolling_coeff"],
+        battery_capacity_kwh=ather_profile["battery_capacity_kwh"],
+        efficiency=ather_profile["efficiency"],
+        regen_efficiency=ather_profile["regen_efficiency"],
+        auxiliary_draw_w=ather_profile["auxiliary_draw_w"]
+    )
+    
+    # Hyundai Ioniq 5 (Heavy, high auxiliary draw, large battery)
+    ioniq_model = EVEnergyModel(
+        mass_kg=ioniq_profile["mass_kg"],
+        drag_coeff=ioniq_profile["drag_coeff"],
+        frontal_area=ioniq_profile["frontal_area"],
+        rolling_coeff=ioniq_profile["rolling_coeff"],
+        battery_capacity_kwh=ioniq_profile["battery_capacity_kwh"],
+        efficiency=ioniq_profile["efficiency"],
+        regen_efficiency=ioniq_profile["regen_efficiency"],
+        auxiliary_draw_w=ioniq_profile["auxiliary_draw_w"]
+    )
+    
+    # Run identical flat transit segment
+    ather_run = ather_model.calculate_energy_consumption(distance_km=10.0, speed_kmh=45.0, elevation_delta_m=0.0)
+    ioniq_run = ioniq_model.calculate_energy_consumption(distance_km=10.0, speed_kmh=45.0, elevation_delta_m=0.0)
+    
+    # Lightweight scooter should consume significantly fewer absolute kWh than heavy premium crossover
+    assert ather_run["energy_kwh"] < ioniq_run["energy_kwh"]
+    
+    # But because Ather battery is very small (3.7 kWh vs 72.6 kWh), the SoC percentage delta should be higher
+    assert ather_run["soc_delta"] > ioniq_run["soc_delta"]
+    print("SUCCESS: Dynamic EV Profiles physics calculations are scientifically accurate!")
+

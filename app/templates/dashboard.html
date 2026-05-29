@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}goVolt - Dynamic Driver Dashboard{% endblock %}
+{% block title %}GoBharat EV - Dynamic Driver Dashboard{% endblock %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto py-12 px-6" x-data="dashboardController()" x-init="initDashboard()">
@@ -44,7 +44,7 @@
                 <!-- Card Header -->
                 <div class="flex justify-between items-start z-10 relative">
                     <div>
-                        <span class="text-[9px] font-bold tracking-widest text-neutral-400 uppercase">goVolt Charge Card</span>
+                        <span class="text-[9px] font-bold tracking-widest text-neutral-400 uppercase">GoBharat EV Charge Card</span>
                         <span class="badge badge-success badge-xs border-none text-[8px] font-bold text-black px-1.5 py-0.5 ml-1 animate-pulse">ACTIVE</span>
                     </div>
                     <i class="fa-solid fa-microchip text-neutral-400 text-2xl"></i>
@@ -66,6 +66,23 @@
                         <span class="text-[8px] text-neutral-500 font-mono block">CARD NO</span>
                         <span class="text-xs font-bold text-white tracking-widest font-mono">•••• 2026</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Payment Method Toggle (Global Stripe vs Indian UPI) -->
+            <div class="mb-6">
+                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-2">Checkout Channel</span>
+                <div class="grid grid-cols-2 gap-2 bg-neutral-900/60 p-1 rounded-xl border border-neutral-800">
+                    <button @click="paymentMethod = 'card'"
+                            :class="paymentMethod === 'card' ? 'bg-gradient-to-r from-cyberGreen/10 to-cyberBlue/10 text-white border-cyberGreen/30' : 'text-neutral-400 border-transparent hover:text-white'"
+                            class="btn btn-xs py-2 border rounded-lg h-auto font-bold text-[9px] uppercase tracking-wider transition-all">
+                        <i class="fa-solid fa-credit-card text-cyberGreen"></i> Card (Stripe)
+                    </button>
+                    <button @click="paymentMethod = 'upi'"
+                            :class="paymentMethod === 'upi' ? 'bg-gradient-to-r from-cyberGreen/10 to-cyberBlue/10 text-white border-cyberGreen/30' : 'text-neutral-400 border-transparent hover:text-white'"
+                            class="btn btn-xs py-2 border rounded-lg h-auto font-bold text-[9px] uppercase tracking-wider transition-all">
+                        <i class="fa-solid fa-qrcode text-cyberBlue"></i> Indian UPI
+                    </button>
                 </div>
             </div>
 
@@ -234,6 +251,15 @@ function dashboardController() {
         walletBalance: 1000.0,
         selectedAmount: 250,
         depositing: false,
+        paymentMethod: 'card',
+        upiPulsing: false,
+        upiSuccess: false,
+        ocppSoc: 32,
+        ocppPower: 150.0,
+        ocppEnergy: 0.0,
+        ocppCost: 0.0,
+        ocppTimer: null,
+        ocppComplete: false,
         transactions: [],
         reservations: [],
         trips: [],
@@ -281,7 +307,7 @@ function dashboardController() {
                     port_id: 'port_cc55',
                     connector_type: 'CCS2',
                     power_kw: 150.0,
-                    qr_code: 'GOVOLT_RES_99a8bc43d1_ACTIVE_CCS2_BANDRA',
+                    qr_code: 'BHARAT_RES_99a8bc43d1_ACTIVE_CCS2_BANDRA',
                     created_at: new Date().toISOString()
                 }
             ];
@@ -297,6 +323,13 @@ function dashboardController() {
         },
 
         async triggerDeposit() {
+            if (this.paymentMethod === 'upi') {
+                this.upiPulsing = false;
+                this.upiSuccess = false;
+                document.getElementById('upi_payment_modal').showModal();
+                return;
+            }
+
             this.depositing = true;
             const depositAmt = this.selectedAmount;
             
@@ -313,6 +346,28 @@ function dashboardController() {
             }, 1000);
         },
 
+        simulateUpiScan() {
+            this.upiPulsing = true;
+            const depositAmt = this.selectedAmount;
+            
+            setTimeout(() => {
+                this.upiPulsing = false;
+                this.upiSuccess = true;
+                
+                setTimeout(() => {
+                    this.walletBalance += depositAmt;
+                    this.transactions.unshift({
+                        id: String(Date.now()),
+                        description: 'BHIM UPI Deposit - Wallet Top-up',
+                        amount: depositAmt,
+                        created_at: new Date().toISOString()
+                    });
+                    document.getElementById('upi_payment_modal').close();
+                    this.upiSuccess = false;
+                }, 1500);
+            }, 1200);
+        },
+
         cancelReservation(resId) {
             if (confirm("Are you sure you want to cancel this reservation?")) {
                 this.reservations = this.reservations.filter(r => r.id !== resId);
@@ -327,16 +382,54 @@ function dashboardController() {
         },
 
         simulateOcppCharging(resId, portId) {
-            // Triggers a simulated interactive charge cycle sequence!
-            alert("QR Code Verification Successful!\nSimulating OCPP WebSocket handshake...\nHandshake Complete: Port status switched from RESERVED to OCCUPIED. Car is charging!");
-            this.reservations = [];
+            // OCPP live progress initialization
+            this.ocppSoc = 32;
+            this.ocppPower = 150.0;
+            this.ocppEnergy = 0.0;
+            this.ocppCost = 0.0;
+            this.ocppComplete = false;
+            
+            const modal = document.getElementById('ocpp_charging_modal');
+            if (modal) modal.showModal();
+            
+            // Charge session telemetry sweep
+            this.ocppTimer = setInterval(() => {
+                if (this.ocppSoc < 85) {
+                    this.ocppSoc += 1;
+                    
+                    // realistic taper flow curves
+                    if (this.ocppSoc > 72) {
+                        this.ocppPower = Math.max(30.0, this.ocppPower - 12.0);
+                    } else if (this.ocppSoc > 55) {
+                        this.ocppPower = Math.max(75.0, this.ocppPower - 6.0);
+                    }
+                    
+                    this.ocppEnergy += 0.45;
+                    this.ocppCost += 0.45 * 18.5; // India standard commercial ₹18.50 per unit
+                } else {
+                    this.stopOcppCharging();
+                }
+            }, 250);
+        },
+
+        stopOcppCharging() {
+            clearInterval(this.ocppTimer);
+            this.ocppComplete = true;
+            
+            this.walletBalance -= this.ocppCost;
             this.transactions.unshift({
                 id: String(Date.now()),
                 description: 'OCPP Charging Session Settlement',
-                amount: -340.40,
+                amount: -this.ocppCost,
                 created_at: new Date().toISOString()
             });
-            this.walletBalance -= 340.40;
+            
+            setTimeout(() => {
+                const modal = document.getElementById('ocpp_charging_modal');
+                if (modal) modal.close();
+                this.ocppComplete = false;
+                this.reservations = [];
+            }, 2000);
         },
 
         formatDate(dateStr) {
@@ -346,4 +439,138 @@ function dashboardController() {
     };
 }
 </script>
+
+<!-- BHIM UPI Dynamic QR Code Checkout Modal (Indian Local Checkout) -->
+<dialog id="upi_payment_modal" class="modal">
+    <div class="modal-box glass-panel border border-neutral-850 rounded-3xl p-8 max-w-md bg-neutral-950 text-white relative overflow-hidden">
+        <!-- Circuits glowing design -->
+        <div class="absolute -right-20 -bottom-20 w-44 h-44 rounded-full bg-cyberBlue/5 blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-20 -top-20 w-44 h-44 rounded-full bg-cyberGreen/5 blur-3xl pointer-events-none"></div>
+
+        <div class="text-center space-y-5">
+            <!-- BHIM UPI Logo Rebrand -->
+            <div class="flex justify-center items-center gap-2 mb-2">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center border border-white/20">
+                    <i class="fa-solid fa-qrcode text-cyberBlue"></i>
+                </div>
+                <div>
+                    <span class="text-base font-extrabold tracking-wide text-neutral-100">BHIM</span>
+                    <span class="text-base font-extrabold tracking-wider text-cyberGreen glow-text-green">UPI</span>
+                </div>
+            </div>
+            
+            <div class="border-b border-neutral-900 pb-3">
+                <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">Scan to Pay GoBharat EV</span>
+                <span class="text-2xl font-extrabold text-white mt-1 block tracking-tight" x-text="$store.global.formatMoney(selectedAmount)"></span>
+            </div>
+
+            <!-- Dynamic QR Code Container -->
+            <div class="flex flex-col items-center justify-center p-6 bg-black/50 border border-neutral-900 rounded-2xl relative shadow-inner">
+                <template x-if="!upiSuccess">
+                    <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=gobharatev@hdfcbank&pn=GoBharatEV&am=' + selectedAmount + '&cu=INR'" 
+                         alt="UPI Payment QR Code" 
+                         :class="upiPulsing ? 'opacity-40 animate-pulse scale-95' : ''"
+                         class="w-36 h-36 rounded-lg border border-white/10 p-1.5 bg-white transition-all duration-300 animate-fade-in" />
+                </template>
+                
+                <template x-if="upiSuccess">
+                    <div class="w-36 h-36 flex flex-col items-center justify-center bg-cyberGreen/10 border border-cyberGreen/20 rounded-lg text-cyberGreen animate-bounce">
+                        <i class="fa-solid fa-circle-check text-5xl"></i>
+                        <span class="text-[10px] font-extrabold mt-3 uppercase tracking-widest">Payment Settled</span>
+                    </div>
+                </template>
+
+                <div class="text-center mt-3 text-neutral-400 text-[10px]" x-show="!upiSuccess">
+                    <span class="font-bold text-[9px] uppercase tracking-widest text-cyberBlue block"><i class="fa-solid fa-expand mr-0.5"></i> UPI Merchant Code</span>
+                    <span class="font-mono text-[8px] mt-0.5 block">TXN: GOBHARATEV-DEPOSIT-2026</span>
+                </div>
+            </div>
+
+            <!-- Dynamic UPI checkout control -->
+            <div class="space-y-2">
+                <button @click="simulateUpiScan()" :disabled="upiPulsing || upiSuccess"
+                        class="btn btn-sm btn-block bg-gradient-to-r from-cyberGreen to-cyberBlue text-black font-extrabold border-none hover:bg-white rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.15)] py-2 flex items-center justify-center">
+                    <span x-show="upiPulsing" class="loading loading-spinner loading-xs text-black mr-1"></span>
+                    <span x-text="upiPulsing ? 'Verifying UPI settlement...' : (upiSuccess ? 'Success!' : 'Simulate UPI Scanner Scan')"></span>
+                </button>
+                <button @click="document.getElementById('upi_payment_modal').close()" 
+                        :disabled="upiPulsing || upiSuccess"
+                        class="btn btn-ghost btn-xs text-neutral-500 hover:text-white rounded-lg btn-block mt-2">
+                    Cancel Checkout
+                </button>
+            </div>
+        </div>
+    </div>
+</dialog>
+
+<!-- Interactive Holographic OCPP Live Charging Simulator Dialog -->
+<dialog id="ocpp_charging_modal" class="modal">
+    <div class="modal-box glass-panel border border-neutral-850 rounded-3xl p-8 max-w-md bg-neutral-950 text-white relative overflow-hidden">
+         
+        <!-- Abstract neon backdrops -->
+        <div class="absolute -right-20 -top-20 w-44 h-44 rounded-full bg-cyberGreen/5 blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-20 -bottom-20 w-44 h-44 rounded-full bg-cyberBlue/5 blur-3xl pointer-events-none"></div>
+
+        <div class="text-center space-y-6">
+            <!-- Header Rebrand -->
+            <div class="border-b border-neutral-900 pb-3">
+                <span class="badge border-cyberGreen text-cyberGreen font-bold text-[9px] bg-cyberGreen/5 uppercase tracking-wider mb-2 animate-pulse">
+                    <i class="fa-solid fa-rss mr-1"></i> OCPP Live Session
+                </span>
+                <h3 class="text-lg font-extrabold text-white">GoBharat EV Charging Stream</h3>
+            </div>
+
+            <!-- Pulsing Circular Telemetry HUD Progress Ring -->
+            <div class="relative w-40 h-40 mx-auto flex items-center justify-center">
+                <!-- Circular progress ring back track -->
+                <svg class="absolute w-full h-full transform -rotate-90">
+                    <circle cx="80" cy="80" r="70" stroke="#1f2937" stroke-width="8" fill="transparent" />
+                    <!-- Dynamic stroke dasharray for progress representation -->
+                    <circle cx="80" cy="80" r="70" stroke="#22c55e" stroke-width="8" fill="transparent" 
+                            :stroke-dasharray="440"
+                            :stroke-dashoffset="440 - (440 * ocppSoc) / 100"
+                            class="transition-all duration-300 drop-shadow-[0_0_8px_#22c55e]" />
+                </svg>
+                
+                <!-- Internal telemetry percentages -->
+                <div class="z-10 text-center">
+                    <span class="text-4xl font-black text-white font-sans tracking-tight animate-pulse" x-text="ocppSoc + '%'"></span>
+                    <span class="text-[9px] font-bold text-neutral-400 block uppercase tracking-widest mt-0.5">State of Charge</span>
+                </div>
+            </div>
+
+            <!-- Live Session Metrics Grid (2 Columns) -->
+            <div class="grid grid-cols-2 gap-3 bg-neutral-900/50 p-4 border border-neutral-900 rounded-2xl text-left">
+                <div>
+                    <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider block">Power Flow Speed</span>
+                    <span class="text-sm font-extrabold text-cyberBlue" x-text="ocppPower.toFixed(1) + ' kW'"></span>
+                </div>
+                <div>
+                    <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider block">Energy Delivered</span>
+                    <span class="text-sm font-extrabold text-white" x-text="ocppEnergy.toFixed(2) + ' kWh'"></span>
+                </div>
+                <div class="mt-2 pt-2 border-t border-neutral-900/60 col-span-2 flex justify-between items-center">
+                    <span class="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">Accrued Session Cost</span>
+                    <span class="text-sm font-extrabold text-cyberGreen" x-text="$store.global.formatMoney(ocppCost)"></span>
+                </div>
+            </div>
+
+            <!-- Charging controls -->
+            <div class="pt-2">
+                <template x-if="!ocppComplete">
+                    <button @click="stopOcppCharging()"
+                            class="btn btn-sm btn-block bg-cyberPink border-none hover:bg-white text-black font-extrabold rounded-xl shadow-[0_0_15px_rgba(236,72,153,0.15)] flex items-center justify-center">
+                        Stop Charge Session <i class="fa-solid fa-circle-stop ml-1"></i>
+                    </button>
+                </template>
+                
+                <template x-if="ocppComplete">
+                    <div class="alert alert-success bg-cyberGreen text-black font-extrabold text-xs py-2.5 rounded-xl text-center flex justify-center items-center">
+                        <i class="fa-solid fa-circle-check mr-1.5 text-sm"></i> Session Settled & RESTORED!
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</dialog>
 {% endblock %}

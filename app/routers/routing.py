@@ -16,6 +16,7 @@ class RoutePlanRequest(BaseModel):
     origin: str
     destination: str
     start_soc: float = 100.0
+    vehicle: Optional[str] = "tata_nexon_ev_max"
 
 @router.get("/nodes")
 def get_graph_nodes():
@@ -43,10 +44,26 @@ def plan_optimized_route(
     Saves the trip metadata and dynamic path geometry details in the database logs.
     """
     try:
+        from app.engines.battery import VEHICLE_PROFILES, EVEnergyModel
+        
+        # Load the selected vehicle's physical characteristics
+        profile = VEHICLE_PROFILES.get(req.vehicle, VEHICLE_PROFILES["tata_nexon_ev_max"])
+        ev_model = EVEnergyModel(
+            mass_kg=profile["mass_kg"],
+            drag_coeff=profile["drag_coeff"],
+            frontal_area=profile["frontal_area"],
+            rolling_coeff=profile["rolling_coeff"],
+            battery_capacity_kwh=profile["battery_capacity_kwh"],
+            efficiency=profile["efficiency"],
+            regen_efficiency=profile["regen_efficiency"],
+            auxiliary_draw_w=profile["auxiliary_draw_w"]
+        )
+        
         route_results = compute_route(
             origin=req.origin,
             destination=req.destination,
-            start_soc=req.start_soc
+            start_soc=req.start_soc,
+            ev_model=ev_model
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

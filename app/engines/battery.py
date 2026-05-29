@@ -1,17 +1,76 @@
 import math
 from typing import Dict, Any
 
+# Popular Indian and Global EV configurations with dynamic physical weight coefficients
+VEHICLE_PROFILES = {
+    "tata_nexon_ev_max": {
+        "mass_kg": 1600.0,
+        "drag_coeff": 0.29,
+        "frontal_area": 2.4,
+        "rolling_coeff": 0.012,
+        "battery_capacity_kwh": 40.5,
+        "efficiency": 0.90,
+        "regen_efficiency": 0.70,
+        "auxiliary_draw_w": 1200.0,
+        "display_name": "Tata Nexon EV Max"
+    },
+    "ather_450x": {
+        "mass_kg": 200.0,  # Scooter + Rider mass
+        "drag_coeff": 0.60,
+        "frontal_area": 0.8,
+        "rolling_coeff": 0.015,
+        "battery_capacity_kwh": 3.7,
+        "efficiency": 0.88,
+        "regen_efficiency": 0.50,
+        "auxiliary_draw_w": 100.0,
+        "display_name": "Ather 450X"
+    },
+    "tata_tiago_ev": {
+        "mass_kg": 1250.0,
+        "drag_coeff": 0.32,
+        "frontal_area": 2.1,
+        "rolling_coeff": 0.012,
+        "battery_capacity_kwh": 24.0,
+        "efficiency": 0.89,
+        "regen_efficiency": 0.65,
+        "auxiliary_draw_w": 1000.0,
+        "display_name": "Tata Tiago EV"
+    },
+    "hyundai_ioniq_5": {
+        "mass_kg": 2100.0,
+        "drag_coeff": 0.288,
+        "frontal_area": 2.6,
+        "rolling_coeff": 0.011,
+        "battery_capacity_kwh": 72.6,
+        "efficiency": 0.92,
+        "regen_efficiency": 0.75,
+        "auxiliary_draw_w": 1500.0,
+        "display_name": "Hyundai Ioniq 5"
+    },
+    "ola_s1_pro": {
+        "mass_kg": 215.0,  # Scooter + Rider mass
+        "drag_coeff": 0.58,
+        "frontal_area": 0.85,
+        "rolling_coeff": 0.014,
+        "battery_capacity_kwh": 4.0,
+        "efficiency": 0.88,
+        "regen_efficiency": 0.52,
+        "auxiliary_draw_w": 110.0,
+        "display_name": "Ola S1 Pro"
+    }
+}
+
 class EVEnergyModel:
     def __init__(
         self,
-        mass_kg: float = 2000.0,         # Mass of typical EV + payload (e.g. Tesla Model 3)
-        drag_coeff: float = 0.23,         # C_d aerodynamic drag coefficient
-        frontal_area: float = 2.22,       # Frontal area in square meters
-        rolling_coeff: float = 0.01,      # Tire rolling resistance coefficient
-        battery_capacity_kwh: float = 75.0, # Battery size in kWh
+        mass_kg: float = 1600.0,         # Mass of typical EV + payload (Default Tata Nexon EV)
+        drag_coeff: float = 0.29,         # C_d aerodynamic drag coefficient
+        frontal_area: float = 2.4,        # Frontal area in square meters
+        rolling_coeff: float = 0.012,      # Tire rolling resistance coefficient
+        battery_capacity_kwh: float = 40.5, # Battery size in kWh
         efficiency: float = 0.90,         # Powertrain discharge efficiency (90%)
         regen_efficiency: float = 0.70,   # Regenerative braking recovery efficiency (70%)
-        auxiliary_draw_w: float = 1500.0  # HVAC, audio, screens draw (1.5 kW constant)
+        auxiliary_draw_w: float = 1200.0  # HVAC, audio, screens draw (1.2 kW constant)
     ):
         self.mass = mass_kg
         self.Cd = drag_coeff
