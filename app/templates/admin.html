@@ -150,6 +150,9 @@ function adminController() {
 
             // Load all stations
             await this.loadAdminGrid();
+
+            // Initialize WebSocket sync channel
+            this.initWebSocket();
         },
 
         async loadAdminGrid() {
@@ -225,6 +228,36 @@ function adminController() {
                 case 'MAINTENANCE': return '#ec4899'; // Pink
                 default: return '#6b7280';          // Grey
             }
+        },
+
+        initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUri = `${protocol}//${window.location.host}/ws`;
+            console.log("Admin WS connecting:", wsUri);
+            const ws = new WebSocket(wsUri);
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'PORT_STATUS_UPDATE') {
+                        console.log("Admin received port status update:", data);
+                        const station = this.stations.find(s => s.id === data.station_id);
+                        if (station) {
+                            const port = station.ports.find(p => p.id === data.port_id);
+                            if (port) {
+                                port.status = data.status;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error parsing WS message:", e);
+                }
+            };
+
+            ws.onclose = () => {
+                console.log("Admin WS closed. Reconnecting...");
+                setTimeout(() => this.initWebSocket(), 5000);
+            };
         }
     };
 }
