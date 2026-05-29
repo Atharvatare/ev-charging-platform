@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AURA EV - Smart Route & Charging Platform{% endblock %}</title>
+    
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS & DaisyUI CDNs -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js (Reactive micro-state manager) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.0/dist/cdn.min.js"></script>
+    
+    <!-- FontAwesome for futuristic cyber icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- Tailwind Config for Custom Theme Overrides -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        cyberGreen: '#22c55e',
+                        cyberOrange: '#f97316',
+                        cyberBlue: '#06b6d4',
+                        cyberPink: '#ec4899',
+                        bgDark: '#0a0a0c',
+                        cardDark: 'rgba(18, 18, 22, 0.65)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Global Cyber CSS Styles -->
+    <style>
+        body {
+            background-color: #0a0a0c;
+            color: #f3f4f6;
+            overflow-x: hidden;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Glassmorphism custom styling */
+        .glass-panel {
+            background: rgba(15, 15, 20, 0.7);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-panel-glow-green {
+            background: rgba(15, 15, 20, 0.75);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(34, 197, 94, 0.25);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.1);
+        }
+
+        .glass-panel-glow-orange {
+            background: rgba(15, 15, 20, 0.75);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(249, 115, 22, 0.25);
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.1);
+        }
+
+        /* Cyberpunk Neon Glow Text */
+        .glow-text-green {
+            text-shadow: 0 0 10px rgba(34, 197, 94, 0.5), 0 0 20px rgba(34, 197, 94, 0.2);
+        }
+        .glow-text-blue {
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.5), 0 0 20px rgba(6, 182, 212, 0.2);
+        }
+        .glow-text-orange {
+            text-shadow: 0 0 10px rgba(249, 115, 22, 0.5), 0 0 20px rgba(249, 115, 22, 0.2);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0c;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+
+        /* Glowing keyframe animations */
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+                border-color: rgba(34, 197, 94, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
+                border-color: rgba(34, 197, 94, 0.5);
+            }
+        }
+
+        .pulse-border-green {
+            animation: pulseGlow 2.5s infinite;
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Global Glassmorphism Navigation Bar -->
+    <header class="navbar sticky top-0 z-50 glass-panel px-6 py-3 border-b border-neutral-800">
+        <div class="navbar-start">
+            <a href="/" class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyberGreen to-cyberBlue flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.4)]">
+                    <i class="fa-solid fa-bolt text-lg text-black font-extrabold"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-neutral-100 to-neutral-400">AURA</span>
+                    <span class="text-xl font-bold tracking-widest text-cyberGreen glow-text-green">EV</span>
+                </div>
+            </a>
+        </div>
+        
+        <div class="navbar-center hidden lg:flex">
+            <ul class="menu menu-horizontal px-1 gap-2">
+                <li>
+                    <a href="/portal" class="hover:text-cyberGreen font-medium px-4 py-2 rounded-lg transition-all duration-300">
+                        <i class="fa-solid fa-map-location-dot mr-1"></i> Interactive Map
+                    </a>
+                </li>
+                <li>
+                    <a href="/dashboard" class="hover:text-cyberGreen font-medium px-4 py-2 rounded-lg transition-all duration-300">
+                        <i class="fa-solid fa-wallet mr-1"></i> Wallet & Booking
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin" class="hover:text-cyberGreen font-medium px-4 py-2 rounded-lg transition-all duration-300">
+                        <i class="fa-solid fa-chart-line mr-1"></i> Fleet Admin
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="navbar-end gap-3" x-data="{ loggedIn: false, email: '' }" x-init="
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                loggedIn = true;
+                email = localStorage.getItem('user_email') || 'alex@ev.com';
+            }
+        ">
+            <!-- Auth State UI Toggle -->
+            <template x-if="!loggedIn">
+                <a href="/dashboard" class="btn btn-outline border-cyberGreen text-cyberGreen hover:bg-cyberGreen hover:text-black hover:border-cyberGreen btn-sm px-5 rounded-lg transition-all duration-300 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
+                    <i class="fa-solid fa-user text-xs"></i> Sign In
+                </a>
+            </template>
+            <template x-if="loggedIn">
+                <div class="flex items-center gap-3 bg-neutral-900/60 border border-neutral-800 rounded-xl px-4 py-1.5">
+                    <div class="w-2.5 h-2.5 rounded-full bg-cyberGreen shadow-[0_0_8px_#22c55e]"></div>
+                    <span class="text-sm font-semibold text-neutral-300" x-text="email"></span>
+                    <button @click="
+                        localStorage.removeItem('access_token');
+                        localStorage.removeItem('user_email');
+                        window.location.reload();
+                    " class="btn btn-ghost btn-xs text-neutral-500 hover:text-cyberPink hover:bg-transparent">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </div>
+            </template>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Futuristic Footer -->
+    <footer class="footer items-center p-6 border-t border-neutral-900 bg-[#070709] text-neutral-500 text-xs">
+        <div class="items-center grid-flow-col">
+            <i class="fa-solid fa-circle-nodes text-cyberBlue text-sm"></i>
+            <p>© 2026 AURA EV Inc. All Systems Operational. Decarbonizing Mobility with AI.</p>
+        </div> 
+        <div class="grid-flow-col gap-4 md:place-self-center md:justify-self-end text-sm">
+            <a class="hover:text-cyberGreen transition-all"><i class="fa-brands fa-twitter"></i></a> 
+            <a class="hover:text-cyberBlue transition-all"><i class="fa-brands fa-github"></i></a> 
+            <a class="hover:text-cyberPink transition-all"><i class="fa-solid fa-code-fork"></i></a>
+        </div>
+    </footer>
+
+    <!-- AI FLOATING SUPPORT CHATBOT ASSISTANT -->
+    <div x-data="chatbotController()" x-init="initChatbot()" class="relative">
+        
+        <!-- Pulsing Floating Circular Chat Button -->
+        <button @click="toggleChat()" 
+                class="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-tr from-cyberGreen to-cyberBlue text-black flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.4)] hover:shadow-[0_0_30px_rgba(34,197,94,0.6)] hover:scale-105 transition-all duration-300">
+            <i class="fa-solid fa-comment-dots text-xl"></i>
+        </button>
+
+        <!-- Glassmorphism Chat Panel Widget -->
+        <div x-show="open" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="fixed bottom-24 right-6 z-40 w-80 h-[400px] glass-panel border border-neutral-800 rounded-3xl shadow-2xl flex flex-col justify-between overflow-hidden bg-neutral-950 text-white"
+             style="display: none;">
+            
+            <!-- Chat Box Header -->
+            <div class="px-5 py-4 border-b border-neutral-900 bg-neutral-950 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-cyberGreen shadow-[0_0_6px_#22c55e]"></div>
+                    <span class="text-xs font-extrabold tracking-widest text-white uppercase">AURA AI Assistant</span>
+                </div>
+                <button @click="toggleChat()" class="text-neutral-500 hover:text-white transition-all"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Messages Stream Area -->
+            <div class="flex-grow p-4 space-y-3 overflow-y-auto" id="chat-messages-container">
+                <template x-for="(msg, idx) in chatLogs" :key="idx">
+                    <div class="chat text-xs" :class="msg.sender === 'user' ? 'chat-end' : 'chat-start'">
+                        <div class="chat-bubble font-normal leading-relaxed rounded-2xl" 
+                             :class="msg.sender === 'user' ? 'bg-cyberGreen text-black font-semibold' : 'bg-neutral-900/90 text-neutral-200 border border-neutral-800'">
+                            <span x-text="msg.text"></span>
+                        </div>
+                    </div>
+                </template>
+                <div x-show="replying" class="chat chat-start">
+                    <div class="chat-bubble bg-neutral-900/90 border border-neutral-800 rounded-2xl py-2 px-3">
+                        <span class="loading loading-dots loading-xs text-cyberGreen"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Inputs Box -->
+            <div class="p-3 border-t border-neutral-900 bg-neutral-950 flex gap-2">
+                <input type="text" x-model="inputMsg" @keydown.enter="sendChat()" 
+                       placeholder="Ask about battery, routes, solar..." 
+                       class="input input-sm input-bordered bg-neutral-900 border-neutral-800 text-xs focus:border-cyberGreen rounded-xl flex-grow text-white" />
+                <button @click="sendChat()" class="btn btn-square btn-sm bg-cyberGreen hover:bg-white text-black border-none rounded-xl">
+                    <i class="fa-solid fa-paper-plane text-xs"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Chatbot script logic integration -->
+    <script>
+    function chatbotController() {
+        return {
+            open: false,
+            inputMsg: '',
+            replying: false,
+            chatLogs: [],
+
+            initChatbot() {
+                this.chatLogs = [
+                    { sender: 'aura', text: 'Hi! I am AURA, your EV optimization companion. Ask me anything about San Francisco stations, elevation maps, or your battery range!' }
+                ];
+            },
+
+            toggleChat() {
+                this.open = !this.open;
+                this.scrollChat();
+            },
+
+            async sendChat() {
+                if (!this.inputMsg.trim()) return;
+                
+                const userText = this.inputMsg.trim();
+                this.chatLogs.push({ sender: 'user', text: userText });
+                this.inputMsg = '';
+                this.scrollChat();
+                
+                this.replying = true;
+                
+                try {
+                    const token = localStorage.getItem('access_token') || 'mock_testing_token';
+                    const response = await fetch('/api/chatbot/ask', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ message: userText })
+                    });
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        this.chatLogs.push({ sender: 'aura', text: data.reply });
+                    } else {
+                        this.chatLogs.push({ sender: 'aura', text: "Apologies, I encountered an authorization lock. Please sign in to consult our AI engines." });
+                    }
+                } catch (err) {
+                    this.chatLogs.push({ sender: 'aura', text: "My neural transmission link has been severed. Are our server engines online?" });
+                } finally {
+                    this.replying = false;
+                    this.scrollChat();
+                }
+            },
+
+            scrollChat() {
+                setTimeout(() => {
+                    const container = document.getElementById('chat-messages-container');
+                    if (container) {
+                        container.scrollTop = container.scrollHeight;
+                    }
+                }, 100);
+            }
+        };
+    }
+    </script>
+</body>
+</html>

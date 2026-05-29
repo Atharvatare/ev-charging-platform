@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}AURA EV - Fleet Admin Panel{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-12 px-6" x-data="adminController()" x-init="initAdmin()">
+
+    <!-- Admin Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-neutral-900 pb-8">
+        <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyberPink/10 border border-cyberPink/20 text-cyberPink text-[10px] font-bold uppercase tracking-widest mb-3">
+                <i class="fa-solid fa-lock-open mr-0.5"></i> Secure Operator Console
+            </div>
+            <h1 class="text-4xl font-extrabold tracking-tight text-white">
+                Fleet Management & Telemetry
+            </h1>
+            <p class="text-neutral-400 text-sm mt-1">Monitor station health grids, solar energy distribution, and override charger sockets.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button @click="reSeedStations()" class="btn btn-outline border-neutral-800 hover:border-cyberGreen hover:bg-cyberGreen/5 text-neutral-300 hover:text-cyberGreen px-5 rounded-xl text-xs uppercase tracking-wider">
+                <i class="fa-solid fa-cloud-arrow-down mr-1"></i> Re-Seed DB Grid
+            </button>
+        </div>
+    </div>
+
+    <!-- Telemetry System Stats Cards (3 Columns) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        
+        <!-- API Latency Dial -->
+        <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 flex flex-row items-center justify-between gap-4">
+            <div>
+                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Router Solver Latency</span>
+                <span class="text-3xl font-extrabold text-white mt-1.5 block">14.8 ms</span>
+                <span class="text-[9px] text-cyberGreen font-bold mt-1 block"><i class="fa-solid fa-chevron-up"></i> Within 99th Percentile</span>
+            </div>
+            <div class="w-14 h-14 rounded-full bg-cyberGreen/10 flex items-center justify-center text-cyberGreen border border-cyberGreen/20 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
+                <i class="fa-solid fa-chart-simple text-xl"></i>
+            </div>
+        </div>
+
+        <!-- Solar Generation Load -->
+        <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 flex flex-row items-center justify-between gap-4">
+            <div>
+                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Solar Load Generated</span>
+                <span class="text-3xl font-extrabold text-white mt-1.5 block">252.5 kW</span>
+                <span class="text-[9px] text-cyberBlue font-bold mt-1 block"><i class="fa-solid fa-sun"></i> High Sunlight Intensity</span>
+            </div>
+            <div class="w-14 h-14 rounded-full bg-cyberBlue/10 flex items-center justify-center text-cyberBlue border border-cyberBlue/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+                <i class="fa-solid fa-solar-panel text-xl"></i>
+            </div>
+        </div>
+
+        <!-- Charger Health Index -->
+        <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 flex flex-row items-center justify-between gap-4">
+            <div>
+                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Fleet Active Capacity</span>
+                <span class="text-3xl font-extrabold text-white mt-1.5 block">94.4%</span>
+                <span class="text-[9px] text-cyberOrange font-bold mt-1 block"><i class="fa-solid fa-circle-exclamation"></i> 1 Station Maintenance</span>
+            </div>
+            <div class="w-14 h-14 rounded-full bg-cyberOrange/10 flex items-center justify-center text-cyberOrange border border-cyberOrange/20 shadow-[0_0_10px_rgba(249,115,22,0.1)]">
+                <i class="fa-solid fa-plug-circle-bolt text-xl"></i>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Charging Stations Management Grid -->
+    <div class="space-y-6">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-network-wired text-cyberGreen"></i> Station Override Grid
+        </h3>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <template x-for="st in stations" :key="st.id">
+                <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 space-y-4">
+                    
+                    <!-- Station Header Info -->
+                    <div class="flex justify-between items-start border-b border-neutral-900 pb-3">
+                        <div>
+                            <h4 class="font-extrabold text-white text-base" x-text="st.name"></h4>
+                            <p class="text-neutral-400 text-[10px]" x-text="st.address"></p>
+                        </div>
+                        
+                        <!-- Solar & Battery specs -->
+                        <div class="text-right">
+                            <span class="badge border-cyberBlue text-cyberBlue font-bold text-[9px] uppercase bg-cyberBlue/5 mb-1" 
+                                  x-text="'Solar: ' + st.solar_insights.solar_output_kw + ' kW'"></span>
+                            <span class="text-[9px] text-neutral-400 block" x-text="'Renewable Index: ' + st.solar_insights.renewable_percentage + '%'"></span>
+                        </div>
+                    </div>
+
+                    <!-- Charger Socket Port Controllers -->
+                    <div class="space-y-2">
+                        <span class="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mb-2">Charger Port Controllers</span>
+                        <template x-for="port in st.ports" :key="port.id">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-neutral-900/40 border border-neutral-950 p-3 rounded-xl">
+                                <div>
+                                    <span class="text-xs font-bold text-white block" x-text="port.connector_type + ' - ' + port.power_kw + 'kW'"></span>
+                                    <span class="text-[9px] text-neutral-400" x-text="'Fee: $' + port.price_per_kwh + '/kWh'"></span>
+                                </div>
+
+                                <!-- Real-time Actions & Badges -->
+                                <div class="flex items-center gap-2">
+                                    <!-- Dynamic status badge -->
+                                    <span class="badge border-none text-[9px] font-extrabold text-black uppercase" 
+                                          :style="'background-color: ' + getStatusColor(port.status)">
+                                        <span x-text="port.status"></span>
+                                    </span>
+
+                                    <!-- Actions Group -->
+                                    <div class="join border border-neutral-800 rounded-lg">
+                                        <button @click="overrideStatus(st.id, port.id, 'AVAILABLE')" 
+                                                class="btn btn-ghost btn-xs text-[9px] font-bold hover:bg-cyberGreen/20 hover:text-cyberGreen join-item"
+                                                :class="port.status === 'AVAILABLE' ? 'text-cyberGreen' : 'text-neutral-500'">
+                                            AV
+                                        </button>
+                                        <button @click="overrideStatus(st.id, port.id, 'OCCUPIED')" 
+                                                class="btn btn-ghost btn-xs text-[9px] font-bold hover:bg-cyberOrange/20 hover:text-cyberOrange join-item"
+                                                :class="port.status === 'OCCUPIED' ? 'text-cyberOrange' : 'text-neutral-500'">
+                                            OC
+                                        </button>
+                                        <button @click="overrideStatus(st.id, port.id, 'MAINTENANCE')" 
+                                                class="btn btn-ghost btn-xs text-[9px] font-bold hover:bg-cyberPink/20 hover:text-cyberPink join-item"
+                                                :class="port.status === 'MAINTENANCE' ? 'text-cyberPink' : 'text-neutral-500'">
+                                            MN
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                </div>
+            </template>
+        </div>
+    </div>
+
+</div>
+
+<!-- Admin Dashboard Logic -->
+<script>
+function adminController() {
+    return {
+        stations: [],
+
+        async initAdmin() {
+            // Check auth token
+            const token = localStorage.getItem('access_token') || 'mock_testing_token';
+            localStorage.setItem('user_email', 'user@ev.com');
+
+            // Load all stations
+            await this.loadAdminGrid();
+        },
+
+        async loadAdminGrid() {
+            try {
+                const response = await fetch('/api/stations/');
+                const data = await response.json();
+                
+                // Format telemetry outputs to make bindings easier
+                this.stations = data.map(st => {
+                    const si = st.solar_insights && st.solar_insights[0] ? st.solar_insights[0] : { solar_output_kw: 0.0, renewable_percentage: 100 };
+                    return {
+                        id: st.id,
+                        name: st.name,
+                        address: st.address,
+                        solar_insights: si,
+                        ports: st.ports
+                    };
+                });
+            } catch (err) {
+                console.error("Error loading admin stations grid:", err);
+            }
+        },
+
+        async overrideStatus(stationId, portId, status) {
+            // Standard admin token credentials override (simulated for simplicity)
+            try {
+                // Instantly update local reactive state for fast UI rendering feedback
+                const station = this.stations.find(s => s.id === stationId);
+                const port = station.ports.find(p => p.id === portId);
+                port.status = status;
+
+                // Send request to API to commit in PostgreSQL!
+                // Uses mock token bypass credentials or custom role dependency
+                const token = localStorage.getItem('access_token') || 'mock_testing_token';
+                await fetch(`/api/stations/${stationId}/ports/${portId}/status?new_status=${status}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            } catch (err) {
+                console.error("Override failed:", err);
+            }
+        },
+
+        async reSeedStations() {
+            if (confirm("Proceed to re-seed and refresh the spatial databases?")) {
+                alert("Simulating seed refresh... Done!");
+            }
+        },
+
+        getStatusColor(status) {
+            switch (status) {
+                case 'AVAILABLE': return '#22c55e'; // Green
+                case 'OCCUPIED': return '#f97316';  // Orange
+                case 'CHARGING': return '#06b6d4';  // Cyan
+                case 'MAINTENANCE': return '#ec4899'; // Pink
+                default: return '#6b7280';          // Grey
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

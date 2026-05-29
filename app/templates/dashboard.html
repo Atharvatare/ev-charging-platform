@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}AURA EV - Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-12 px-6" x-data="dashboardController()" x-init="initDashboard()">
+
+    <!-- Dashboard Hero Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+        <div>
+            <h1 class="text-4xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                Welcome, <span class="bg-clip-text text-transparent bg-gradient-to-r from-white via-neutral-100 to-cyberGreen" x-text="userName"></span>
+            </h1>
+            <p class="text-neutral-400 text-sm mt-1">Manage charger session locks, wallet audits, and travel logs.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="badge border-cyberGreen text-cyberGreen font-bold px-3 py-2 text-xs uppercase tracking-wider bg-cyberGreen/5">
+                <i class="fa-solid fa-medal mr-1"></i> Eco Tier: Platinum
+            </span>
+        </div>
+    </div>
+
+    <!-- 2-Column Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- COLUMN 1: WALLET & DEPOSIT PORTAL (Glassmorphic) -->
+        <div class="card glass-panel border border-neutral-800 rounded-3xl p-6 lg:col-span-1 h-fit">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-wallet text-cyberGreen mr-1"></i> EV Wallet</h3>
+                <span class="text-[10px] text-cyberGreen font-bold uppercase tracking-widest bg-cyberGreen/10 border border-cyberGreen/20 px-2.5 py-1 rounded-lg">Stripe Verified</span>
+            </div>
+
+            <!-- Glowing Wallet Balance Card -->
+            <div class="bg-gradient-to-tr from-neutral-900 via-neutral-950 to-neutral-900 border border-neutral-800 rounded-2xl p-6 text-center shadow-inner relative overflow-hidden group">
+                <!-- Glowing corner gradient -->
+                <div class="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-cyberGreen/10 blur-xl group-hover:scale-125 transition-all"></div>
+                
+                <span class="text-xs text-neutral-400 font-semibold uppercase tracking-wider block">Available Balance</span>
+                <span class="text-5xl font-extrabold text-white mt-2 block glow-text-green" x-text="'$' + walletBalance.toFixed(2)"></span>
+                <span class="text-[10px] text-neutral-500 font-bold block mt-1">Simulated Credit Reserve</span>
+            </div>
+
+            <!-- Instant Deposit Trigger -->
+            <button @click="triggerDeposit()" :disabled="depositing"
+                    class="btn btn-block bg-cyberGreen text-black font-extrabold border-none hover:bg-white rounded-xl mt-6 shadow-[0_0_15px_rgba(34,197,94,0.15)] transition-all duration-300">
+                <template x-if="depositing">
+                    <span class="loading loading-spinner loading-xs text-black"></span>
+                </template>
+                <template x-if="!depositing">
+                    <span><i class="fa-solid fa-circle-plus mr-1"></i> Add $25.00 via Stripe</span>
+                </template>
+            </button>
+
+            <!-- Wallet Transaction Log -->
+            <div class="mt-8">
+                <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-4">Transaction Ledger</h4>
+                <div class="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                    <template x-for="tx in transactions" :key="tx.id">
+                        <div class="flex justify-between items-center bg-neutral-900/30 border border-neutral-900/60 p-3 rounded-xl hover:bg-neutral-900/60 transition-all">
+                            <div>
+                                <span class="text-xs font-bold text-white block" x-text="tx.description"></span>
+                                <span class="text-[9px] text-neutral-500" x-text="formatDate(tx.created_at)"></span>
+                            </div>
+                            <span class="text-xs font-extrabold" 
+                                  :class="tx.amount > 0 ? 'text-cyberGreen' : 'text-cyberPink'" 
+                                  x-text="(tx.amount > 0 ? '+' : '') + '$' + tx.amount.toFixed(2)"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 2: ACTIVE RESERVATIONS & QR CODES (2/3 width) -->
+        <div class="lg:col-span-2 space-y-8">
+            
+            <!-- Reservation Section -->
+            <div class="card glass-panel border border-neutral-800 rounded-3xl p-6">
+                <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-clock text-cyberGreen glow-text-green"></i> Active Reservation Lockouts
+                </h3>
+
+                <template x-if="reservations.length === 0">
+                    <div class="text-center py-10 border border-dashed border-neutral-800 rounded-2xl">
+                        <i class="fa-solid fa-calendar-minus text-4xl text-neutral-600 mb-3 block"></i>
+                        <span class="text-sm font-semibold text-neutral-400 block">No Active Charger Reservations</span>
+                        <a href="/portal" class="text-xs text-cyberGreen font-bold hover:underline mt-2 inline-block uppercase tracking-wider">Book a Charger now</a>
+                    </div>
+                </template>
+
+                <template x-if="reservations.length > 0">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <template x-for="res in reservations" :key="res.id">
+                            <!-- Glowing Active Lockout Card -->
+                            <div class="card border border-neutral-800 bg-gradient-to-tr from-neutral-950 to-neutral-900 rounded-2xl overflow-hidden shadow-xl group">
+                                <div class="card-body p-6 flex flex-col justify-between">
+                                    
+                                    <div class="space-y-4">
+                                        <!-- Header connector metadata -->
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h4 class="font-bold text-white text-base" x-text="res.station_name"></h4>
+                                                <span class="text-[10px] text-neutral-400" x-text="res.connector_type + ' Charger - ' + res.power_kw + 'kW'"></span>
+                                            </div>
+                                            <span class="badge badge-success border-none text-[9px] font-bold text-black animate-pulse">ACTIVE</span>
+                                        </div>
+
+                                        <!-- QR code rendering -->
+                                        <div class="flex justify-center py-4 bg-white/5 rounded-xl border border-white/5 relative">
+                                            <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + res.qr_code" 
+                                                 alt="Access QR Code" class="w-32 h-32 rounded-lg border-2 border-white shadow-[0_0_20px_rgba(255,255,255,0.08)]" />
+                                        </div>
+
+                                        <!-- Verification instructions -->
+                                        <div class="text-center">
+                                            <span class="text-[10px] font-semibold text-cyberGreen uppercase tracking-widest block glow-text-green">SCAN TO START CHARGING</span>
+                                            <span class="text-[8px] text-neutral-500 font-mono block mt-1" x-text="'Ref: ' + res.qr_code"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Access controls -->
+                                    <div class="mt-6 pt-4 border-t border-neutral-800 flex justify-between gap-2">
+                                        <button @click="cancelReservation(res.id)" 
+                                                class="btn btn-outline btn-xs border-neutral-800 hover:border-cyberPink hover:bg-cyberPink/5 hover:text-cyberPink text-neutral-400 rounded-lg flex-grow transition-all">
+                                            Cancel Book
+                                        </button>
+                                        <button @click="simulateOcppCharging(res.id, res.port_id)"
+                                                class="btn bg-cyberGreen border-none text-black font-extrabold btn-xs hover:bg-white rounded-lg flex-grow shadow-[0_0_10px_rgba(34,197,94,0.15)] transition-all">
+                                            Test Scan <i class="fa-solid fa-qrcode ml-0.5"></i>
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Historical Trip Logs Section -->
+            <div class="card glass-panel border border-neutral-800 rounded-3xl p-6">
+                <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-signs-post text-cyberGreen"></i> Topography Trip History
+                </h3>
+
+                <div class="overflow-x-auto">
+                    <table class="table table-compact w-full text-left text-neutral-300">
+                        <thead>
+                            <tr class="border-b border-neutral-800 text-neutral-400 text-xs uppercase tracking-wider">
+                                <th>Trip Journey</th>
+                                <th>Departure SoC</th>
+                                <th>Forecast Arrival</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs">
+                            <template x-for="trip in trips" :key="trip.id">
+                                <tr class="border-b border-neutral-900/60 hover:bg-neutral-900/20">
+                                    <td class="py-3">
+                                        <span class="font-bold text-white block" x-text="trip.origin_name + ' → ' + trip.destination_name"></span>
+                                        <span class="text-[9px] text-neutral-500" x-text="formatDate(trip.created_at)"></span>
+                                    </td>
+                                    <td class="font-bold py-3 text-neutral-200" x-text="trip.start_soc + '%'"></td>
+                                    <td class="font-bold py-3 text-cyberBlue glow-text-blue" x-text="trip.predicted_arrival_soc + '%'"></td>
+                                    <td class="py-3">
+                                        <span class="badge badge-success border-none text-[9px] font-bold text-black">COMPLETED</span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Interactive Client Dashboard Logic -->
+<script>
+function dashboardController() {
+    return {
+        userName: 'Alex Mercer',
+        walletBalance: 150.0,
+        depositing: false,
+        transactions: [],
+        reservations: [],
+        trips: [],
+
+        async initDashboard() {
+            // Check auth token
+            const token = localStorage.getItem('access_token') || 'mock_testing_token';
+            localStorage.setItem('user_email', 'user@ev.com');
+
+            // 1. Fetch user profile for live wallet
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    this.userName = user.full_name || 'Alex Mercer';
+                    this.walletBalance = user.wallet_balance;
+                }
+            } catch (err) {
+                console.error("Error loading user me:", err);
+            }
+
+            // 2. Fetch or Mock Booking Transactions & Reservations
+            this.loadTransactions();
+            this.loadReservations();
+            this.loadTrips();
+        },
+
+        loadTransactions() {
+            // Mock transaction logs for high visual fidelity
+            this.transactions = [
+                { id: '1', description: 'Stripe Deposit - Wallet Top-up', amount: 25.0, created_at: new Date(Date.now() - 3600000).toISOString() },
+                { id: '2', description: 'Charger Booking Reserve - CCS2 Port Rincon', amount: -2.00, created_at: new Date(Date.now() - 7200000).toISOString() },
+                { id: '3', description: 'Simulated EV charging fee - Civic Center', amount: -14.35, created_at: new Date(Date.now() - 86400000).toISOString() }
+            ];
+        },
+
+        loadReservations() {
+            // Seed a high-fidelity reservation mockup showing actual CCS2 charger at Rincon
+            this.reservations = [
+                {
+                    id: 'res_99a8bc43d1',
+                    station_name: 'Tesla Supercharger - Rincon Center',
+                    port_id: 'port_cc55',
+                    connector_type: 'CCS2',
+                    power_kw: 250.0,
+                    qr_code: 'AURA_RES_99a8bc43d1_ACTIVE_CCS2_RINCON',
+                    created_at: new Date().toISOString()
+                }
+            ];
+        },
+
+        loadTrips() {
+            // Mock historical computed trips
+            this.trips = [
+                { id: 't1', origin_name: 'Civic Center', destination_name: 'Salesforce Transit', start_soc: 100.0, predicted_arrival_soc: 94.2, created_at: new Date(Date.now() - 7200000).toISOString() },
+                { id: 't2', origin_name: 'Castro', destination_name: 'Twin Peaks', start_soc: 45.0, predicted_arrival_soc: 28.5, created_at: new Date(Date.now() - 86400000).toISOString() },
+                { id: 't3', origin_name: 'Embarcadero', destination_name: 'Sunset District', start_soc: 85.0, predicted_arrival_soc: 61.4, created_at: new Date(Date.now() - 172800000).toISOString() }
+            ];
+        },
+
+        async triggerDeposit() {
+            this.depositing = true;
+            
+            // Call simulated Stripe deposit balance API
+            setTimeout(() => {
+                this.walletBalance += 25.0;
+                this.transactions.unshift({
+                    id: String(Date.now()),
+                    description: 'Stripe Deposit - Wallet Top-up',
+                    amount: 25.00,
+                    created_at: new Date().toISOString()
+                });
+                this.depositing = false;
+            }, 1000);
+        },
+
+        cancelReservation(resId) {
+            if (confirm("Are you sure you want to cancel this reservation?")) {
+                this.reservations = this.reservations.filter(r => r.id !== resId);
+                this.transactions.unshift({
+                    id: String(Date.now()),
+                    description: 'Cancelled Reservation Refund',
+                    amount: 2.00,
+                    created_at: new Date().toISOString()
+                });
+                this.walletBalance += 2.00;
+            }
+        },
+
+        simulateOcppCharging(resId, portId) {
+            // Triggers a simulated interactive charge cycle sequence!
+            alert("QR Code Verification Successful!\nSimulating OCPP WebSocket handshake...\nHandshake Complete: Port status switched from RESERVED to OCCUPIED. Car is charging!");
+            this.reservations = [];
+            this.transactions.unshift({
+                id: String(Date.now()),
+                description: 'OCPP Charging Session Settlement',
+                amount: -12.40,
+                created_at: new Date().toISOString()
+            });
+            this.walletBalance -= 12.40;
+        },
+
+        formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+    };
+}
+</script>
+{% endblock %}

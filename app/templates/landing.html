@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}AURA EV - AI-Powered Charging & Route Optimization{% endblock %}
+
+{% block content %}
+<!-- Animated Futuristic Grid Hero Section -->
+<section class="relative min-h-[85vh] flex items-center justify-center overflow-hidden px-6 py-20">
+    
+    <!-- Vector grid background animation (simulated in CSS) -->
+    <div class="absolute inset-0 opacity-20 pointer-events-none" style="
+        background-size: 40px 40px;
+        background-image: 
+            linear-gradient(to right, #1f2937 1px, transparent 1px),
+            linear-gradient(to bottom, #1f2937 1px, transparent 1px);
+    "></div>
+    
+    <!-- Glowing neon backdrops -->
+    <div class="absolute w-[500px] h-[500px] rounded-full bg-cyberGreen/5 blur-[120px] top-1/4 left-1/4 animate-pulse pointer-events-none"></div>
+    <div class="absolute w-[400px] h-[400px] rounded-full bg-cyberBlue/5 blur-[100px] bottom-1/4 right-1/4 animate-pulse pointer-events-none"></div>
+
+    <div class="max-w-5xl mx-auto text-center z-10">
+        
+        <!-- Premium Tagline Badges -->
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-panel border border-neutral-800 text-xs font-semibold text-neutral-300 uppercase tracking-widest mb-6 animate-bounce">
+            <span class="w-2 h-2 rounded-full bg-cyberGreen shadow-[0_0_8px_#22c55e]"></span>
+            Topography-Aware Neural Router v2.4 Live
+        </div>
+
+        <!-- Futuristic Heading -->
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+            Decarbonize Your Journey With <br/>
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-white via-cyberGreen to-cyberBlue glow-text-green font-extrabold">
+                Topography-Aware AI Routing
+            </span>
+        </h1>
+
+        <!-- Explanatory Subtitle -->
+        <p class="text-neutral-400 text-base md:text-xl max-w-3xl mx-auto mb-10 font-normal leading-relaxed">
+            The smartest route optimization platform for Electric Vehicles. Factor in elevation slopes, kinetic drag, live charger availability, and solar-grid green index scoring in real-time.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="/portal" class="btn btn-md bg-gradient-to-r from-cyberGreen to-cyberBlue text-black hover:from-white hover:to-white font-extrabold border-none px-8 py-3.5 rounded-xl transition-all duration-300 shadow-[0_0_25px_rgba(34,197,94,0.35)] hover:shadow-[0_0_35px_rgba(34,197,94,0.5)] transform hover:-translate-y-1">
+                <i class="fa-solid fa-compass text-lg"></i> Launch Smart Portal
+            </a>
+            <a href="#features" class="btn btn-md btn-outline border-neutral-800 hover:border-neutral-500 text-neutral-300 hover:text-white px-8 py-3.5 rounded-xl transition-all duration-300">
+                <i class="fa-solid fa-circle-info"></i> How It Works
+            </a>
+        </div>
+
+    </div>
+</section>
+
+<!-- Core Features Section -->
+<section id="features" class="py-20 px-6 max-w-6xl mx-auto border-t border-neutral-900/60 relative">
+    
+    <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-extrabold mb-4 tracking-tight">System Specifications & AI Modules</h2>
+        <p class="text-neutral-400 max-w-xl mx-auto">
+            Combining fluid physics, graph algorithms, and solar grid optimization to build the ultimate EV charging ecosystem.
+        </p>
+    </div>
+
+    <!-- 4-Grid Core Features Card Deck -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Card 1 -->
+        <div class="card glass-panel hover:border-cyberGreen/30 hover:shadow-[0_0_15px_rgba(34,197,94,0.05)] transition-all duration-500 rounded-2xl group">
+            <div class="card-body p-6 flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-cyberGreen/10 flex items-center justify-center text-cyberGreen mb-5 group-hover:scale-110 transition-all duration-300">
+                        <i class="fa-solid fa-map-location-dot text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2 text-white">Topographic Routing</h3>
+                    <p class="text-neutral-400 text-sm leading-relaxed">
+                        A* graph planner computed on custom NetworkX grids. Evaluates incline angles to plan routes that bypass battery-draining steep climbs.
+                    </p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-neutral-900 flex items-center text-cyberGreen text-xs font-bold tracking-widest uppercase">
+                    Dijkstra Solver <i class="fa-solid fa-chevron-right ml-1"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="card glass-panel hover:border-cyberBlue/30 hover:shadow-[0_0_15px_rgba(6,182,212,0.05)] transition-all duration-500 rounded-2xl group">
+            <div class="card-body p-6 flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-cyberBlue/10 flex items-center justify-center text-cyberBlue mb-5 group-hover:scale-110 transition-all duration-300">
+                        <i class="fa-solid fa-microchip text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2 text-white">AI Battery Predictor</h3>
+                    <p class="text-neutral-400 text-sm leading-relaxed">
+                        Physics-based state-of-charge estimator factoring in wind resistance, roll coefficient, speed, auxiliary load, and regenerative energy recovery.
+                    </p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-neutral-900 flex items-center text-cyberBlue text-xs font-bold tracking-widest uppercase">
+                    Physics Engine <i class="fa-solid fa-chevron-right ml-1"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="card glass-panel hover:border-cyberOrange/30 hover:shadow-[0_0_15px_rgba(249,115,22,0.05)] transition-all duration-500 rounded-2xl group">
+            <div class="card-body p-6 flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-cyberOrange/10 flex items-center justify-center text-cyberOrange mb-5 group-hover:scale-110 transition-all duration-300">
+                        <i class="fa-solid fa-sun text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2 text-white">Solar Green Scoring</h3>
+                    <p class="text-neutral-400 text-sm leading-relaxed">
+                        Real-time tracking of charger solar panel output. Ranks stations by energy self-sufficiency so you can power your car with 100% green electrons.
+                    </p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-neutral-900 flex items-center text-cyberOrange text-xs font-bold tracking-widest uppercase">
+                    Solar Telemetry <i class="fa-solid fa-chevron-right ml-1"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="card glass-panel hover:border-cyberPink/30 hover:shadow-[0_0_15px_rgba(236,72,153,0.05)] transition-all duration-500 rounded-2xl group">
+            <div class="card-body p-6 flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-cyberPink/10 flex items-center justify-center text-cyberPink mb-5 group-hover:scale-110 transition-all duration-300">
+                        <i class="fa-solid fa-ticket text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2 text-white">Smart Lock Booking</h3>
+                    <p class="text-neutral-400 text-sm leading-relaxed">
+                        Pre-book charger ports to lock out availability. Settles transaction fees via secure wallet balance and generates encrypted QR validation codes.
+                    </p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-neutral-900 flex items-center text-cyberPink text-xs font-bold tracking-widest uppercase">
+                    Wallet Audits <i class="fa-solid fa-chevron-right ml-1"></i>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- Emergency Low-Battery Simulation Banner -->
+<section class="py-16 px-6 max-w-6xl mx-auto">
+    <div class="card glass-panel-glow-orange pulse-border-orange rounded-3xl overflow-hidden shadow-[0_0_35px_rgba(249,115,22,0.1)] relative">
+        <div class="card-body p-8 md:p-12 flex flex-col md:flex-row md:items-center justify-between gap-8 z-10">
+            <div class="max-w-2xl">
+                <div class="badge border-cyberOrange text-cyberOrange font-bold tracking-wider text-xs uppercase px-3 py-2 mb-4">
+                    <i class="fa-solid fa-triangle-exclamation mr-1 animate-pulse"></i> Safety Feature
+                </div>
+                <h3 class="text-2xl md:text-3xl font-extrabold mb-3 text-white">Emergency Low-Battery Reroute</h3>
+                <p class="text-neutral-300 leading-relaxed text-sm md:text-base">
+                    When traveling, if the physics engine projects that your State of Charge will plunge below 12% before reaching the destination, AURA EV automatically stops A* execution, calculates reachable stations, inserts an ultra-fast charging waypoint, and dynamically reroutes your vehicle.
+                </p>
+            </div>
+            <div>
+                <a href="/portal" class="btn bg-cyberOrange text-black border-none hover:bg-white font-extrabold px-6 rounded-xl transition-all shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+                    Simulate Route <i class="fa-solid fa-circle-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
