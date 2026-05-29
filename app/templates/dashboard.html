@@ -260,16 +260,16 @@ function dashboardController() {
         ocppCost: 0.0,
         ocppTimer: null,
         ocppComplete: false,
+        activeResId: null,
         transactions: [],
         reservations: [],
         trips: [],
 
         async initDashboard() {
-            // Check auth token
             const token = localStorage.getItem('access_token') || 'mock_testing_token';
             localStorage.setItem('user_email', 'user@ev.com');
 
-            // 1. Fetch user profile for live wallet
+            // 1. Fetch user profile for live wallet persistently from DB
             try {
                 const response = await fetch('/api/auth/me', {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -283,34 +283,38 @@ function dashboardController() {
                 console.error("Error loading user me:", err);
             }
 
-            // 2. Fetch or Mock Booking Transactions & Reservations
-            this.loadTransactions();
-            this.loadReservations();
+            // 2. Fetch persistent database records
+            await this.loadTransactions();
+            await this.loadReservations();
             this.loadTrips();
         },
 
-        loadTransactions() {
-            // Mock transaction logs for high visual fidelity
-            this.transactions = [
-                { id: '1', description: 'Stripe Deposit - Wallet Top-up', amount: 250.0, created_at: new Date(Date.now() - 3600000).toISOString() },
-                { id: '2', description: 'Charger Booking Reserve - Bandra Reclamation', amount: -100.00, created_at: new Date(Date.now() - 7200000).toISOString() },
-                { id: '3', description: 'Simulated EV charging fee - BKC Hub', amount: -350.50, created_at: new Date(Date.now() - 86400000).toISOString() }
-            ];
+        async loadTransactions() {
+            const token = localStorage.getItem('access_token') || 'mock_testing_token';
+            try {
+                const response = await fetch('/api/wallet/transactions', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    this.transactions = await response.json();
+                }
+            } catch (err) {
+                console.error("Error loading transactions:", err);
+            }
         },
 
-        loadReservations() {
-            // Seed a high-fidelity reservation mockup showing actual CCS2 charger at Bandra
-            this.reservations = [
-                {
-                    id: 'res_99a8bc43d1',
-                    station_name: 'Tata Power EZ Charge - Bandra Reclamation',
-                    port_id: 'port_cc55',
-                    connector_type: 'CCS2',
-                    power_kw: 150.0,
-                    qr_code: 'BHARAT_RES_99a8bc43d1_ACTIVE_CCS2_BANDRA',
-                    created_at: new Date().toISOString()
+        async loadReservations() {
+            const token = localStorage.getItem('access_token') || 'mock_testing_token';
+            try {
+                const response = await fetch('/api/bookings/active', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    this.reservations = await response.json();
                 }
-            ];
+            } catch (err) {
+                console.error("Error loading active bookings:", err);
+            }
         },
 
         loadTrips() {
@@ -332,72 +336,104 @@ function dashboardController() {
 
             this.depositing = true;
             const depositAmt = this.selectedAmount;
+            const token = localStorage.getItem('access_token') || 'mock_testing_token';
             
-            // Call simulated Stripe deposit balance API
-            setTimeout(() => {
-                this.walletBalance += depositAmt;
-                this.transactions.unshift({
-                    id: String(Date.now()),
-                    description: 'Stripe Deposit - Wallet Top-up',
-                    amount: depositAmt,
-                    created_at: new Date().toISOString()
+            try {
+                const response = await fetch('/api/wallet/deposit', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ amount: depositAmt })
                 });
+                if (response.ok) {
+                    const result = await response.json();
+                    this.walletBalance = result.new_balance;
+                    await this.loadTransactions();
+                }
+            } catch (err) {
+                console.error("Stripe deposit error:", err);
+            } finally {
                 this.depositing = false;
-            }, 1000);
+            }
         },
 
-        simulateUpiScan() {
+        async simulateUpiScan() {
             this.upiPulsing = true;
             const depositAmt = this.selectedAmount;
+            const token = localStorage.getItem('access_token') || 'mock_testing_token';
             
-            setTimeout(() => {
+            try {
+                const response = await fetch('/api/wallet/deposit', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ amount: depositAmt })
+                });
+                if (response.ok) {
+                    const result = await response.json();
+                    setTimeout(() => {
+                        this.upiPulsing = false;
+                        this.upiSuccess = true;
+                        
+                        setTimeout(() => {
+                            this.walletBalance = result.new_balance;
+                            this.loadTransactions();
+                            document.getElementById('upi_payment_modal').close();
+                            this.upiSuccess = false;
+                        }, 1500);
+                    }, 1200);
+                } else {
+                    this.upiPulsing = false;
+                    alert("UPI Payment Failed on Server.");
+                }
+            } catch (err) {
+                console.error("UPI deposit error:", err);
                 this.upiPulsing = false;
-                this.upiSuccess = true;
-                
-                setTimeout(() => {
-                    this.walletBalance += depositAmt;
-                    this.transactions.unshift({
-                        id: String(Date.now()),
-                        description: 'BHIM UPI Deposit - Wallet Top-up',
-                        amount: depositAmt,
-                        created_at: new Date().toISOString()
-                    });
-                    document.getElementById('upi_payment_modal').close();
-                    this.upiSuccess = false;
-                }, 1500);
-            }, 1200);
+            }
         },
 
-        cancelReservation(resId) {
+        async cancelReservation(resId) {
             if (confirm("Are you sure you want to cancel this reservation?")) {
-                this.reservations = this.reservations.filter(r => r.id !== resId);
-                this.transactions.unshift({
-                    id: String(Date.now()),
-                    description: 'Cancelled Reservation Refund',
-                    amount: 100.00,
-                    created_at: new Date().toISOString()
-                });
-                this.walletBalance += 100.00;
+                const token = localStorage.getItem('access_token') || 'mock_testing_token';
+                try {
+                    const response = await fetch(`/api/bookings/${resId}/cancel`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.walletBalance = result.new_balance;
+                        await this.loadReservations();
+                        await this.loadTransactions();
+                    } else {
+                        const errData = await response.json();
+                        alert("Cancellation failed: " + errData.detail);
+                    }
+                } catch (err) {
+                    console.error("Error cancelling booking:", err);
+                }
             }
         },
 
         simulateOcppCharging(resId, portId) {
-            // OCPP live progress initialization
             this.ocppSoc = 32;
             this.ocppPower = 150.0;
             this.ocppEnergy = 0.0;
             this.ocppCost = 0.0;
             this.ocppComplete = false;
+            this.activeResId = resId;
             
             const modal = document.getElementById('ocpp_charging_modal');
             if (modal) modal.showModal();
             
-            // Charge session telemetry sweep
             this.ocppTimer = setInterval(() => {
                 if (this.ocppSoc < 85) {
                     this.ocppSoc += 1;
                     
-                    // realistic taper flow curves
                     if (this.ocppSoc > 72) {
                         this.ocppPower = Math.max(30.0, this.ocppPower - 12.0);
                     } else if (this.ocppSoc > 55) {
@@ -405,30 +441,46 @@ function dashboardController() {
                     }
                     
                     this.ocppEnergy += 0.45;
-                    this.ocppCost += 0.45 * 18.5; // India standard commercial ₹18.50 per unit
+                    this.ocppCost += 0.45 * 18.5; // standard rate ₹18.50 per unit
                 } else {
                     this.stopOcppCharging();
                 }
             }, 250);
         },
 
-        stopOcppCharging() {
+        async stopOcppCharging() {
             clearInterval(this.ocppTimer);
             this.ocppComplete = true;
             
-            this.walletBalance -= this.ocppCost;
-            this.transactions.unshift({
-                id: String(Date.now()),
-                description: 'OCPP Charging Session Settlement',
-                amount: -this.ocppCost,
-                created_at: new Date().toISOString()
-            });
+            const token = localStorage.getItem('access_token') || 'mock_testing_token';
+            const resId = this.activeResId;
+            
+            try {
+                const response = await fetch(`/api/bookings/${resId}/complete`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ cost: this.ocppCost })
+                });
+                if (response.ok) {
+                    const result = await response.json();
+                    this.walletBalance = result.new_balance;
+                    await this.loadReservations();
+                    await this.loadTransactions();
+                } else {
+                    const err = await response.json();
+                    console.error("OCPP Settlement failed:", err.detail);
+                }
+            } catch (err) {
+                console.error("OCPP Complete error:", err);
+            }
             
             setTimeout(() => {
                 const modal = document.getElementById('ocpp_charging_modal');
                 if (modal) modal.close();
                 this.ocppComplete = false;
-                this.reservations = [];
             }, 2000);
         },
 

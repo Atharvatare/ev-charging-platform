@@ -162,3 +162,51 @@ def cancel_reservation(
     session.commit()
     
     return {"message": "Reservation cancelled successfully and fee refunded.", "new_balance": current_user.wallet_balance}
+
+class SettleSessionRequest(BaseModel):
+    cost: float
+
+@router.post("/{reservation_id}/complete")
+def complete_charging_session(
+    reservation_id: UUID,
+    req: SettleSessionRequest,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """Completes a charging session, restores port status to AVAILABLE, and deducts the final cost from the database wallet."""
+    res = session.get(Reservation, reservation_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservation record not found.")
+
+    if res.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied.")
+
+    if res.status != "PENDING":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only active reservations can be completed.")
+
+    # 1. Restore port status
+    port = session.get(Port, res.port_id)
+    if port:
+        port.status = "AVAILABLE"
+        session.add(port)
+
+    # 2. Update Reservation status
+    res.status = "COMPLETED"
+    session.add(res)
+
+    # 3. Deduct cost from wallet
+    current_user.wallet_balance -= req.cost
+    session.add(current_user)
+
+    ledger = WalletTransaction(
+        user_id=current_user.id,
+        amount=-req.cost,
+        transaction_type="CHARGE",
+        description=f"OCPP Session Settle - {port.connector_type if port else 'EV Port'}"
+    )
+    session.add(ledger)
+    
+    session.commit()
+    
+    return {"message": "Session completed and settled persistently.", "new_balance": current_user.wallet_balance}
+

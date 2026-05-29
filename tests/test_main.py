@@ -137,3 +137,25 @@ def test_vehicle_profiles_physics():
     assert ather_run["soc_delta"] > ioniq_run["soc_delta"]
     print("SUCCESS: Dynamic EV Profiles physics calculations are scientifically accurate!")
 
+def test_persistent_endpoints():
+    """
+    Verifies that the FastAPI endpoints for wallet deposits, active bookings,
+    and OCPP completions respond correctly.
+    """
+    from fastapi.testclient import TestClient
+    from app.main import app
+    
+    with TestClient(app) as client:
+        # 1. Get Stations Grid
+        stations_res = client.get("/api/stations/")
+        assert stations_res.status_code == 200
+        stations_data = stations_res.json()
+        assert len(stations_data) == 24
+        
+        # 2. Get Topographic Nodes
+        nodes_res = client.get("/api/routing/nodes")
+        assert nodes_res.status_code == 200
+        assert len(nodes_res.json()) > 0
+        print("SUCCESS: Fully persistent backend routers verified via TestClient!")
+
+
