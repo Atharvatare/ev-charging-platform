@@ -172,3 +172,16 @@ def update_port_status(
     
     # In Phase 5, we will hook this update to stream live broadcasts to all active maps.
     return {"message": "Port status updated successfully", "port_id": port.id, "status": port.status}
+
+@router.post("/reseed")
+def reseed_database_endpoint(
+    session: Session = Depends(get_session),
+    admin_user: User = Depends(require_role(["admin"]))
+):
+    """
+    Exposes an administrative route to force-clear and re-seed the charging stations grid
+    representing the latest pan-India hubs.
+    """
+    from app.core.seed import seed_database
+    seed_database(force=True)
+    return {"message": "Database successfully force-reseeded with newest Pan-India stations!"}

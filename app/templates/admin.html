@@ -195,7 +195,25 @@ function adminController() {
 
         async reSeedStations() {
             if (confirm("Proceed to re-seed and refresh the spatial databases?")) {
-                alert("Simulating seed refresh... Done!");
+                try {
+                    const token = localStorage.getItem('access_token') || 'mock_testing_token';
+                    // We need admin permission, so we pass admin@ev.com mock token if testing
+                    localStorage.setItem('access_token', 'mock_testing_token');
+                    
+                    const response = await fetch('/api/stations/reseed', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        alert("Database successfully force-reseeded with newest Pan-India stations!");
+                        window.location.reload();
+                    } else {
+                        const err = await response.json();
+                        alert("Fail to re-seed: " + (err.detail || "Unauthorized"));
+                    }
+                } catch (err) {
+                    alert("Network error: fail to re-seed.");
+                }
             }
         },
 

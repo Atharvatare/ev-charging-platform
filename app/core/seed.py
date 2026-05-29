@@ -7,11 +7,11 @@ from app.core.security import get_password_hash
 from app.models.user import User
 from app.models.station import Station, Port, SolarInsight
 
-# High-fidelity charging station profiles centered around Mumbai and Lonavala
+# High-fidelity charging station profiles centered across major states in India
 SEED_STATIONS = [
     {
         "name": "Jio-bp Pulse - BKC Hub",
-        "address": "G Block BKC, Bandra Kurla Complex, Mumbai, MH 400051",
+        "address": "G Block BKC, Bandra Kurla Complex, Mumbai, Maharashtra 400051",
         "lat": 19.0600,
         "lng": 72.8600,
         "rating": 4.9,
@@ -19,54 +19,50 @@ SEED_STATIONS = [
         "ports": [
             {"connector": "CCS2", "power": 250.0, "price": 18.5, "status": "AVAILABLE"},
             {"connector": "CCS2", "power": 250.0, "price": 18.5, "status": "OCCUPIED"},
-            {"connector": "CCS2", "power": 250.0, "price": 18.5, "status": "CHARGING"},
             {"connector": "Type 2 AC", "power": 22.0, "price": 12.0, "status": "AVAILABLE"}
         ]
     },
     {
-        "name": "Tata Power EZ Charge - Bandra Reclamation",
-        "address": "KC Marg, Bandra West, Mumbai, MH 400050",
-        "lat": 19.0430,
-        "lng": 72.8340,
+        "name": "EESL Supercharger - Connaught Place",
+        "address": "Radial Road 1, Connaught Place, New Delhi, Delhi 110001",
+        "lat": 28.6304,
+        "lng": 77.2177,
         "rating": 4.7,
         "solar": {"output": 25.0, "storage": 80.0, "score": 85},
         "ports": [
             {"connector": "CCS2", "power": 150.0, "price": 19.0, "status": "AVAILABLE"},
-            {"connector": "CCS2", "power": 150.0, "price": 19.0, "status": "OCCUPIED"},
-            {"connector": "CHAdeMO", "power": 50.0, "price": 15.0, "status": "AVAILABLE"}
+            {"connector": "CCS2", "power": 150.0, "price": 19.0, "status": "OCCUPIED"}
         ]
     },
     {
-        "name": "Magenta ChargeGrid - Lower Parel",
-        "address": "Senapati Bapat Marg, Lower Parel, Mumbai, MH 400013",
-        "lat": 18.9950,
-        "lng": 72.8300,
+        "name": "Ather Grid Hub - Indiranagar",
+        "address": "100 Feet Rd, Indiranagar, Bengaluru, Karnataka 560038",
+        "lat": 12.9784,
+        "lng": 77.6408,
         "rating": 4.8,
         "solar": {"output": 60.0, "storage": 200.0, "score": 98},
         "ports": [
-            {"connector": "CCS2", "power": 150.0, "price": 18.0, "status": "AVAILABLE"},
             {"connector": "CCS2", "power": 150.0, "price": 18.0, "status": "AVAILABLE"},
             {"connector": "Type 2 AC", "power": 22.0, "price": 11.5, "status": "AVAILABLE"}
         ]
     },
     {
-        "name": "Ather Grid - Powai Tech Park",
-        "address": "Central Ave, Hiranandani Gardens, Powai, Mumbai, MH 400076",
-        "lat": 19.1300,
-        "lng": 72.9100,
+        "name": "Zeon Charging - Highway Stop",
+        "address": "Krishnagiri Highway, Krishnagiri, Tamil Nadu 635001",
+        "lat": 12.5265,
+        "lng": 78.2140,
         "rating": 4.4,
         "solar": {"output": 12.0, "storage": 40.0, "score": 72},
         "ports": [
             {"connector": "Type 2 AC", "power": 22.0, "price": 11.0, "status": "AVAILABLE"},
-            {"connector": "Type 2 AC", "power": 22.0, "price": 11.0, "status": "OCCUPIED"},
-            {"connector": "CHAdeMO", "power": 50.0, "price": 14.5, "status": "MAINTENANCE"}
+            {"connector": "CCS2", "power": 50.0, "price": 14.5, "status": "MAINTENANCE"}
         ]
     },
     {
-        "name": "Tata Power EZ Charge - Navi Mumbai Vashi",
-        "address": "Vashi Rd, Sector 17, Vashi, Navi Mumbai, MH 400703",
-        "lat": 19.0650,
-        "lng": 73.0000,
+        "name": "Bengal EcoCharge - Salt Lake Sector V",
+        "address": "GP Block, Sector V, Salt Lake, Kolkata, West Bengal 700091",
+        "lat": 22.5726,
+        "lng": 88.4339,
         "rating": 4.5,
         "solar": {"output": 35.0, "storage": 100.0, "score": 88},
         "ports": [
@@ -75,10 +71,10 @@ SEED_STATIONS = [
         ]
     },
     {
-        "name": "Magenta ChargeGrid - Lonavala Hill Station",
-        "address": "Mumbai-Pune Expressway Food Plaza, Lonavala, MH 410401",
-        "lat": 18.7500,
-        "lng": 73.4000,
+        "name": "GMR Pulse - Shamshabad Airport",
+        "address": "RGIA, Shamshabad, Hyderabad, Telangana 500409",
+        "lat": 17.2403,
+        "lng": 78.4294,
         "rating": 4.6,
         "solar": {"output": 75.0, "storage": 250.0, "score": 100},
         "ports": [
@@ -88,9 +84,30 @@ SEED_STATIONS = [
     }
 ]
 
-def seed_database():
-    """Seeds the database with users and spatial charging stations if empty."""
+def seed_database(force: bool = False):
+    """Seeds the database with users and spatial charging stations, with auto-upgrade support."""
     with Session(engine) as session:
+        # Auto-detect old database schema and upgrade to new Pan-India multi-state stations
+        existing_stations = session.exec(select(Station)).all()
+        has_old_data = False
+        if existing_stations:
+            names = [s.name for s in existing_stations]
+            if "EESL Supercharger - Connaught Place" not in names:
+                has_old_data = True
+
+        if force or has_old_data:
+            print("Auto-upgrading database tables for clean pan-India re-seeding...")
+            # Clear solar insights
+            for item in session.exec(select(SolarInsight)).all():
+                session.delete(item)
+            # Clear ports
+            for item in session.exec(select(Port)).all():
+                session.delete(item)
+            # Clear stations
+            for item in session.exec(select(Station)).all():
+                session.delete(item)
+            session.commit()
+
         # 1. Seed Users
         existing_user = session.exec(select(User).where(User.email == "user@ev.com")).first()
         if not existing_user:
@@ -151,9 +168,9 @@ def seed_database():
                     )
                     session.add(port)
             session.commit()
-            print("Seeded 6 high-fidelity EV Charging Stations with multi-ports & solar analytics!")
+            print("Seeded 6 high-fidelity Pan-India EV Charging Stations across multiple states!")
         else:
-            print("Database already contains stations. Skipping spatial seed.")
+            print("Database already contains the latest stations. Skipping spatial seed.")
 
 if __name__ == "__main__":
     seed_database()
