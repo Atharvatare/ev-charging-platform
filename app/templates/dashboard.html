@@ -6,60 +6,109 @@
 <div class="max-w-6xl mx-auto py-12 px-6" x-data="dashboardController()" x-init="initDashboard()">
 
     <!-- Dashboard Hero Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-neutral-900 pb-8">
         <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyberGreen/10 border border-cyberGreen/20 text-cyberGreen text-[10px] font-bold uppercase tracking-widest mb-3">
+                <i class="fa-solid fa-gauge-high mr-0.5"></i> Live Driver Portal
+            </div>
             <h1 class="text-4xl font-extrabold tracking-tight text-white flex items-center gap-2">
-                Welcome, <span class="bg-clip-text text-transparent bg-gradient-to-r from-white via-neutral-100 to-cyberGreen" x-text="userName"></span>
+                Welcome, <span class="bg-clip-text text-transparent bg-gradient-to-r from-white via-neutral-200 to-cyberGreen font-extrabold" x-text="userName"></span>
             </h1>
-            <p class="text-neutral-400 text-sm mt-1">Manage charger session locks, wallet audits, and travel logs.</p>
+            <p class="text-neutral-400 text-sm mt-1">Manage charger session locks, wallet balance audits, and dynamic topographic travel logs.</p>
         </div>
         <div class="flex items-center gap-3">
-            <span class="badge border-cyberGreen text-cyberGreen font-bold px-3 py-2 text-xs uppercase tracking-wider bg-cyberGreen/5">
+            <span class="badge border-cyberGreen text-cyberGreen font-bold px-3 py-2 text-xs uppercase tracking-wider bg-cyberGreen/5 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
                 <i class="fa-solid fa-medal mr-1"></i> Eco Tier: Platinum
             </span>
         </div>
     </div>
 
     <!-- 2-Column Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
-        <!-- COLUMN 1: WALLET & DEPOSIT PORTAL (Glassmorphic) -->
-        <div class="card glass-panel border border-neutral-800 rounded-3xl p-6 lg:col-span-1 h-fit">
+        <!-- COLUMN 1: WALLET & DEPOSIT PORTAL (Glassmorphic Card Panel) -->
+        <div class="card glass-panel border border-neutral-800 rounded-3xl p-6 lg:col-span-1 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-wallet text-cyberGreen mr-1"></i> EV Wallet</h3>
-                <span class="text-[10px] text-cyberGreen font-bold uppercase tracking-widest bg-cyberGreen/10 border border-cyberGreen/20 px-2.5 py-1 rounded-lg">Stripe Verified</span>
+                <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-wallet text-cyberGreen"></i> EV Wallet
+                </h3>
+                <span class="text-[9px] text-cyberGreen font-bold uppercase tracking-widest bg-cyberGreen/10 border border-cyberGreen/25 px-2.5 py-1 rounded-lg">Stripe Verified</span>
             </div>
 
-            <!-- Glowing Wallet Balance Card -->
-            <div class="bg-gradient-to-tr from-neutral-900 via-neutral-950 to-neutral-900 border border-neutral-800 rounded-2xl p-6 text-center shadow-inner relative overflow-hidden group">
-                <!-- Glowing corner gradient -->
-                <div class="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-cyberGreen/10 blur-xl group-hover:scale-125 transition-all"></div>
+            <!-- Sleek Interactive Credit Card HUD Overlay -->
+            <div class="relative w-full h-48 rounded-2xl bg-gradient-to-br from-[#121216] via-neutral-950 to-[#1e1b4b] border border-white/10 p-5 shadow-2xl overflow-hidden group mb-6 transition-all duration-300 hover:border-cyberGreen/30 hover:shadow-[0_0_20px_rgba(34,197,94,0.05)]">
+                <!-- Abstract glowing circuit pattern -->
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-cyberGreen/5 blur-2xl group-hover:scale-125 transition-all duration-700"></div>
+                <div class="absolute -left-10 -top-10 w-32 h-32 rounded-full bg-cyberBlue/5 blur-xl"></div>
                 
-                <span class="text-xs text-neutral-400 font-semibold uppercase tracking-wider block">Available Balance</span>
-                <span class="text-5xl font-extrabold text-white mt-2 block glow-text-green" x-text="$store.global.formatMoney(walletBalance)"></span>
-                <span class="text-[10px] text-neutral-500 font-bold block mt-1">Simulated Credit Reserve</span>
+                <!-- Card Header -->
+                <div class="flex justify-between items-start z-10 relative">
+                    <div>
+                        <span class="text-[9px] font-bold tracking-widest text-neutral-400 uppercase">goVolt Charge Card</span>
+                        <span class="badge badge-success badge-xs border-none text-[8px] font-bold text-black px-1.5 py-0.5 ml-1 animate-pulse">ACTIVE</span>
+                    </div>
+                    <i class="fa-solid fa-microchip text-neutral-400 text-2xl"></i>
+                </div>
+                
+                <!-- Card Balance -->
+                <div class="mt-4 z-10 relative">
+                    <span class="text-[9px] text-neutral-500 font-bold tracking-widest block uppercase">Card Balance</span>
+                    <span class="text-3xl font-extrabold text-white mt-1 block glow-text-green tracking-tight font-sans" x-text="$store.global.formatMoney(walletBalance)"></span>
+                </div>
+                
+                <!-- Card Footer -->
+                <div class="absolute bottom-5 left-5 right-5 flex justify-between items-end z-10">
+                    <div>
+                        <span class="text-[8px] text-neutral-500 font-mono block">CARD HOLDER</span>
+                        <span class="text-xs font-bold text-white uppercase tracking-wider font-mono" x-text="userName"></span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[8px] text-neutral-500 font-mono block">CARD NO</span>
+                        <span class="text-xs font-bold text-white tracking-widest font-mono">•••• 2026</span>
+                    </div>
+                </div>
             </div>
 
-            <!-- Instant Deposit Trigger -->
+            <!-- Quick Top-Up Selector Pills -->
+            <div class="mb-6">
+                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mb-3">Quick Deposit Amount</span>
+                <div class="grid grid-cols-4 gap-2">
+                    <template x-for="amt in [250, 500, 1000, 2500]">
+                        <button @click="selectedAmount = amt" 
+                                :class="selectedAmount === amt ? 'border-cyberGreen text-cyberGreen bg-cyberGreen/10 shadow-[0_0_10px_rgba(34,197,94,0.15)]' : 'border-neutral-800 text-neutral-400 hover:border-neutral-600 bg-neutral-900/50'"
+                                class="btn btn-outline btn-xs py-2.5 h-auto font-bold rounded-lg border transition-all duration-300 text-[10px] flex items-center justify-center">
+                            <span x-text="($store.global.currency === 'INR' ? '₹' : ($store.global.currency === 'USD' ? '$' : '€')) + amt"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Instant Deposit Trigger Button -->
             <button @click="triggerDeposit()" :disabled="depositing"
-                    class="btn btn-block bg-cyberGreen text-black font-extrabold border-none hover:bg-white rounded-xl mt-6 shadow-[0_0_15px_rgba(34,197,94,0.15)] transition-all duration-300">
+                    class="btn btn-block bg-gradient-to-r from-cyberGreen to-cyberBlue text-black font-extrabold border-none hover:from-white hover:to-white rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.25)] transition-all duration-300 transform hover:-translate-y-0.5">
                 <template x-if="depositing">
                     <span class="loading loading-spinner loading-xs text-black"></span>
                 </template>
                 <template x-if="!depositing">
-                    <span><i class="fa-solid fa-circle-plus mr-1"></i> Add <span x-text="$store.global.formatMoney(250.00)"></span> via Stripe</span>
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-circle-plus"></i> Top Up <span x-text="$store.global.formatMoney(selectedAmount)"></span></span>
                 </template>
             </button>
 
-            <!-- Wallet Transaction Log -->
-            <div class="mt-8">
-                <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-4">Transaction Ledger</h4>
+            <!-- Wallet Transaction Log Ledger -->
+            <div class="mt-8 pt-6 border-t border-neutral-900">
+                <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-4"><i class="fa-solid fa-receipt text-neutral-500 mr-0.5"></i> Transaction Ledger</h4>
                 <div class="space-y-3 max-h-[220px] overflow-y-auto pr-1">
                     <template x-for="tx in transactions" :key="tx.id">
-                        <div class="flex justify-between items-center bg-neutral-900/30 border border-neutral-900/60 p-3 rounded-xl hover:bg-neutral-900/60 transition-all">
-                            <div>
-                                <span class="text-xs font-bold text-white block" x-text="tx.description"></span>
-                                <span class="text-[9px] text-neutral-500" x-text="formatDate(tx.created_at)"></span>
+                        <div class="flex justify-between items-center bg-neutral-900/40 border border-neutral-800/40 p-3 rounded-xl hover:bg-neutral-900/70 transition-all">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs"
+                                     :class="tx.amount > 0 ? 'bg-cyberGreen/10 text-cyberGreen' : 'bg-cyberPink/10 text-cyberPink'">
+                                    <i :class="tx.amount > 0 ? 'fa-solid fa-circle-arrow-down' : 'fa-solid fa-circle-arrow-up'"></i>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-white block truncate max-w-[140px]" x-text="tx.description"></span>
+                                    <span class="text-[9px] text-neutral-500" x-text="formatDate(tx.created_at)"></span>
+                                </div>
                             </div>
                             <span class="text-xs font-extrabold" 
                                   :class="tx.amount > 0 ? 'text-cyberGreen' : 'text-cyberPink'" 
@@ -73,58 +122,58 @@
         <!-- COLUMN 2: ACTIVE RESERVATIONS & QR CODES (2/3 width) -->
         <div class="lg:col-span-2 space-y-8">
             
-            <!-- Reservation Section -->
-            <div class="card glass-panel border border-neutral-800 rounded-3xl p-6">
-                <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+            <!-- Reservation Section Card -->
+            <div class="card glass-panel border border-neutral-800 rounded-3xl p-6 shadow-2xl">
+                <h3 class="text-base font-extrabold text-white mb-6 flex items-center gap-2">
                     <i class="fa-solid fa-clock text-cyberGreen glow-text-green"></i> Active Charger Reservations
                 </h3>
 
                 <template x-if="reservations.length === 0">
-                    <div class="text-center py-10 border border-dashed border-neutral-800 rounded-2xl">
-                        <i class="fa-solid fa-calendar-minus text-4xl text-neutral-600 mb-3 block"></i>
+                    <div class="text-center py-12 border border-dashed border-neutral-800 rounded-2xl">
+                        <i class="fa-solid fa-calendar-minus text-4xl text-neutral-600 mb-3 block animate-pulse"></i>
                         <span class="text-sm font-semibold text-neutral-400 block">No Active Charger Reservations</span>
-                        <a href="/portal" class="text-xs text-cyberGreen font-bold hover:underline mt-2 inline-block uppercase tracking-wider">Book a Charger now</a>
+                        <a href="/portal" class="text-xs text-cyberGreen font-bold hover:underline mt-2 inline-block uppercase tracking-wider"><i class="fa-solid fa-compass mr-1"></i> Book a Charger now</a>
                     </div>
                 </template>
 
                 <template x-if="reservations.length > 0">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <template x-for="res in reservations" :key="res.id">
-                            <!-- Glowing Active Lockout Card -->
-                            <div class="card border border-neutral-800 bg-gradient-to-tr from-neutral-950 to-neutral-900 rounded-2xl overflow-hidden shadow-xl group">
-                                <div class="card-body p-6 flex flex-col justify-between">
+                            <!-- Glowing Active Lockout Card HUD -->
+                            <div class="card border border-neutral-800 bg-gradient-to-tr from-neutral-950 to-neutral-900 rounded-2xl overflow-hidden shadow-2xl group transition-all duration-300 hover:border-cyberGreen/20">
+                                <div class="card-body p-5 flex flex-col justify-between h-full">
                                     
                                     <div class="space-y-4">
                                         <!-- Header connector metadata -->
-                                        <div class="flex justify-between items-start">
+                                        <div class="flex justify-between items-start border-b border-neutral-800 pb-3">
                                             <div>
-                                                <h4 class="font-bold text-white text-base" x-text="res.station_name"></h4>
-                                                <span class="text-[10px] text-neutral-400" x-text="res.connector_type + ' Charger - ' + res.power_kw + 'kW'"></span>
+                                                <h4 class="font-extrabold text-white text-sm" x-text="res.station_name"></h4>
+                                                <span class="badge border-cyberBlue/30 text-cyberBlue bg-cyberBlue/5 font-bold text-[9px] uppercase tracking-wider mt-1" x-text="res.connector_type + ' - ' + res.power_kw + 'kW'"></span>
                                             </div>
-                                            <span class="badge badge-success border-none text-[9px] font-bold text-black animate-pulse">ACTIVE</span>
+                                            <span class="badge badge-success border-none text-[8px] font-bold text-black animate-pulse px-2 py-1">ACTIVE</span>
                                         </div>
 
-                                        <!-- QR code rendering -->
-                                        <div class="flex justify-center py-4 bg-white/5 rounded-xl border border-white/5 relative">
+                                        <!-- QR code rendering frame -->
+                                        <div class="flex flex-col items-center py-4 bg-black/60 rounded-xl border border-neutral-800/40 relative shadow-inner">
                                             <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + res.qr_code" 
-                                                 alt="Access QR Code" class="w-32 h-32 rounded-lg border-2 border-white shadow-[0_0_20px_rgba(255,255,255,0.08)]" />
-                                        </div>
-
-                                        <!-- Verification instructions -->
-                                        <div class="text-center">
-                                            <span class="text-[10px] font-semibold text-cyberGreen uppercase tracking-widest block glow-text-green">SCAN TO START CHARGING</span>
-                                            <span class="text-[8px] text-neutral-500 font-mono block mt-1" x-text="'Ref: ' + res.qr_code"></span>
+                                                 alt="Access QR Code" class="w-32 h-32 rounded-lg border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)] bg-white p-1" />
+                                            
+                                            <!-- Scan Validation Indicator -->
+                                            <div class="text-center mt-3">
+                                                <span class="text-[9px] font-extrabold text-cyberGreen uppercase tracking-widest block glow-text-green"><i class="fa-solid fa-expand mr-0.5"></i> Scan Code at Charger</span>
+                                                <span class="text-[8px] text-neutral-500 font-mono block mt-0.5" x-text="'REF: ' + res.qr_code"></span>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <!-- Access controls -->
-                                    <div class="mt-6 pt-4 border-t border-neutral-800 flex justify-between gap-2">
+                                    <div class="mt-5 pt-4 border-t border-neutral-800 flex justify-between gap-2">
                                         <button @click="cancelReservation(res.id)" 
-                                                class="btn btn-outline btn-xs border-neutral-800 hover:border-cyberPink hover:bg-cyberPink/5 hover:text-cyberPink text-neutral-400 rounded-lg flex-grow transition-all">
+                                                class="btn btn-outline btn-xs border-neutral-850 hover:border-cyberPink hover:bg-cyberPink/5 hover:text-cyberPink text-neutral-400 rounded-lg flex-grow transition-all duration-300 font-bold">
                                             Cancel Book
                                         </button>
                                         <button @click="simulateOcppCharging(res.id, res.port_id)"
-                                                class="btn bg-cyberGreen border-none text-black font-extrabold btn-xs hover:bg-white rounded-lg flex-grow shadow-[0_0_10px_rgba(34,197,94,0.15)] transition-all">
+                                                class="btn bg-cyberGreen border-none text-black font-extrabold btn-xs hover:bg-white rounded-lg flex-grow shadow-[0_0_10px_rgba(34,197,94,0.15)] transition-all duration-300">
                                             Test Scan <i class="fa-solid fa-qrcode ml-0.5"></i>
                                         </button>
                                     </div>
@@ -136,16 +185,16 @@
                 </template>
             </div>
 
-            <!-- Historical Trip Logs Section -->
-            <div class="card glass-panel border border-neutral-800 rounded-3xl p-6">
-                <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+            <!-- Historical Trip Logs Section Card -->
+            <div class="card glass-panel border border-neutral-800 rounded-3xl p-6 shadow-2xl">
+                <h3 class="text-base font-extrabold text-white mb-6 flex items-center gap-2">
                     <i class="fa-solid fa-signs-post text-cyberGreen"></i> Topography Trip History
                 </h3>
 
                 <div class="overflow-x-auto">
                     <table class="table table-compact w-full text-left text-neutral-300">
                         <thead>
-                            <tr class="border-b border-neutral-800 text-neutral-400 text-xs uppercase tracking-wider">
+                            <tr class="border-b border-neutral-800 text-neutral-400 text-[10px] uppercase tracking-wider font-bold">
                                 <th>Trip Journey</th>
                                 <th>Departure SoC</th>
                                 <th>Forecast Arrival</th>
@@ -154,7 +203,7 @@
                         </thead>
                         <tbody class="text-xs">
                             <template x-for="trip in trips" :key="trip.id">
-                                <tr class="border-b border-neutral-900/60 hover:bg-neutral-900/20">
+                                <tr class="border-b border-neutral-900/60 hover:bg-neutral-900/25 transition-all">
                                     <td class="py-3">
                                         <span class="font-bold text-white block" x-text="trip.origin_name + ' → ' + trip.destination_name"></span>
                                         <span class="text-[9px] text-neutral-500" x-text="formatDate(trip.created_at)"></span>
@@ -162,7 +211,7 @@
                                     <td class="font-bold py-3 text-neutral-200" x-text="trip.start_soc + '%'"></td>
                                     <td class="font-bold py-3 text-cyberBlue glow-text-blue" x-text="trip.predicted_arrival_soc + '%'"></td>
                                     <td class="py-3">
-                                        <span class="badge badge-success border-none text-[9px] font-bold text-black">COMPLETED</span>
+                                        <span class="badge border-none text-[8px] font-extrabold text-black bg-cyberGreen px-2 py-1">COMPLETED</span>
                                     </td>
                                 </tr>
                             </template>
@@ -183,6 +232,7 @@ function dashboardController() {
     return {
         userName: 'Alex Mercer',
         walletBalance: 1000.0,
+        selectedAmount: 250,
         depositing: false,
         transactions: [],
         reservations: [],
@@ -248,14 +298,15 @@ function dashboardController() {
 
         async triggerDeposit() {
             this.depositing = true;
+            const depositAmt = this.selectedAmount;
             
             // Call simulated Stripe deposit balance API
             setTimeout(() => {
-                this.walletBalance += 250.0;
+                this.walletBalance += depositAmt;
                 this.transactions.unshift({
                     id: String(Date.now()),
                     description: 'Stripe Deposit - Wallet Top-up',
-                    amount: 250.00,
+                    amount: depositAmt,
                     created_at: new Date().toISOString()
                 });
                 this.depositing = false;
