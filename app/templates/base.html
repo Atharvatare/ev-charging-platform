@@ -306,6 +306,11 @@
                         <i class="fa-solid fa-chart-line mr-1"></i> Fleet Admin
                     </a>
                 </li>
+                <li>
+                    <a @click="window.dispatchEvent(new CustomEvent('toggle-chatbot'))" class="hover:text-cyberGreen font-medium px-4 py-2 rounded-lg transition-all duration-300 cursor-pointer">
+                        <i class="fa-solid fa-robot mr-1 text-cyberGreen"></i> AI Assistant
+                    </a>
+                </li>
             </ul>
         </div>
         
@@ -380,7 +385,7 @@
     </footer>
 
     <!-- AI FLOATING SUPPORT CHATBOT ASSISTANT -->
-    <div x-data="chatbotController()" x-init="initChatbot()" class="relative">
+    <div x-data="chatbotController()" x-init="initChatbot()" @toggle-chatbot.window="toggleChat()" class="relative">
         
         <!-- Pulsing Floating Circular Chat Button -->
         <button @click="toggleChat()" 
@@ -404,7 +409,7 @@
                     <div class="w-2.5 h-2.5 rounded-full bg-cyberGreen shadow-[0_0_6px_#22c55e]"></div>
                     <span class="text-xs font-extrabold tracking-widest text-white uppercase">goVolt AI Assistant</span>
                 </div>
-                <button @click="chatOpen = false" class="text-neutral-500 hover:text-white transition-all"><i class="fa-solid fa-xmark"></i></button>
+                <button @click.stop="chatOpen = false" class="text-neutral-500 hover:text-white transition-all z-50 relative p-1.5 cursor-pointer"><i class="fa-solid fa-xmark text-sm"></i></button>
             </div>
 
             <!-- Messages Stream Area -->
