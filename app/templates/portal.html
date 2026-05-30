@@ -240,6 +240,149 @@
             </div>
             <span class="text-sm font-semibold tracking-wider text-white uppercase glow-text-green">Solving Spatial Dijkstra Graph...</span>
         </div>
+
+        <!-- Collapsible Bottom Topography Elevation & SoC Chart HUD -->
+        <div x-show="routeResult" 
+             x-transition:enter="transition ease-out duration-350 transform"
+             x-transition:enter-start="translate-y-full"
+             x-transition:enter-end="translate-y-0"
+             x-transition:leave="transition ease-in duration-250 transform"
+             x-transition:leave-start="translate-y-0"
+             x-transition:leave-end="translate-y-full"
+             class="absolute bottom-6 left-6 right-6 bg-neutral-950/90 backdrop-blur-md border border-neutral-800 rounded-3xl p-5 z-[1005] shadow-[0_10px_35px_rgba(0,0,0,0.65)] flex flex-col gap-3 animate-fade-in"
+             style="display: none;"
+             x-data="{ expanded: true }">
+            
+            <!-- Drawer Header Controls -->
+            <div class="flex justify-between items-center border-b border-neutral-900 pb-2">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyberBlue animate-pulse shadow-[0_0_8px_#06b6d4]"></span>
+                    <h4 class="text-xs font-black text-white uppercase tracking-wider">Topographic Incline & Telemetry HUD</h4>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button @click="expanded = !expanded" class="btn btn-ghost btn-xs text-neutral-400 hover:text-white rounded-lg px-2">
+                        <i class="fa-solid text-xs" :class="expanded ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
+                        <span class="text-[9px] font-bold uppercase tracking-wider ml-1" x-text="expanded ? 'Minimize' : 'Expand'"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Drawer Dynamic Chart Canvas Content -->
+            <div x-show="expanded" 
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 max-h-0"
+                 x-transition:enter-end="opacity-100 max-h-[200px]"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 max-h-[200px]"
+                 x-transition:leave-end="opacity-0 max-h-0"
+                 class="w-full relative py-2 overflow-hidden">
+                
+                <template x-if="!routeResult || !routeResult.telemetry || routeResult.telemetry.length === 0">
+                    <div class="text-center py-6 text-neutral-500 text-xs font-semibold">No telemetry coordinate metrics loaded.</div>
+                </template>
+                
+                <template x-if="routeResult && routeResult.telemetry && routeResult.telemetry.length > 0">
+                    <div class="relative w-full" x-data="{ hoveredIdx: null }">
+                        <!-- SVG Responsive Frame -->
+                        <svg viewBox="0 0 1000 120" class="w-full h-28 overflow-visible select-none" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="elevationGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#1f2937" stop-opacity="0.6"/>
+                                    <stop offset="100%" stop-color="#0a0a0c" stop-opacity="0.1"/>
+                                </linearGradient>
+                                <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="3" result="blur" />
+                                    <feMerge>
+                                        <feMergeNode in="blur" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                            </defs>
+
+                            <!-- 1. Elevation Mountain Fill Profile -->
+                            <path :d="getElevationAreaPath()" fill="url(#elevationGrad)" stroke="#4b5563" stroke-width="1.2" />
+
+                            <!-- 2. State of Charge (SoC) Polyline with Neon Green/Cyan Glow -->
+                            <path :d="getSocLinePath()" fill="none" stroke="#22c55e" stroke-width="2.5" filter="url(#neonGlow)" />
+
+                            <!-- 3. Dynamic Node Tick Grid Lines -->
+                            <template x-for="(point, idx) in routeResult.telemetry" :key="idx">
+                                <g>
+                                    <line :x1="getPointX(idx)" 
+                                          y1="0" 
+                                          :x2="getPointX(idx)" 
+                                          y2="120" 
+                                          stroke="#111" 
+                                          stroke-dasharray="2,4" 
+                                          stroke-width="1" />
+                                    
+                                    <circle :cx="getPointX(idx)" 
+                                            :cy="getElevationY(point.elev)" 
+                                            r="3.5" 
+                                            fill="#4b5563" />
+                                            
+                                    <circle :cx="getPointX(idx)" 
+                                            :cy="getSocY(point.soc)" 
+                                            r="4.5" 
+                                            :fill="point.charging_stop ? '#f97316' : '#22c55e'" 
+                                            :class="hoveredIdx === idx ? 'stroke-white stroke-2' : ''"
+                                            class="cursor-pointer transition-all duration-200" 
+                                            @mouseenter="hoveredIdx = idx"
+                                            @mouseleave="hoveredIdx = null" />
+                                </g>
+                            </template>
+                        </svg>
+
+                        <!-- Absolute Local Tooltip Details -->
+                        <div x-show="hoveredIdx !== null"
+                             class="absolute bg-neutral-950/95 border border-neutral-800 rounded-2xl p-3 shadow-2xl pointer-events-none text-xs text-white z-50 w-44 transition-all duration-100"
+                             :style="`left: ${Math.max(10, Math.min($el.parentElement ? $el.parentElement.clientWidth - 190 : 800, hoveredIdx !== null ? (getPointX(hoveredIdx) * ($el.parentElement ? $el.parentElement.clientWidth : 1000) / 1000) - 88 : 0))}px; bottom: 85px;`"
+                             style="display: none;">
+                            <template x-if="hoveredIdx !== null">
+                                <div class="space-y-1.5 text-left">
+                                    <span class="font-extrabold text-white block uppercase tracking-wide border-b border-neutral-900 pb-1 truncate" x-text="routeResult.telemetry[hoveredIdx].node.replace(/_/g, ' ')"></span>
+                                    <div class="flex justify-between gap-4 text-[10px]">
+                                        <span class="text-neutral-400 font-medium">Altitude:</span>
+                                        <span class="font-bold text-neutral-200" x-text="routeResult.telemetry[hoveredIdx].elev + ' m'"></span>
+                                    </div>
+                                    <div class="flex justify-between gap-4 text-[10px]">
+                                        <span class="text-neutral-400 font-medium">SoC Level:</span>
+                                        <span class="font-black text-cyberGreen" x-text="routeResult.telemetry[hoveredIdx].soc + '%'"></span>
+                                    </div>
+                                    <template x-if="routeResult.telemetry[hoveredIdx].charging_stop">
+                                        <div class="badge badge-warning border-none text-[8px] font-bold text-black uppercase w-full flex items-center justify-center mt-1 py-0.5">
+                                            ⚡ Waypoint Stop
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Legend & Status Details -->
+                        <div class="flex flex-col sm:flex-row justify-between items-center text-[9px] font-bold text-neutral-500 uppercase tracking-widest mt-2 border-t border-neutral-900/60 pt-2 px-1 gap-2">
+                            <div class="flex items-center gap-4">
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-neutral-600"></span> Altitude (m)</span>
+                                <span class="flex items-center gap-1"><span class="w-2.5 h-0.5 bg-cyberGreen inline-block"></span> Battery SoC (%)</span>
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-cyberOrange"></span> Charging Stop</span>
+                            </div>
+                            <div class="text-right flex items-center gap-2">
+                                <template x-if="hoveredIdx !== null">
+                                    <span class="text-cyberBlue font-extrabold uppercase animate-pulse">
+                                        <i class="fa-solid fa-crosshairs mr-0.5 animate-spin"></i> Analyze: 
+                                        <span class="text-white" x-text="routeResult.telemetry[hoveredIdx].node.replace(/_/g, ' ')"></span> 
+                                        (<span class="text-cyberGreen" x-text="routeResult.telemetry[hoveredIdx].soc + '% SoC'"></span>, 
+                                        <span class="text-neutral-300" x-text="routeResult.telemetry[hoveredIdx].elev + 'm'"></span>)
+                                    </span>
+                                </template>
+                                <template x-if="hoveredIdx === null">
+                                    <span>Hover points to scan telemetry</span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -332,6 +475,66 @@ function portalController() {
         bookingSubmitting: false,
         bookingSuccessMsg: '',
         bookingErrorMsg: '',
+
+        getPointX(idx) {
+            if (!this.routeResult || !this.routeResult.telemetry) return 0;
+            const len = this.routeResult.telemetry.length;
+            if (len <= 1) return 500;
+            return (idx / (len - 1)) * 1000;
+        },
+
+        getElevationMinMax() {
+            if (!this.routeResult || !this.routeResult.telemetry) return { min: 0, max: 1000 };
+            const elevs = this.routeResult.telemetry.map(pt => pt.elev);
+            const min = Math.min(...elevs);
+            const max = Math.max(...elevs);
+            return { min: min, max: max };
+        },
+
+        getElevationY(elev) {
+            const bounds = this.getElevationMinMax();
+            const delta = bounds.max - bounds.min;
+            if (delta === 0) return 90;
+            const ratio = (elev - bounds.min) / delta;
+            return 105 - (ratio * 70);
+        },
+
+        getSocY(soc) {
+            return 110 - (soc / 100) * 95;
+        },
+
+        getElevationAreaPath() {
+            if (!this.routeResult || !this.routeResult.telemetry) return '';
+            const len = this.routeResult.telemetry.length;
+            if (len === 0) return '';
+            
+            let path = `M 0 120`;
+            this.routeResult.telemetry.forEach((pt, idx) => {
+                const x = this.getPointX(idx);
+                const y = this.getElevationY(pt.elev);
+                path += ` L ${x} ${y}`;
+            });
+            path += ` L 1000 120 Z`;
+            return path;
+        },
+
+        getSocLinePath() {
+            if (!this.routeResult || !this.routeResult.telemetry) return '';
+            const len = this.routeResult.telemetry.length;
+            if (len === 0) return '';
+            
+            let path = '';
+            this.routeResult.telemetry.forEach((pt, idx) => {
+                const x = this.getPointX(idx);
+                const y = this.getSocY(pt.soc);
+                if (idx === 0) {
+                    path += `M ${x} ${y}`;
+                } else {
+                    path += ` L ${x} ${y}`;
+                }
+            });
+            return path;
+        },
 
         async initPortal() {
             // Check auth token
