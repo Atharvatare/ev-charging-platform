@@ -6,6 +6,11 @@
   - [x] Update database test assertion in `tests/test_main.py`
 - [x] Registered Office Update
   - [x] Relocate Registered Office address in `app/templates/support.html` to Kalmeshwar, Nagpur
+- [x] Persistent Support Ticketing System
+  - [x] Create database model `SupportTicket` in `app/models/ticket.py`
+  - [x] Integrate `SupportTicket` inside `sqlmodel.py` and `database.py`
+  - [x] Implement database CRUD endpoints in `app/main.py`
+  - [x] Embed Live Operations ticket dashboard inside `app/templates/admin.html`
 - [x] Interactive Map Sidebar Filters
   - [x] Inject Sleek Glassmorphic dropdowns for Country, State, and City in `app/templates/portal.html`
   - [x] Implement robust JS address parsing function `parseStationAddress(address)`

@@ -14,6 +14,7 @@ class MockDBStore:
         self.solar_insights: Dict[uuid.UUID, Any] = {}
         self.wallet_transactions: List[Any] = []
         self.route_trips: List[Any] = []
+        self.support_tickets: Dict[uuid.UUID, Any] = {}
 
 # Global In-Memory Database Instance
 db_store = MockDBStore()
@@ -66,11 +67,29 @@ class InMemorySession:
             return _link_relationships(db_store.ports.get(id_val))
         elif name == "reservation":
             return _link_relationships(db_store.reservations.get(id_val))
+        elif name == "supportticket":
+            return db_store.support_tickets.get(id_val)
         return None
 
     def add(self, entity):
         """Mock SQLAlchemy session.add()."""
         self._pending_additions.append(entity)
+
+    def delete(self, entity):
+        """Mock SQLAlchemy session.delete()."""
+        name = entity.__class__.__name__.lower()
+        if name == "user":
+            db_store.users.pop(entity.id, None)
+        elif name == "station":
+            db_store.stations.pop(entity.id, None)
+        elif name == "port":
+            db_store.ports.pop(entity.id, None)
+        elif name == "solarinsight":
+            db_store.solar_insights.pop(entity.id, None)
+        elif name == "reservation":
+            db_store.reservations.pop(entity.id, None)
+        elif name == "supportticket":
+            db_store.support_tickets.pop(entity.id, None)
 
     def commit(self):
         """Mock SQLAlchemy session.commit() committing pending entities."""
@@ -95,6 +114,8 @@ class InMemorySession:
                 db_store.wallet_transactions.append(entity)
             elif name == "routetrip":
                 db_store.route_trips.append(entity)
+            elif name == "supportticket":
+                db_store.support_tickets[entity.id] = entity
                 
         self._pending_additions.clear()
 

@@ -135,6 +135,75 @@
         </div>
     </div>
 
+    <!-- Live Driver Support Tickets Grid -->
+    <div class="space-y-6 mt-12">
+        <div class="flex items-center justify-between border-b border-neutral-900 pb-3">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-headset text-cyberBlue"></i> Operations Ticket Queue
+            </h3>
+            <span class="badge border-cyberBlue text-cyberBlue bg-cyberBlue/5 font-extrabold text-[9px] uppercase tracking-widest px-2.5 py-1"
+                  x-text="tickets.filter(t => t.status === 'OPEN').length + ' Active Tickets'"></span>
+        </div>
+
+        <!-- Dynamic Tickets List -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <template x-for="ticket in tickets" :key="ticket.id">
+                <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 space-y-4 hover:border-cyberBlue/20 transition-all duration-300 relative overflow-hidden">
+                    <!-- Status Glow accent -->
+                    <div class="absolute top-0 right-0 w-24 h-24 rounded-full pointer-events-none blur-3xl"
+                         :style="'background-color: ' + (ticket.status === 'OPEN' ? 'rgba(6,182,212,0.06)' : 'rgba(34,197,94,0.06)')"></div>
+
+                    <!-- Header -->
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="badge text-[9px] font-extrabold px-2 py-0.5 rounded border-none"
+                                  :class="ticket.status === 'OPEN' ? 'bg-cyberBlue text-black' : 'bg-cyberGreen text-black'"
+                                  x-text="ticket.status"></span>
+                            <h4 class="font-extrabold text-white text-base mt-2" x-text="ticket.subject"></h4>
+                        </div>
+                        <span class="text-[9px] text-neutral-500 font-mono" x-text="formatDate(ticket.created_at)"></span>
+                    </div>
+
+                    <!-- Content body -->
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between text-[10px] text-neutral-400 font-semibold border-b border-neutral-900/60 pb-1.5">
+                            <span x-text="'Driver: ' + ticket.name"></span>
+                            <span x-text="ticket.email" class="hover:text-cyberBlue cursor-pointer"></span>
+                        </div>
+                        <p class="text-neutral-350 leading-relaxed bg-neutral-900/40 border border-neutral-950 p-3 rounded-xl italic font-serif" x-text="'“' + ticket.message + '”'"></p>
+                    </div>
+
+                    <!-- Action controllers -->
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button x-show="ticket.status === 'OPEN'" @click="updateTicketStatus(ticket.id, 'RESOLVED')" 
+                                class="btn btn-xs bg-cyberGreen/10 border border-cyberGreen/30 text-cyberGreen rounded-xl font-bold uppercase hover:bg-cyberGreen hover:text-black transition-all">
+                            Resolve Ticket <i class="fa-solid fa-circle-check ml-0.5"></i>
+                        </button>
+                        <button x-show="ticket.status === 'RESOLVED'" @click="updateTicketStatus(ticket.id, 'OPEN')" 
+                                class="btn btn-xs bg-neutral-900 border border-neutral-800 text-neutral-400 rounded-xl font-bold uppercase hover:border-cyberBlue hover:text-cyberBlue transition-all">
+                            Reopen <i class="fa-solid fa-arrow-rotate-left ml-0.5"></i>
+                        </button>
+                        <button @click="deleteTicket(ticket.id)" 
+                                class="btn btn-xs bg-cyberPink/10 border border-cyberPink/30 text-cyberPink rounded-xl font-bold uppercase hover:bg-cyberPink hover:text-black transition-all">
+                            Discard <i class="fa-solid fa-trash-can ml-0.5"></i>
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Fallback if empty -->
+            <template x-if="tickets.length === 0">
+                <div class="col-span-2 card bg-neutral-900/30 border border-neutral-900/60 rounded-2xl p-12 text-center">
+                    <div class="w-12 h-12 rounded-full bg-neutral-900 flex items-center justify-center text-neutral-600 text-xl mx-auto mb-3">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <h4 class="font-bold text-white text-sm">No Active Tickets</h4>
+                    <p class="text-neutral-500 text-xs mt-1">All driver queries have been successfully cataloged and resolved.</p>
+                </div>
+            </template>
+        </div>
+    </div>
+
 </div>
 
 <!-- Admin Dashboard Logic -->
@@ -142,6 +211,7 @@
 function adminController() {
     return {
         stations: [],
+        tickets: [],
         pollingInterval: null,
 
         async initAdmin() {
@@ -151,6 +221,9 @@ function adminController() {
 
             // Load all stations
             await this.loadAdminGrid();
+
+            // Load support tickets
+            await this.loadTickets();
 
             // Initialize WebSocket sync channel
             this.initWebSocket();
@@ -278,6 +351,56 @@ function adminController() {
                     }, 8000);
                 }
             }
+        },
+
+        async loadTickets() {
+            try {
+                const response = await fetch('/api/contact/tickets');
+                if (response.ok) {
+                    this.tickets = await response.json();
+                }
+            } catch (err) {
+                console.error("Error loading support tickets:", err);
+            }
+        },
+
+        async updateTicketStatus(ticketId, status) {
+            try {
+                const response = await fetch(`/api/contact/tickets/${ticketId}/status?status=${status}`, {
+                    method: 'PATCH'
+                });
+                if (response.ok) {
+                    await this.loadTickets();
+                } else {
+                    alert("Fail to update ticket status.");
+                }
+            } catch (err) {
+                console.error("Error updating ticket status:", err);
+            }
+        },
+
+        async deleteTicket(ticketId) {
+            if (confirm("Discard this driver support ticket permanently?")) {
+                try {
+                    const response = await fetch(`/api/contact/tickets/${ticketId}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        await this.loadTickets();
+                    } else {
+                        alert("Fail to delete ticket.");
+                    }
+                } catch (err) {
+                    console.error("Error deleting ticket:", err);
+                }
+            }
+        },
+
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + 
+                   date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
         }
     };
 }

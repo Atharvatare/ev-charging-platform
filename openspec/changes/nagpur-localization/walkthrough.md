@@ -11,6 +11,12 @@
 ### Corporate Office Relocation
 - Updated `/support` template registered office to: **Startup Command Hub, Kalmeshwar, Nagpur, Maharashtra 441501**.
 
+### Persistent Support Ticketing System
+- **Database Entity Model**: Created `SupportTicket` model in `app/models/ticket.py` with name, email, subject, message, status ("OPEN", "RESOLVED"), and timestamp fields.
+- **Mock DB Integration**: Registered model inside `sqlmodel.py` and `database.py`, and added a mock `InMemorySession.delete()` implementation to complete the REST CRUD flow.
+- **REST Endpoints**: Integrated dynamic API routes in `app/main.py`: `POST /api/contact/submit` (generates persistent UUID), `GET /api/contact/tickets` (lists all tickets desc), `PATCH /api/contact/tickets/{id}/status` (marks resolved/reopens), and `DELETE /api/contact/tickets/{id}` (discards ticket).
+- **Operations Support Queue**: Embedded a beautiful glassmorphic Operations Ticket Queue in the Fleet Admin dashboard (`admin.html`) listing all driver queries in real-time with resolve/reopen and delete actions, fully binding the dashboard to backend database states.
+
 ### Interactive Sidebar Filters
 - Implemented three beautiful glassmorphic dropdowns (Country, State, City) in the Left HUD Route Coordinator panel.
 - Coded robust `parseStationAddress()` regex in Alpine.js component to extract clean State and City fields dynamically.

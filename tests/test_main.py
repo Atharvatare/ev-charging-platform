@@ -209,7 +209,26 @@ def test_persistent_endpoints():
         }
         submit_res = client.post("/api/contact/submit", json=ticket_payload)
         assert submit_res.status_code == 200
-        assert "submitted successfully" in submit_res.json()["message"]
+        res_json = submit_res.json()
+        assert "submitted successfully" in res_json["message"]
+        assert "ticket_id" in res_json
+        ticket_id = res_json["ticket_id"]
+        
+        # Verify tickets list
+        list_res = client.get("/api/contact/tickets")
+        assert list_res.status_code == 200
+        tickets = list_res.json()
+        assert len(tickets) > 0
+        assert tickets[0]["id"] == ticket_id
+        
+        # Verify ticket status update
+        status_res = client.patch(f"/api/contact/tickets/{ticket_id}/status?status=RESOLVED")
+        assert status_res.status_code == 200
+        assert status_res.json()["status"] == "RESOLVED"
+        
+        # Verify ticket delete
+        delete_res = client.delete(f"/api/contact/tickets/{ticket_id}")
+        assert delete_res.status_code == 200
         
         # 5. Submit Invalid Support Ticket (Empty field validations)
         invalid_payload = {

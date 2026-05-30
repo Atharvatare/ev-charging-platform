@@ -125,22 +125,92 @@ class ContactRequest(BaseModel):
 
 @app.post("/api/contact/submit")
 def submit_contact_ticket(req: ContactRequest):
-    """Saves a driver support ticket persistently in the corporate memory ledger."""
+    """Saves a driver support ticket persistently in the database."""
     from fastapi import HTTPException
+    from sqlmodel import Session
+    from app.core.database import engine
+    from app.models.ticket import SupportTicket
+    
     if not req.name or not req.email or not req.subject or not req.message:
         raise HTTPException(status_code=400, detail="All contact form fields are required.")
     
-    from datetime import datetime
-    ticket = {
-        "name": req.name,
-        "email": req.email,
-        "subject": req.subject,
-        "message": req.message,
-        "created_at": datetime.utcnow().isoformat()
+    with Session(engine) as session:
+        ticket = SupportTicket(
+            name=req.name,
+            email=req.email,
+            subject=req.subject,
+            message=req.message,
+            status="OPEN"
+        )
+        session.add(ticket)
+        session.commit()
+        session.refresh(ticket)
+        ticket_id = str(ticket.id)
+        
+    print(f"[OK] Database support ticket logged: {ticket_id} from {req.email} regarding '{req.subject}'")
+    return {
+        "message": "Support ticket submitted successfully. GoBharat EV team will contact you shortly.",
+        "ticket_id": ticket_id
     }
-    SUPPORT_TICKETS.append(ticket)
-    print(f"[OK] Persistent support ticket logged from {req.email} regarding '{req.subject}'")
-    return {"message": "Support ticket submitted successfully. GoBharat EV team will contact you shortly."}
+
+@app.get("/api/contact/tickets")
+def get_all_support_tickets():
+    """Retrieves all driver support tickets from the database."""
+    from sqlmodel import Session, select
+    from app.core.database import engine
+    from app.models.ticket import SupportTicket
+    
+    with Session(engine) as session:
+        tickets = session.exec(select(SupportTicket)).all()
+        # Sort in-memory desc by created_at since it's mock
+        tickets.sort(key=lambda t: t.created_at or datetime.utcnow(), reverse=True)
+        return tickets
+
+@app.patch("/api/contact/tickets/{ticket_id}/status")
+def update_support_ticket_status(ticket_id: str, status: str):
+    """Updates status ('OPEN' or 'RESOLVED') of a support ticket."""
+    from fastapi import HTTPException
+    from sqlmodel import Session
+    from uuid import UUID
+    from app.core.database import engine
+    from app.models.ticket import SupportTicket
+    
+    try:
+        ticket_uuid = UUID(ticket_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid ticket UUID format.")
+        
+    with Session(engine) as session:
+        ticket = session.get(SupportTicket, ticket_uuid)
+        if not ticket:
+            raise HTTPException(status_code=404, detail="Support ticket not found.")
+        ticket.status = status
+        session.add(ticket)
+        session.commit()
+        session.refresh(ticket)
+        return ticket
+
+@app.delete("/api/contact/tickets/{ticket_id}")
+def delete_support_ticket(ticket_id: str):
+    """Deletes a support ticket permanently from the database."""
+    from fastapi import HTTPException
+    from sqlmodel import Session
+    from uuid import UUID
+    from app.core.database import engine
+    from app.models.ticket import SupportTicket
+    
+    try:
+        ticket_uuid = UUID(ticket_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid ticket UUID format.")
+        
+    with Session(engine) as session:
+        ticket = session.get(SupportTicket, ticket_uuid)
+        if not ticket:
+            raise HTTPException(status_code=404, detail="Support ticket not found.")
+        session.delete(ticket)
+        session.commit()
+        return {"message": "Support ticket deleted successfully."}
 
 # -------------------------------------------------------------
 # WEBSOCKET REAL-TIME STREAMING

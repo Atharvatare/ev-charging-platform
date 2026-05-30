@@ -177,6 +177,8 @@ class SelectQuery:
             items = list(db_store.wallet_transactions)
         elif name == "routetrip":
             items = list(db_store.route_trips)
+        elif name == "supportticket":
+            items = list(db_store.support_tickets.values())
 
         # Apply filters
         filtered_items = []
@@ -220,6 +222,7 @@ def rebuild_all_models():
         from app.models.station import Station, Port, SolarInsight
         from app.models.booking import Reservation, WalletTransaction
         from app.models.routing import RouteTrip
+        from app.models.ticket import SupportTicket
     except Exception:
         return
         
