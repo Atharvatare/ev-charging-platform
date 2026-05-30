@@ -10,8 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS & DaisyUI CDNs -->
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" type="text/css" />
+    <!-- Tailwind CSS & DaisyUI (Local Fallbacks + CDN Support) -->
+    <link href="/static/css/daisyui.css" rel="stylesheet" type="text/css" />
+    <link href="/static/css/tailwind.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Alpine.js (Reactive micro-state manager) -->
@@ -49,35 +50,35 @@
         }
 
         .grid {
-            display: grid;
+            display: grid !important;
         }
         .flex {
-            display: flex;
+            display: flex !important;
         }
         .flex-col {
-            flex-direction: column;
+            flex-direction: column !important;
         }
         .items-center {
-            align-items: center;
+            align-items: center !important;
         }
         .justify-between {
-            justify-content: space-between;
+            justify-content: space-between !important;
         }
         
         .gap-8 {
-            gap: 2rem;
+            gap: 2rem !important;
         }
         .gap-6 {
-            gap: 1.5rem;
+            gap: 1.5rem !important;
         }
         .gap-4 {
-            gap: 1rem;
+            gap: 1rem !important;
         }
         .gap-3 {
-            gap: 0.75rem;
+            gap: 0.75rem !important;
         }
         .gap-2 {
-            gap: 0.5rem;
+            gap: 0.5rem !important;
         }
 
         /* Core Grid splits to prevent stretching */
@@ -127,7 +128,7 @@
             color: #f3f4f6;
             overflow-x: hidden;
             font-family: 'Outfit', sans-serif;
-            opacity: 0;
+            opacity: 1 !important;
             transition: opacity 0.25s ease-in-out;
         }
 
