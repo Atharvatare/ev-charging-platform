@@ -83,6 +83,51 @@
                 <p class="text-neutral-400 text-xs mt-1">Adjust driving state variables and plan optimized routes.</p>
             </div>
 
+            <!-- Station Filter Panel -->
+            <div class="card bg-neutral-900/50 border border-neutral-800 rounded-xl p-4 space-y-3">
+                <div class="flex items-center justify-between border-b border-neutral-900 pb-2">
+                    <span class="text-neutral-300 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-filter text-cyberGreen"></i> Station Finder
+                    </span>
+                    <span class="text-[9px] text-cyberGreen font-bold uppercase tracking-widest bg-cyberGreen/10 border border-cyberGreen/25 px-2 py-0.5 rounded">
+                        <span x-text="filteredStationsCount"></span> / <span x-text="stations.length"></span> Active
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-2.5">
+                    <!-- Country Filter -->
+                    <div class="form-control w-full">
+                        <label class="label py-0 mb-0.5"><span class="text-[9px] text-neutral-400 font-bold uppercase">Country</span></label>
+                        <select x-model="selectedCountry" @change="onCountryChange()" class="select select-bordered select-xs bg-neutral-900 border-neutral-800 text-xs rounded-xl h-8 min-h-8">
+                            <option value="ALL">All Countries</option>
+                            <option value="India">India</option>
+                        </select>
+                    </div>
+
+                    <!-- State Filter -->
+                    <div class="form-control w-full">
+                        <label class="label py-0 mb-0.5"><span class="text-[9px] text-neutral-400 font-bold uppercase">State / Territory</span></label>
+                        <select x-model="selectedState" @change="onStateChange()" class="select select-bordered select-xs bg-neutral-900 border-neutral-800 text-xs rounded-xl h-8 min-h-8">
+                            <option value="ALL">All States</option>
+                            <template x-for="st in uniqueStates" :key="st">
+                                <option :value="st" x-text="st"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <!-- City Filter -->
+                    <div class="form-control w-full">
+                        <label class="label py-0 mb-0.5"><span class="text-[9px] text-neutral-400 font-bold uppercase">City</span></label>
+                        <select x-model="selectedCity" @change="onCityChange()" class="select select-bordered select-xs bg-neutral-900 border-neutral-800 text-xs rounded-xl h-8 min-h-8" :disabled="selectedState === 'ALL'">
+                            <option value="ALL">All Cities</option>
+                            <template x-for="c in uniqueCities" :key="c">
+                                <option :value="c" x-text="c"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <!-- Route Forms -->
             <div class="space-y-4">
                 <!-- Origin -->
@@ -588,6 +633,12 @@ function portalController() {
         map: null,
         graphNodes: [],
         stations: [],
+        selectedCountry: 'ALL',
+        selectedState: 'ALL',
+        selectedCity: 'ALL',
+        uniqueStates: [],
+        uniqueCities: [],
+        filteredStationsCount: 0,
         routeForm: {
             origin: '',
             destination: '',
@@ -817,9 +868,125 @@ function portalController() {
                         className: 'custom-leaflet-popup'
                     });
                 });
+
+                // Construct and apply filters dynamically
+                this.updateFilters();
+
             } catch (err) {
                 console.error("Error loading stations:", err);
             }
+        },
+
+        updateFilters() {
+            // 1. Get unique states
+            const states = new Set();
+            this.stations.forEach(st => {
+                const parsed = this.parseStationAddress(st.address);
+                if (parsed.state) {
+                    states.add(parsed.state);
+                }
+            });
+            this.uniqueStates = Array.from(states).sort();
+
+            // 2. Filter stations based on state & city
+            this.filterMarkers();
+        },
+
+        parseStationAddress(address) {
+            const parts = address.split(',').map(p => p.trim());
+            if (parts.length < 2) return { city: 'Unknown', state: 'Unknown', country: 'India' };
+            
+            const lastPart = parts[parts.length - 1];
+            // Remove zip code digits and trim to get state
+            const state = lastPart.replace(/\d+/g, '').trim();
+            const city = parts[parts.length - 2];
+            
+            return { city: city, state: state, country: 'India' };
+        },
+
+        filterMarkers() {
+            let count = 0;
+            
+            // Update cities dropdown list based on state selection
+            if (this.selectedState === 'ALL') {
+                this.uniqueCities = [];
+                this.selectedCity = 'ALL';
+            } else {
+                const cities = new Set();
+                this.stations.forEach(st => {
+                    const parsed = this.parseStationAddress(st.address);
+                    if (parsed.state === this.selectedState && parsed.city) {
+                        cities.add(parsed.city);
+                    }
+                });
+                this.uniqueCities = Array.from(cities).sort();
+            }
+
+            // Check each station and hide/show marker
+            this.stations.forEach(st => {
+                const parsed = this.parseStationAddress(st.address);
+                const marker = this.stationMarkersMap[st.id];
+                
+                let matchCountry = (this.selectedCountry === 'ALL' || parsed.country === this.selectedCountry);
+                let matchState = (this.selectedState === 'ALL' || parsed.state === this.selectedState);
+                let matchCity = (this.selectedCity === 'ALL' || parsed.city === this.selectedCity);
+                
+                if (marker) {
+                    if (matchCountry && matchState && matchCity) {
+                        marker.addTo(this.map);
+                        count++;
+                    } else {
+                        this.map.removeLayer(marker);
+                    }
+                }
+            });
+
+            this.filteredStationsCount = count;
+        },
+
+        zoomToFilteredStations() {
+            const bounds = [];
+            this.stations.forEach(st => {
+                const parsed = this.parseStationAddress(st.address);
+                let matchCountry = (this.selectedCountry === 'ALL' || parsed.country === this.selectedCountry);
+                let matchState = (this.selectedState === 'ALL' || parsed.state === this.selectedState);
+                let matchCity = (this.selectedCity === 'ALL' || parsed.city === this.selectedCity);
+
+                if (matchCountry && matchState && matchCity) {
+                    bounds.push([st.latitude, st.longitude]);
+                }
+            });
+
+            if (bounds.length > 0) {
+                if (bounds.length === 1) {
+                    this.map.setView(bounds[0], 12);
+                } else {
+                    this.map.fitBounds(bounds, { padding: [50, 50] });
+                }
+            } else {
+                // Default center
+                this.map.setView([20.5937, 78.9629], 5);
+            }
+        },
+
+        onCountryChange() {
+            if (this.selectedCountry === 'ALL') {
+                this.selectedState = 'ALL';
+                this.selectedCity = 'ALL';
+            }
+            this.filterMarkers();
+            this.zoomToFilteredStations();
+        },
+
+        onStateChange() {
+            this.selectedCity = 'ALL';
+            this.filterMarkers();
+            this.zoomToFilteredStations();
+        },
+
+        onCityChange() {
+            this.filterMarkers();
+            this.zoomToFilteredStations();
         },
 
         async planRoute() {

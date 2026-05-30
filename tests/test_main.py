@@ -182,7 +182,7 @@ def test_persistent_endpoints():
         stations_res = client.get("/api/stations/")
         assert stations_res.status_code == 200
         stations_data = stations_res.json()
-        assert len(stations_data) == 24
+        assert len(stations_data) == 25
         
         # 2. Get Topographic Nodes
         nodes_res = client.get("/api/routing/nodes")

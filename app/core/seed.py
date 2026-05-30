@@ -7,9 +7,22 @@ from app.core.security import get_password_hash
 from app.models.user import User
 from app.models.station import Station, Port, SolarInsight
 
-# High-fidelity nationwide charging station profiles centered across major states in India (24 stations)
+# High-fidelity nationwide charging station profiles centered across major states in India (25 stations)
 SEED_STATIONS = [
-    # --- MAHARASHTRA (Mumbai / Pune / Highway) ---
+    # --- MAHARASHTRA (Nagpur / Mumbai / Pune / Highway) ---
+    {
+        "name": "GoBharat EV Flagship Command Hub",
+        "address": "Kalmeshwar Town Center, Nagpur, Maharashtra 441501",
+        "lat": 21.2333,
+        "lng": 78.9167,
+        "rating": 5.0,
+        "solar": {"output": 80.0, "storage": 300.0, "score": 100},
+        "ports": [
+            {"connector": "CCS2", "power": 350.0, "price": 15.0, "status": "AVAILABLE"},
+            {"connector": "CCS2", "power": 150.0, "price": 12.0, "status": "AVAILABLE"},
+            {"connector": "Type 2 AC", "power": 22.0, "price": 8.0, "status": "AVAILABLE"}
+        ]
+    },
     {
         "name": "Jio-bp Pulse - BKC Hub",
         "address": "G Block BKC, Bandra Kurla Complex, Mumbai, Maharashtra 400051",
@@ -312,12 +325,12 @@ SEED_STATIONS = [
 def seed_database(force: bool = False):
     """Seeds the database with users and spatial charging stations, with auto-upgrade support."""
     with Session(engine) as session:
-        # Auto-detect old database schema and upgrade to new Pan-India 24-station grid
+        # Auto-detect old database schema and upgrade to new Pan-India 25-station grid
         existing_stations = session.exec(select(Station)).all()
         has_old_data = False
         if existing_stations:
-            # Force upgrade if database has less than 24 stations
-            if len(existing_stations) < 24:
+            # Force upgrade if database has less than 25 stations
+            if len(existing_stations) < 25:
                 has_old_data = True
 
         if force or has_old_data:
@@ -393,7 +406,7 @@ def seed_database(force: bool = False):
                     )
                     session.add(port)
             session.commit()
-            print("Seeded 24 high-fidelity Pan-India EV Charging Stations across multiple states!")
+            print("Seeded 25 high-fidelity Pan-India EV Charging Stations across multiple states!")
         else:
             print("Database already contains the latest stations. Skipping spatial seed.")
 
