@@ -386,6 +386,170 @@
         </div>
     </footer>
 
+    <!-- Glowing Cyber AI Support Chatbot HUD Widget -->
+    <div x-data="chatbotController()" x-init="initChat()" class="fixed bottom-6 right-6 z-[2000] flex flex-col items-end">
+        <!-- Floating Glass Chat Console -->
+        <div x-show="open" 
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-10 scale-95"
+             class="w-[360px] h-[480px] bg-neutral-950/95 backdrop-blur-2xl border border-neutral-800 rounded-3xl flex flex-col shadow-[0_0_35px_rgba(34,197,94,0.15)] overflow-hidden mb-4 animate-fade-in"
+             style="display: none;">
+            
+            <!-- Chat Header -->
+            <div class="px-5 py-4 border-b border-neutral-900 bg-neutral-950 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-cyberGreen/10 border border-cyberGreen/20 flex items-center justify-center text-cyberGreen">
+                        <i class="fa-solid fa-robot animate-pulse"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-white uppercase tracking-wider">AI Support Coordinator</h4>
+                        <span class="text-[9px] text-cyberGreen font-bold uppercase tracking-widest block">System Diagnostics Online</span>
+                    </div>
+                </div>
+                <button @click="toggleChat()" class="btn btn-ghost btn-xs text-neutral-500 hover:text-white rounded-lg"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+
+            <!-- Messages Window -->
+            <div x-ref="msgWindow" class="flex-grow overflow-y-auto p-4 space-y-3.5 scroll-smooth">
+                <template x-for="(msg, idx) in messages" :key="idx">
+                    <div class="flex flex-col" :class="msg.sender === 'user' ? 'items-end' : 'items-start'">
+                        <div class="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs shadow-md leading-relaxed"
+                             :class="msg.sender === 'user' ? 'bg-gradient-to-tr from-cyberGreen/20 to-cyberBlue/10 border border-cyberGreen/30 text-white rounded-tr-none' : 'bg-neutral-900/80 border border-neutral-800 text-neutral-300 rounded-tl-none'">
+                            <span x-html="msg.text"></span>
+                        </div>
+                        <span class="text-[8px] text-neutral-500 font-bold uppercase mt-1 px-1" x-text="msg.sender === 'user' ? 'Driver' : 'AI Agent'"></span>
+                    </div>
+                </template>
+                
+                <!-- Animated Typing Indicator -->
+                <div x-show="loading" class="flex items-center gap-1.5 pl-3 py-1 text-cyberGreen text-[10px] font-bold uppercase tracking-widest animate-pulse" style="display: none;">
+                    <i class="fa-solid fa-spinner animate-spin"></i> Analyzing telemetry grid...
+                </div>
+            </div>
+
+            <!-- Input Console Form -->
+            <div class="p-3 border-t border-neutral-900 bg-neutral-950/60 flex gap-2 items-center">
+                <input type="text" 
+                       x-model="input" 
+                       @keydown.enter="sendMessage()" 
+                       placeholder="Ask about routing, solar output, or wallet..." 
+                       class="input input-bordered input-sm bg-neutral-900 border-neutral-800 focus:border-cyberGreen text-xs rounded-xl flex-grow pl-3 focus:outline-none" />
+                <button @click="sendMessage()" :disabled="loading || !input.trim()" 
+                        class="btn btn-square bg-cyberGreen border-none text-black hover:bg-white btn-sm rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-paper-plane text-xs"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Glowing Neon Toggle Floating Button -->
+        <button @click="toggleChat()" 
+                class="w-14 h-14 rounded-full bg-gradient-to-tr from-cyberGreen to-cyberBlue flex items-center justify-center text-black shadow-[0_0_20px_rgba(34,197,94,0.4)] hover:shadow-[0_0_30px_rgba(34,197,94,0.6)] cursor-pointer hover:scale-110 active:scale-95 transition-all duration-300 relative group border border-white/10">
+            <span class="absolute inset-0 rounded-full bg-cyberGreen/20 animate-ping opacity-75 group-hover:hidden"></span>
+            <i class="fa-solid text-lg transition-all duration-300" :class="open ? 'fa-xmark rotate-90 text-black' : 'fa-robot text-black'"></i>
+        </button>
+    </div>
+
+    <!-- Chatbot Controller Script -->
+    <script>
+        function chatbotController() {
+            return {
+                open: false,
+                input: '',
+                messages: [],
+                loading: false,
+
+                initChat() {
+                    // Initial helpful guide
+                    this.messages.push({
+                        sender: 'ai',
+                        text: "Welcome Driver! ⚡ I am your **GoBharat EV Neural AI Assistant**.<br/><br/>I am directly integrated with your user session, live database wallet, topographic route solvers, and solar telemetry metrics. Ask me things like:<br/>• *'Where do you factor in elevations?'*<br/>• *'How does emergency battery rerouting work?'*<br/>• *'What is my active wallet balance?'*"
+                    });
+                },
+
+                toggleChat() {
+                    this.open = !this.open;
+                    if (this.open) {
+                        this.scrollChat();
+                    }
+                },
+
+                scrollChat() {
+                    setTimeout(() => {
+                        const win = this.$refs.msgWindow;
+                        if (win) {
+                            win.scrollTop = win.scrollHeight;
+                        }
+                    }, 50);
+                },
+
+                async sendMessage() {
+                    if (!this.input.trim() || this.loading) return;
+
+                    const userMsg = this.input.trim();
+                    this.messages.push({ sender: 'user', text: userMsg });
+                    this.input = '';
+                    this.loading = true;
+                    this.scrollChat();
+
+                    try {
+                        const token = localStorage.getItem('access_token');
+                        if (!token) {
+                            this.messages.push({
+                                sender: 'ai',
+                                text: "🔒 *Authentication Required:* Please sign in to verify your driver profile, active wallets, and route trip histories before asking personal telemetry diagnostics."
+                            });
+                            this.loading = false;
+                            this.scrollChat();
+                            return;
+                        }
+
+                        const response = await fetch('/api/chatbot/ask', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ message: userMsg })
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.messages.push({
+                                sender: 'ai',
+                                text: data.reply
+                            });
+                        } else {
+                            if (response.status === 401) {
+                                this.messages.push({
+                                    sender: 'ai',
+                                    text: "🔒 *Session Expired:* Please sign in again to re-authorize secure AI telemetry queries."
+                                });
+                            } else {
+                                this.messages.push({
+                                    sender: 'ai',
+                                    text: "⚠️ Failed to reach the AI coordinator. Please check your Uvicorn app server task."
+                                });
+                            }
+                        }
+                    } catch (err) {
+                        console.error("AI connection error:", err);
+                        this.messages.push({
+                            sender: 'ai',
+                            text: "⚠️ Connection timeout. The GoBharat EV backend engine appears offline."
+                        });
+                    } finally {
+                        this.loading = false;
+                        this.scrollChat();
+                    }
+                }
+            };
+        }
+    </script>
+
     <!-- Anti-shuffling layout flash guard -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
@@ -396,3 +560,4 @@
     </script>
 </body>
 </html>
+

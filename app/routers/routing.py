@@ -102,3 +102,17 @@ def plan_optimized_route(
     # Return results enriched with DB Trip ID
     route_results["trip_id"] = trip.id
     return route_results
+
+
+@router.get("/history", response_model=List[RouteTrip])
+def list_trip_history(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieves all past saved topography-aware optimized trip logs for the authenticated driver."""
+    trips = session.exec(
+        select(RouteTrip)
+        .where(RouteTrip.user_id == current_user.id)
+    ).all()
+    return trips
+

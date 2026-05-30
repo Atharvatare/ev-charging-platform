@@ -324,8 +324,30 @@ function dashboardController() {
             }
         },
 
-        loadTrips() {
-            // Mock historical computed trips (Mumbai-Pune corridor)
+        async loadTrips() {
+            const token = localStorage.getItem('access_token') || 'mock_testing_token';
+            try {
+                const response = await fetch('/api/routing/history', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Sort descending by date so newest trips show at the top
+                    data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    
+                    this.trips = data;
+                } else {
+                    console.warn("Failed to load real trip history, using simulated corridor records.");
+                    this.useFallbackMockTrips();
+                }
+            } catch (err) {
+                console.error("Error loading dynamic trip history:", err);
+                this.useFallbackMockTrips();
+            }
+        },
+
+        useFallbackMockTrips() {
             this.trips = [
                 { id: 't1', origin_name: 'Gateway of India', destination_name: 'BKC Hub', start_soc: 100.0, predicted_arrival_soc: 94.2, created_at: new Date(Date.now() - 7200000).toISOString() },
                 { id: 't2', origin_name: 'Lower Parel', destination_name: 'Lonavala Hill Station', start_soc: 85.0, predicted_arrival_soc: 34.5, created_at: new Date(Date.now() - 86400000).toISOString() },

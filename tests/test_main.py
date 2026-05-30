@@ -224,7 +224,41 @@ def test_persistent_endpoints():
         assert "access_token" in token_data
         assert token_data["token_type"] == "bearer"
         
+        # 9. Test Routing History (GET /api/routing/history)
+        headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+        history_res = client.get("/api/routing/history", headers=headers)
+        assert history_res.status_code == 200
+        assert isinstance(history_res.json(), list)
+
+        # 10. Test Chatbot Ask (POST /api/chatbot/ask)
+        chatbot_payload = {"message": "hello chatbot"}
+        chatbot_res = client.post("/api/chatbot/ask", json=chatbot_payload, headers=headers)
+        assert chatbot_res.status_code == 200
+        assert "reply" in chatbot_res.json()
+        assert "Hello" in chatbot_res.json()["reply"]
+
+        # 11. Test Chatbot Ask with battery keyword
+        chatbot_payload_bat = {"message": "what is my battery profile?"}
+        chatbot_res_bat = client.post("/api/chatbot/ask", json=chatbot_payload_bat, headers=headers)
+        assert chatbot_res_bat.status_code == 200
+        assert "wallet balance" in chatbot_res_bat.json()["reply"]
+
+        # 12. Test Bookings Reserve with OSM dynamic port ID (POST /api/bookings/reserve)
+        import uuid
+        mock_port_uuid = str(uuid.uuid4())
+        reserve_payload = {
+            "port_id": mock_port_uuid,
+            "duration_hours": 2
+        }
+        reserve_res = client.post("/api/bookings/reserve", json=reserve_payload, headers=headers)
+        assert reserve_res.status_code == 200
+        res_data = reserve_res.json()
+        assert "reservation_id" in res_data
+        assert "qr_code" in res_data
+        assert res_data["message"] == "Charger port reserved successfully."
+        
         print("SUCCESS: Fully persistent backend routers, About page, Contact ticketing, and Consumer Auth verified via TestClient!")
+
 
 
 def test_websocket_broadcasts():
