@@ -137,6 +137,38 @@ def test_vehicle_profiles_physics():
     assert ather_run["soc_delta"] > ioniq_run["soc_delta"]
     print("SUCCESS: Dynamic EV Profiles physics calculations are scientifically accurate!")
 
+def test_battery_physics_weather_impact():
+    """
+    Verifies that headwinds, rainfall (wet asphalt resistance), and temperature extremes (HVAC)
+    correctly increase EV battery depletions under the senior consultant physics model.
+    """
+    model_baseline = EVEnergyModel(temperature_c=25.0, wind_speed_kmh=0.0, wind_direction="none", rain="none")
+    model_headwind = EVEnergyModel(temperature_c=25.0, wind_speed_kmh=40.0, wind_direction="headwind", rain="none")
+    model_tailwind = EVEnergyModel(temperature_c=25.0, wind_speed_kmh=40.0, wind_direction="tailwind", rain="none")
+    model_heavy_rain = EVEnergyModel(temperature_c=25.0, wind_speed_kmh=0.0, wind_direction="none", rain="heavy")
+    model_extreme_heat = EVEnergyModel(temperature_c=38.0, wind_speed_kmh=0.0, wind_direction="none", rain="none")
+
+    # Run identical flat transit segment (10 km at 60 km/h)
+    baseline_run = model_baseline.calculate_energy_consumption(distance_km=10.0, speed_kmh=60.0, elevation_delta_m=0.0)
+    headwind_run = model_headwind.calculate_energy_consumption(distance_km=10.0, speed_kmh=60.0, elevation_delta_m=0.0)
+    tailwind_run = model_tailwind.calculate_energy_consumption(distance_km=10.0, speed_kmh=60.0, elevation_delta_m=0.0)
+    heavy_rain_run = model_heavy_rain.calculate_energy_consumption(distance_km=10.0, speed_kmh=60.0, elevation_delta_m=0.0)
+    extreme_heat_run = model_extreme_heat.calculate_energy_consumption(distance_km=10.0, speed_kmh=60.0, elevation_delta_m=0.0)
+
+    # 1. Headwind should consume more absolute energy than baseline
+    assert headwind_run["energy_kwh"] > baseline_run["energy_kwh"]
+    
+    # 2. Tailwind should consume less absolute energy than baseline
+    assert tailwind_run["energy_kwh"] < baseline_run["energy_kwh"]
+    
+    # 3. Heavy rain (increased rolling resistance) should consume more than baseline
+    assert heavy_rain_run["energy_kwh"] > baseline_run["energy_kwh"]
+    
+    # 4. Extreme heat (battery chiller + A/C auxiliary draws) should consume more than baseline
+    assert extreme_heat_run["energy_kwh"] > baseline_run["energy_kwh"]
+
+    print("SUCCESS: Senior Consultant environmental physics calculations are fully verified!")
+
 def test_persistent_endpoints():
     """
     Verifies that the FastAPI endpoints for wallet deposits, active bookings,

@@ -17,6 +17,10 @@ class RoutePlanRequest(BaseModel):
     destination: str
     start_soc: float = 100.0
     vehicle: Optional[str] = "tata_nexon_ev_max"
+    temperature_c: Optional[float] = 25.0
+    wind_speed_kmh: Optional[float] = 0.0
+    wind_direction: Optional[str] = "none"
+    rain: Optional[str] = "none"
 
 @router.get("/nodes")
 def get_graph_nodes():
@@ -56,7 +60,11 @@ def plan_optimized_route(
             battery_capacity_kwh=profile["battery_capacity_kwh"],
             efficiency=profile["efficiency"],
             regen_efficiency=profile["regen_efficiency"],
-            auxiliary_draw_w=profile["auxiliary_draw_w"]
+            auxiliary_draw_w=profile["auxiliary_draw_w"],
+            temperature_c=req.temperature_c,
+            wind_speed_kmh=req.wind_speed_kmh,
+            wind_direction=req.wind_direction,
+            rain=req.rain
         )
         
         route_results = compute_route(

@@ -70,16 +70,38 @@ class EVEnergyModel:
         battery_capacity_kwh: float = 40.5, # Battery size in kWh
         efficiency: float = 0.90,         # Powertrain discharge efficiency (90%)
         regen_efficiency: float = 0.70,   # Regenerative braking recovery efficiency (70%)
-        auxiliary_draw_w: float = 1200.0  # HVAC, audio, screens draw (1.2 kW constant)
+        auxiliary_draw_w: float = 1200.0, # HVAC, audio, screens draw (1.2 kW constant)
+        # Climate override parameters
+        temperature_c: float = 25.0,
+        wind_speed_kmh: float = 0.0,
+        wind_direction: str = "none",
+        rain: str = "none"
     ):
         self.mass = mass_kg
         self.Cd = drag_coeff
         self.A = frontal_area
+        
+        # Adjust Rolling Resistance Coefficient for wet roads
         self.Cr = rolling_coeff
+        if rain.lower() == "heavy":
+            self.Cr *= 1.15
+        elif rain.lower() == "light":
+            self.Cr *= 1.07
+            
         self.capacity = battery_capacity_kwh
         self.efficiency = efficiency
         self.regen_efficiency = regen_efficiency
+        
+        # Scale HVAC / Battery cooling draws based on extreme temperatures
         self.aux_draw = auxiliary_draw_w
+        if temperature_c > 32.0:
+            self.aux_draw *= 1.25  # 25% increase for AC battery chillers
+        elif temperature_c < 10.0:
+            self.aux_draw *= 1.40  # 40% increase for active winter heaters
+            
+        self.wind_speed_ms = wind_speed_kmh / 3.6
+        self.wind_direction = wind_direction.lower()
+        
         self.air_density = 1.225          # kg/m^3 standard sea-level air density
         self.g = 9.81                     # m/s^2 acceleration due to gravity
 
@@ -106,8 +128,14 @@ class EVEnergyModel:
         # theta = arcsin(height_delta / hypotenuse)
         slope_angle = math.asin(min(max(elevation_delta_m / distance_m, -1.0), 1.0))
 
-        # 1. Aerodynamic Drag Force: F_aero = 0.5 * rho * C_d * A * v^2
-        f_aero = 0.5 * self.air_density * self.Cd * self.A * (v ** 2)
+        # 1. Aerodynamic Drag Force: F_aero = 0.5 * rho * C_d * A * v_rel^2
+        v_rel = v
+        if self.wind_direction == "headwind":
+            v_rel = v + self.wind_speed_ms
+        elif self.wind_direction == "tailwind":
+            v_rel = max(0.0, v - self.wind_speed_ms)
+            
+        f_aero = 0.5 * self.air_density * self.Cd * self.A * (v_rel ** 2)
 
         # 2. Rolling Resistance Force: F_roll = C_r * m * g * cos(theta)
         f_roll = self.Cr * self.mass * self.g * math.cos(slope_angle)
