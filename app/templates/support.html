@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}GoBharat EV - Support Hub & Ticketing Center{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-12 px-6 animate-fade-in" x-data="supportController()">
+
+    <!-- Header Hero Section -->
+    <div class="text-center max-w-3xl mx-auto mb-16 border-b border-neutral-900 pb-10">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyberBlue/10 border border-cyberBlue/20 text-cyberBlue text-[10px] font-bold uppercase tracking-widest mb-4">
+            <i class="fa-solid fa-headset mr-0.5 animate-pulse"></i> 24/7 National Operations Command
+        </div>
+        <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-4">
+            Support <span class="text-cyberBlue glow-text-blue">Hub</span>
+        </h1>
+        <p class="text-neutral-400 text-base md:text-lg leading-relaxed">
+            Have questions regarding active port reservations, wallet balances, or physics A* routing anomalies? File a persistent support ticket or reach out to our highway command.
+        </p>
+    </div>
+
+    <!-- 2-Column Corporate Hub Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        
+        <!-- COLUMN 1 & 2: CORPORATE HEADQUARTERS & TELEMETRY (2/3 width) -->
+        <div class="lg:col-span-2 space-y-8">
+            
+            <!-- Corporate Address & Contact Details -->
+            <div class="card glass-panel border border-neutral-800 rounded-3xl p-8 space-y-6 shadow-2xl bg-gradient-to-tr from-neutral-950 to-neutral-900/60 hover:border-cyberBlue/20 transition-all duration-300">
+                <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-building text-cyberBlue"></i> India Headquarters
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-neutral-300">
+                    <div class="space-y-3">
+                        <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Registered Corporate Office</span>
+                        <p class="leading-relaxed text-neutral-400">
+                            **GoBharat EV Private Limited** <br/>
+                            G Block BKC, Bandra Kurla Complex, <br/>
+                            Mumbai, Maharashtra 400051
+                        </p>
+                        <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block pt-2">National Highway Coordinators</span>
+                        <p class="text-xs text-neutral-500">Mumbai-Pune, Bengaluru-Krishnagiri, Delhi-Noida, Kolkata-Sector-V corridors.</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Corporate Hotline</span>
+                            <span class="text-white font-mono font-bold mt-1 block hover:text-cyberGreen transition-all cursor-pointer"><i class="fa-solid fa-phone text-xs text-neutral-500 mr-1"></i> +91 22 5055 2026</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Support Email</span>
+                            <span class="text-white font-mono font-bold mt-1 block hover:text-cyberBlue transition-all cursor-pointer"><i class="fa-solid fa-envelope text-xs text-neutral-500 mr-1"></i> support@gobharatev.com</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Operational Hours</span>
+                            <p class="text-neutral-400 text-xs mt-0.5">24/7/365 Automated Charging Telemetry Support</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Operating Centers (NOC) details -->
+            <div class="card glass-panel border border-neutral-800 rounded-3xl p-8 space-y-4 shadow-2xl">
+                <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-cyberGreen animate-pulse"></i> Operational SLA Commitments
+                </h3>
+                <div class="space-y-3.5 text-xs text-neutral-400 leading-relaxed">
+                    <p>
+                        Our Network Operating Centers (NOC) utilize automated **OCPP heartbeat diagnostics** to scan active charging ports continuously. In the event of high-temperature locked faults or grid over-voltage spikes, status changes are flagged and updated persistently in under 500 milliseconds.
+                    </p>
+                    <p>
+                        Drivers filing support tickets through this hub can expect direct engineering support or dispatch updates regarding local charger maintenance protocols within standard operational timelines.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- COLUMN 3: INTERACTIVE SUPPORT TICKET FORM (1/3 width) -->
+        <div class="card glass-panel border border-neutral-800 rounded-3xl p-6 lg:col-span-1 shadow-2xl relative overflow-hidden">
+            <!-- Circuity neon details -->
+            <div class="absolute -right-20 -top-20 w-40 h-40 rounded-full bg-cyberBlue/5 blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-20 -bottom-20 w-40 h-40 rounded-full bg-cyberGreen/5 blur-3xl pointer-events-none"></div>
+
+            <div class="flex justify-between items-center mb-6 z-10 relative">
+                <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-headset text-cyberGreen animate-bounce"></i> Driver Support
+                </h3>
+                <span class="text-[8px] text-cyberGreen font-bold uppercase tracking-widest bg-cyberGreen/10 border border-cyberGreen/25 px-2 py-0.5 rounded">24/7 Live</span>
+            </div>
+
+            <!-- Form Block -->
+            <div class="space-y-4 z-10 relative" x-show="!submitted">
+                <p class="text-neutral-400 text-xs leading-relaxed mb-2">Have a question regarding active port reservations, wallet balances, or physics A* routing anomalies? File a persistent support ticket below.</p>
+                
+                <div class="form-control w-full">
+                    <label class="label"><span class="label-text text-neutral-300 font-bold text-[10px] uppercase tracking-wider">Driver Name</span></label>
+                    <input type="text" x-model="supportForm.name" placeholder="Alex Mercer" class="input input-bordered input-sm bg-neutral-900 border-neutral-800 focus:border-cyberGreen text-xs rounded-xl w-full" />
+                </div>
+
+                <div class="form-control w-full">
+                    <label class="label"><span class="label-text text-neutral-300 font-bold text-[10px] uppercase tracking-wider">Driver Email</span></label>
+                    <input type="email" x-model="supportForm.email" placeholder="driver@ev.com" class="input input-bordered input-sm bg-neutral-900 border-neutral-850 focus:border-cyberGreen text-xs rounded-xl w-full" />
+                </div>
+
+                <div class="form-control w-full">
+                    <label class="label"><span class="label-text text-neutral-300 font-bold text-[10px] uppercase tracking-wider">Subject</span></label>
+                    <input type="text" x-model="supportForm.subject" placeholder="Bandra CCS2 Port Settle Issue" class="input input-bordered input-sm bg-neutral-900 border-neutral-850 focus:border-cyberGreen text-xs rounded-xl w-full" />
+                </div>
+
+                <div class="form-control w-full">
+                    <label class="label"><span class="label-text text-neutral-300 font-bold text-[10px] uppercase tracking-wider">Message Description</span></label>
+                    <textarea x-model="supportForm.message" rows="4" placeholder="Describe your charging issue..." class="textarea textarea-bordered bg-neutral-900 border-neutral-850 focus:border-cyberGreen text-xs rounded-xl w-full"></textarea>
+                </div>
+
+                <button @click="submitTicket()" :disabled="submitting || !supportForm.name || !supportForm.email || !supportForm.subject || !supportForm.message" 
+                        class="btn btn-block btn-sm bg-gradient-to-r from-cyberGreen to-cyberBlue text-black font-extrabold border-none hover:bg-white rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.15)] py-2.5 transition-all mt-4">
+                    <span x-show="submitting" class="loading loading-spinner loading-xs text-black"></span>
+                    <span x-show="!submitting"><i class="fa-solid fa-paper-plane mr-0.5"></i> Submit Ticket</span>
+                </button>
+            </div>
+
+            <!-- Success Checkmark Block -->
+            <div class="text-center py-12 space-y-4 animate-fade-in" x-show="submitted">
+                <div class="w-16 h-16 rounded-full bg-cyberGreen/10 border border-cyberGreen/20 flex items-center justify-center text-cyberGreen text-3xl mx-auto animate-bounce shadow-[0_0_20px_rgba(34,197,94,0.1)]">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-white text-base">Support Ticket Logged!</h4>
+                    <p class="text-neutral-400 text-xs mt-1 px-4">Your ticket has been logged persistently in the GoBharat EV corporate registry. ID: <span class="font-mono text-cyberGreen font-bold" x-text="ticketId"></span></p>
+                </div>
+                <button @click="resetForm()" class="btn btn-ghost btn-xs text-neutral-500 hover:text-white rounded-lg mt-4">
+                    Submit Another Ticket
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Support page logic -->
+<script>
+function supportController() {
+    return {
+        supportForm: {
+            name: '',
+            email: '',
+            subject: '',
+            message: ''
+        },
+        submitting: false,
+        submitted: false,
+        ticketId: '',
+
+        async submitTicket() {
+            this.submitting = true;
+            try {
+                const response = await fetch('/api/contact/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.supportForm)
+                });
+                if (response.ok) {
+                    const result = await response.json();
+                    this.ticketId = 'TKT_' + Math.floor(Math.random() * 900000 + 100000);
+                    this.submitted = true;
+                } else {
+                    alert("Ticket submission failed on backend.");
+                }
+            } catch (err) {
+                console.error("Support submission error:", err);
+                alert("Fail to connect to support API.");
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        resetForm() {
+            this.supportForm = {
+                name: '',
+                email: '',
+                subject: '',
+                message: ''
+            };
+            this.submitted = false;
+            this.ticketId = '';
+        }
+    };
+}
+</script>
+{% endblock %}

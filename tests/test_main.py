@@ -189,11 +189,16 @@ def test_persistent_endpoints():
         assert nodes_res.status_code == 200
         assert len(nodes_res.json()) > 0
         
-        # 3. Get About Company & Support Page
+        # 3. Get About Company Profile
         about_res = client.get("/about")
         assert about_res.status_code == 200
         assert "GoBharat EV" in about_res.text
-        assert "About Company & Support Hub" in about_res.text
+        assert "About Company Profile" in about_res.text
+        
+        # Get Support Hub
+        support_res = client.get("/support")
+        assert support_res.status_code == 200
+        assert "Support Hub" in support_res.text
         
         # 4. Submit Support Ticket Successfully
         ticket_payload = {

@@ -100,8 +100,13 @@ def get_admin_dashboard_page(request: Request):
 
 @app.get("/about")
 def get_about_and_support_page(request: Request):
-    """Serves the stunning corporate About Company and Contact Support Hub."""
+    """Serves the stunning corporate About Company Profile."""
     return templates.TemplateResponse(request, "about.html", {"request": request})
+
+@app.get("/support")
+def get_support_hub_page(request: Request):
+    """Serves the driver help and corporate support ticketing center."""
+    return templates.TemplateResponse(request, "support.html", {"request": request})
 
 @app.get("/login")
 def get_login_and_register_page(request: Request):

@@ -10,9 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS & DaisyUI (Local Fallbacks + CDN Support) -->
+    <!-- Tailwind CSS & DaisyUI (Local Fallback + CDN Support) -->
     <link href="/static/css/daisyui.css" rel="stylesheet" type="text/css" />
-    <link href="/static/css/tailwind.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Alpine.js (Reactive micro-state manager) -->
@@ -123,21 +122,37 @@
             margin-right: auto !important;
         }
 
+        /* Dynamic Theme Variables */
+        html[data-theme="dark"] {
+            --bg-color: #0a0a0c;
+            --text-color: #f3f4f6;
+            --card-bg: rgba(15, 15, 20, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+        }
+        
+        html[data-theme="light"] {
+            --bg-color: #f8fafc;
+            --text-color: #0f172a;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(0, 0, 0, 0.08);
+        }
+
         body {
-            background-color: #0a0a0c;
-            color: #f3f4f6;
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
             overflow-x: hidden;
             font-family: 'Outfit', sans-serif;
             opacity: 1 !important;
-            transition: opacity 0.25s ease-in-out;
+            transition: background-color 0.3s ease, color 0.3s ease, opacity 0.25s ease-in-out;
         }
 
         /* Glassmorphism custom styling */
         .glass-panel {
-            background: rgba(15, 15, 20, 0.7);
+            background: var(--card-bg) !important;
+            border: 1px solid var(--card-border) !important;
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .glass-panel-glow-green {
@@ -234,12 +249,13 @@
             animation: pulseGlowBlue 2.5s infinite;
         }
     </style>
-    <!-- goVolt Global Store for Currency & Unit switches -->
+    <!-- goVolt Global Store for Currency, Unit & Theme switches -->
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.store('global', {
                 currency: localStorage.getItem('global_currency') || 'INR',
                 unit: localStorage.getItem('global_unit') || 'km',
+                theme: localStorage.getItem('global_theme') || 'dark',
                 rates: {
                     'INR': 1.0,
                     'USD': 0.012,
@@ -249,6 +265,16 @@
                     'INR': '₹',
                     'USD': '$',
                     'EUR': '€'
+                },
+                init() {
+                    // Set default theme state on html tag
+                    document.documentElement.setAttribute('data-theme', this.theme);
+                },
+                toggleTheme() {
+                    this.theme = this.theme === 'dark' ? 'light' : 'dark';
+                    localStorage.setItem('global_theme', this.theme);
+                    document.documentElement.setAttribute('data-theme', this.theme);
+                    window.dispatchEvent(new CustomEvent('theme-changed', { detail: this.theme }));
                 },
                 setCurrency(c) {
                     this.currency = c;
@@ -311,7 +337,12 @@
                 </li>
                 <li>
                     <a href="/about" class="hover:text-cyberGreen font-medium px-4 py-2 rounded-lg transition-all duration-300">
-                        <i class="fa-solid fa-circle-info mr-1"></i> About & Support
+                        <i class="fa-solid fa-circle-info mr-1"></i> About Us
+                    </a>
+                </li>
+                <li>
+                    <a href="/support" class="hover:text-cyberGreen font-medium px-4 py-2 rounded-lg transition-all duration-300">
+                        <i class="fa-solid fa-headset mr-1"></i> Support Hub
                     </a>
                 </li>
             </ul>
@@ -347,6 +378,17 @@
                 </ul>
             </div>
 
+            <!-- Theme Switcher Toggle -->
+            <button @click="$store.global.toggleTheme()" 
+                    class="btn btn-outline border-neutral-800 hover:border-cyberGreen btn-sm px-2.5 rounded-lg text-xs font-semibold text-neutral-300">
+                <template x-if="$store.global.theme === 'dark'">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-moon text-cyberBlue text-xs"></i> Dark</span>
+                </template>
+                <template x-if="$store.global.theme === 'light'">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-sun text-yellow-500 text-xs animate-spin-slow"></i> Light</span>
+                </template>
+            </button>
+
             <!-- Auth State UI Toggle -->
             <template x-if="!loggedIn">
                 <a href="/login" class="btn btn-outline border-cyberGreen text-cyberGreen hover:bg-cyberGreen hover:text-black hover:border-cyberGreen btn-sm px-5 rounded-lg transition-all duration-300 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
@@ -378,7 +420,7 @@
     <footer id="global-footer" class="footer items-center p-6 border-t border-neutral-900 bg-[#070709] text-neutral-500 text-xs">
         <div class="items-center grid-flow-col">
             <i class="fa-solid fa-circle-nodes text-cyberBlue text-sm"></i>
-            <p>© 2026 GoBharat EV. All Systems Operational. <a href="/about" class="hover:underline text-cyberGreen font-bold ml-1">About & Support</a></p>
+            <p>© 2026 GoBharat EV. All Systems Operational. <a href="/about" class="hover:underline text-cyberGreen font-bold ml-1">About Us</a> | <a href="/support" class="hover:underline text-cyberBlue font-bold ml-1">Support Hub</a></p>
         </div> 
         <div class="grid-flow-col gap-4 md:place-self-center md:justify-self-end text-sm">
             <a class="hover:text-cyberGreen transition-all"><i class="fa-brands fa-twitter"></i></a> 
