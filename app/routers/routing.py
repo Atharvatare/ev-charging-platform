@@ -124,3 +124,69 @@ def list_trip_history(
     ).all()
     return trips
 
+
+@router.post("/compare")
+def compare_fleet_routing(
+    req: RoutePlanRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Simulates and compares topographic route depletions, charging stops, travel costs,
+    and carbon offset statistics for all 5 vehicle profiles in parallel.
+    """
+    from app.engines.battery import VEHICLE_PROFILES, EVEnergyModel
+    
+    comparisons = []
+    
+    for key, profile in VEHICLE_PROFILES.items():
+        try:
+            ev_model = EVEnergyModel(
+                mass_kg=profile["mass_kg"],
+                drag_coeff=profile["drag_coeff"],
+                frontal_area=profile["frontal_area"],
+                rolling_coeff=profile["rolling_coeff"],
+                battery_capacity_kwh=profile["battery_capacity_kwh"],
+                efficiency=profile["efficiency"],
+                regen_efficiency=profile["regen_efficiency"],
+                auxiliary_draw_w=profile["auxiliary_draw_w"],
+                temperature_c=req.temperature_c,
+                wind_speed_kmh=req.wind_speed_kmh,
+                wind_direction=req.wind_direction,
+                rain=req.rain
+            )
+            
+            res = compute_route(
+                origin=req.origin,
+                destination=req.destination,
+                start_soc=req.start_soc,
+                ev_model=ev_model
+            )
+            
+            if "error" in res:
+                continue
+                
+            # Compute estimated charging costs (₹100 deposit + ₹18.5/kWh charging if re-routed)
+            charging_cost = 0.0
+            if res.get("rerouted", False):
+                energy_recharged = 0.73 * profile["battery_capacity_kwh"]
+                charging_cost = 100.00 + (energy_recharged * 18.50)
+                
+            # Sum up actual total energy spent from telemetry segments
+            energy_spent = sum(max(0.0, pt.get("energy_consumed_kwh", 0.0)) for pt in res["telemetry"])
+                
+            comparisons.append({
+                "vehicle_id": key,
+                "display_name": profile["display_name"],
+                "total_distance_km": res["total_distance_km"],
+                "total_duration_mins": res["total_duration_mins"],
+                "final_soc": res["final_soc"],
+                "energy_consumed_kwh": round(energy_spent, 2),
+                "carbon_saved_kg": round(res["total_distance_km"] * 0.12, 1),
+                "stops": 1 if res.get("rerouted", False) else 0,
+                "cost": round(charging_cost, 2)
+            })
+        except Exception as e:
+            continue
+            
+    return comparisons
+

@@ -319,6 +319,58 @@ def test_websocket_broadcasts():
     print("SUCCESS: Asynchronous WebSocket handshakes and telemetry broadcasts successfully verified!")
 
 
+def test_port_fault_injection():
+    """
+    Verifies that injecting faults forces the port into MAINTENANCE status, 
+    and clearing it restores status to AVAILABLE.
+    """
+    from fastapi.testclient import TestClient
+    from app.main import app
+    import random
+    
+    with TestClient(app) as client:
+        # 1. Register and login to get auth token
+        random_num = random.randint(100000, 999999)
+        new_consumer_email = f"fault_tester_{random_num}@test.com"
+        register_payload = {
+            "email": new_consumer_email,
+            "password": "securepassword123",
+            "full_name": "Fault Tester",
+            "phone": "+91 99999 77777",
+            "role": "user"
+        }
+        client.post("/api/auth/register", json=register_payload)
+        
+        login_payload = {
+            "username": new_consumer_email,
+            "password": "securepassword123"
+        }
+        login_res = client.post("/api/auth/login", data=login_payload)
+        token_data = login_res.json()
+        headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+        
+        # 2. Fetch stations and get a port
+        stations_res = client.get("/api/stations/")
+        assert stations_res.status_code == 200
+        stations = stations_res.json()
+        assert len(stations) > 0
+        port_id = stations[0]["ports"][0]["id"]
+        
+        # 3. Inject fault
+        fault_payload = {"fault_type": "OVER_VOLTAGE"}
+        fault_res = client.post(f"/api/bookings/port/{port_id}/fault", json=fault_payload, headers=headers)
+        assert fault_res.status_code == 200
+        assert fault_res.json()["status"] == "MAINTENANCE"
+        
+        # 4. Clear fault
+        clear_res = client.post(f"/api/bookings/port/{port_id}/clear-fault", headers=headers)
+        assert clear_res.status_code == 200
+        assert clear_res.json()["status"] == "AVAILABLE"
+        
+        print("SUCCESS: Fault injection and clear-fault endpoints verified persistently!")
+
+
+
 
 
 

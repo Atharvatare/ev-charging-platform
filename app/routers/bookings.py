@@ -261,3 +261,64 @@ async def complete_charging_session(
     
     return {"message": "Session completed and settled persistently.", "new_balance": current_user.wallet_balance}
 
+
+class FaultRequest(BaseModel):
+    fault_type: str
+
+
+@router.post("/port/{port_id}/fault")
+async def inject_port_fault(
+    port_id: UUID,
+    req: FaultRequest,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Injects a physical fault on a charger port, forcing it into MAINTENANCE status and broadcasting.
+    """
+    port = session.get(Port, port_id)
+    if not port:
+        raise HTTPException(status_code=404, detail="Port not found.")
+        
+    port.status = "MAINTENANCE"
+    session.add(port)
+    session.commit()
+    
+    await manager.broadcast({
+        "type": "PORT_STATUS_UPDATE",
+        "station_id": str(port.station_id),
+        "port_id": str(port.id),
+        "status": "MAINTENANCE",
+        "fault_type": req.fault_type
+    })
+    
+    return {"message": f"Fault '{req.fault_type}' successfully injected. Port offline.", "status": port.status}
+
+
+@router.post("/port/{port_id}/clear-fault")
+async def clear_port_fault(
+    port_id: UUID,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Clears physical faults on a charger port, restoring it to AVAILABLE and broadcasting.
+    """
+    port = session.get(Port, port_id)
+    if not port:
+        raise HTTPException(status_code=404, detail="Port not found.")
+        
+    port.status = "AVAILABLE"
+    session.add(port)
+    session.commit()
+    
+    await manager.broadcast({
+        "type": "PORT_STATUS_UPDATE",
+        "station_id": str(port.station_id),
+        "port_id": str(port.id),
+        "status": "AVAILABLE"
+    })
+    
+    return {"message": "Fault cleared. Port returned to service.", "status": port.status}
+
+

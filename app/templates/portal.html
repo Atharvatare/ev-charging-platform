@@ -203,71 +203,145 @@
             <template x-if="routeResult">
                 <div class="mt-6 border-t border-neutral-900 pt-6 space-y-5">
                     
-                    <!-- Emergency Warning Banner -->
-                    <template x-if="routeResult.rerouted">
-                        <div class="alert glass-panel-glow-orange pulse-border-orange rounded-xl border border-cyberOrange/40 text-xs py-3 flex gap-2">
-                            <i class="fa-solid fa-triangle-exclamation text-cyberOrange text-lg animate-pulse"></i>
-                            <div>
-                                <h4 class="font-extrabold text-white">Emergency Warning Triggered</h4>
-                                <p class="text-neutral-300 text-[10px] mt-0.5">Battery drop <12% forecasted. Injected stop at Supercharger!</p>
-                            </div>
-                        </div>
-                    </template>
-
-                    <!-- Core Metrics Deck -->
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="bg-neutral-900/60 border border-neutral-800/80 rounded-xl p-3 text-center">
-                            <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block">Distance</span>
-                            <span class="text-base font-extrabold text-white" x-text="$store.global.formatDistance(routeResult.total_distance_km)"></span>
-                        </div>
-                        <div class="bg-neutral-900/60 border border-neutral-800/80 rounded-xl p-3 text-center">
-                            <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block">Travel Time</span>
-                            <span class="text-base font-extrabold text-white" x-text="routeResult.total_duration_mins + 'm'"></span>
-                        </div>
-                        <div class="bg-neutral-900/60 border border-neutral-800/80 rounded-xl p-3 text-center">
-                            <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block">Arrival SoC</span>
-                            <span class="text-base font-extrabold text-cyberBlue glow-text-blue" x-text="routeResult.final_soc + '%'"></span>
-                        </div>
-                    </div>
-
-                    <!-- WhatsApp Share and Eco Impact (Indian Local Feature) -->
-                    <div class="bg-neutral-900/40 border border-neutral-800/50 p-4 rounded-xl space-y-3">
-                        <div class="flex justify-between items-center text-[10px] font-bold text-neutral-400 uppercase">
-                            <span>🌿 Carbon Offset Saved</span>
-                            <span class="text-cyberGreen glow-text-green font-extrabold" x-text="(routeResult.total_distance_km * 0.12).toFixed(1) + ' kg CO₂'"></span>
-                        </div>
-                        <button @click="shareRouteToWhatsapp()" 
-                                class="btn btn-xs btn-block bg-gradient-to-r from-emerald-500 to-green-600 border-none text-white font-extrabold hover:brightness-110 rounded-lg py-2 flex items-center justify-center gap-1.5 transition-all shadow-[0_0_10px_rgba(16,185,129,0.15)]">
-                            <i class="fa-brands fa-whatsapp text-xs"></i> Share Trip to WhatsApp
+                    <!-- Tab Toggle for Single EV vs Fleet comparison -->
+                    <div class="grid grid-cols-2 gap-2 bg-neutral-900/60 p-1.5 rounded-xl border border-neutral-800">
+                        <button @click="showCompareTab = false" 
+                                :class="!showCompareTab ? 'bg-gradient-to-r from-cyberGreen/10 to-cyberBlue/10 text-white border-cyberGreen/30 shadow-md' : 'text-neutral-400 border-transparent hover:text-white'"
+                                class="btn btn-xs py-1.5 border rounded-lg h-auto font-bold text-[9px] uppercase tracking-wider transition-all">
+                            <i class="fa-solid fa-car-side mr-0.5"></i> Single EV Details
+                        </button>
+                        <button @click="showCompareTab = true; loadComparisonMatrix()" 
+                                :class="showCompareTab ? 'bg-gradient-to-r from-cyberGreen/10 to-cyberBlue/10 text-white border-cyberGreen/30 shadow-md' : 'text-neutral-400 border-transparent hover:text-white'"
+                                class="btn btn-xs py-1.5 border rounded-lg h-auto font-bold text-[9px] uppercase tracking-wider transition-all">
+                            <i class="fa-solid fa-scale-balanced mr-0.5"></i> Compare Fleet
                         </button>
                     </div>
 
-                    <!-- Step-by-Step Telemetry Ledger -->
-                    <div>
-                        <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-3 block">Segment Telemetry Logs</span>
-                        <div class="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                            <template x-for="(point, idx) in routeResult.telemetry" :key="idx">
-                                <div class="flex justify-between items-center bg-neutral-900/40 hover:bg-neutral-900/70 border border-neutral-900 rounded-xl p-2.5 transition-all">
-                                    <div class="flex items-center gap-2">
-                                        <!-- Node Index bullet -->
-                                        <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-black"
-                                             :class="point.charging_stop ? 'bg-cyberOrange animate-pulse' : 'bg-cyberGreen'">
-                                            <span x-text="point.charging_stop ? '⚡' : (idx + 1)"></span>
-                                        </div>
-                                        <div>
-                                            <span class="text-xs font-bold text-white block" x-text="point.node.replace(/_/g, ' ')"></span>
-                                            <span class="text-[9px] text-neutral-400" x-text="'Alt: ' + point.elev + 'm'"></span>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-xs font-extrabold block" 
-                                              :class="point.soc < 20 ? 'text-cyberOrange' : 'text-cyberGreen'"
-                                              x-text="point.soc + '%'"></span>
-                                        <span class="text-[8px] text-neutral-400 uppercase font-bold" x-text="point.charging_stop ? 'CHARGED' : 'SOC'"></span>
-                                    </div>
+                    <!-- Single EV Details Mode -->
+                    <div x-show="!showCompareTab" class="space-y-5">
+                        <!-- Emergency Warning Banner -->
+                        <template x-if="routeResult.rerouted">
+                            <div class="alert glass-panel-glow-orange pulse-border-orange rounded-xl border border-cyberOrange/40 text-xs py-3 flex gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-cyberOrange text-lg animate-pulse"></i>
+                                <div>
+                                    <h4 class="font-extrabold text-white">Emergency Warning Triggered</h4>
+                                    <p class="text-neutral-300 text-[10px] mt-0.5">Battery drop &lt;12% forecasted. Injected stop at Supercharger!</p>
                                 </div>
-                            </template>
+                            </div>
+                        </template>
+
+                        <!-- Core Metrics Deck -->
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="bg-neutral-900/60 border border-neutral-800/80 rounded-xl p-3 text-center">
+                                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block">Distance</span>
+                                <span class="text-base font-extrabold text-white" x-text="$store.global.formatDistance(routeResult.total_distance_km)"></span>
+                            </div>
+                            <div class="bg-neutral-900/60 border border-neutral-800/80 rounded-xl p-3 text-center">
+                                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block">Travel Time</span>
+                                <span class="text-base font-extrabold text-white" x-text="routeResult.total_duration_mins + 'm'"></span>
+                            </div>
+                            <div class="bg-neutral-900/60 border border-neutral-800/80 rounded-xl p-3 text-center">
+                                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block">Arrival SoC</span>
+                                <span class="text-base font-extrabold text-cyberBlue glow-text-blue" x-text="routeResult.final_soc + '%'"></span>
+                            </div>
                         </div>
+
+                        <!-- WhatsApp Share and Eco Impact (Indian Local Feature) -->
+                        <div class="bg-neutral-900/40 border border-neutral-800/50 p-4 rounded-xl space-y-3">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-neutral-400 uppercase">
+                                <span>🌿 Carbon Offset Saved</span>
+                                <span class="text-cyberGreen glow-text-green font-extrabold" x-text="(routeResult.total_distance_km * 0.12).toFixed(1) + ' kg CO₂'"></span>
+                            </div>
+                            <button @click="shareRouteToWhatsapp()" 
+                                    class="btn btn-xs btn-block bg-gradient-to-r from-emerald-500 to-green-600 border-none text-white font-extrabold hover:brightness-110 rounded-lg py-2 flex items-center justify-center gap-1.5 transition-all shadow-[0_0_10px_rgba(16,185,129,0.15)]">
+                                <i class="fa-brands fa-whatsapp text-xs"></i> Share Trip to WhatsApp
+                            </button>
+                        </div>
+
+                        <!-- Step-by-Step Telemetry Ledger -->
+                        <div>
+                            <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-3 block">Segment Telemetry Logs</span>
+                            <div class="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                                <template x-for="(point, idx) in routeResult.telemetry" :key="idx">
+                                    <div class="flex justify-between items-center bg-neutral-900/40 hover:bg-neutral-900/70 border border-neutral-900 rounded-xl p-2.5 transition-all">
+                                        <div class="flex items-center gap-2">
+                                            <!-- Node Index bullet -->
+                                            <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-black"
+                                                 :class="point.charging_stop ? 'bg-cyberOrange animate-pulse' : 'bg-cyberGreen'">
+                                                <span x-text="point.charging_stop ? '⚡' : (idx + 1)"></span>
+                                            </div>
+                                            <div>
+                                                <span class="text-xs font-bold text-white block" x-text="point.node.replace(/_/g, ' ')"></span>
+                                                <span class="text-[9px] text-neutral-400" x-text="'Alt: ' + point.elev + 'm'"></span>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="text-xs font-extrabold block" 
+                                                  :class="point.soc < 20 ? 'text-cyberOrange' : 'text-cyberGreen'"
+                                                  x-text="point.soc + '%'"></span>
+                                            <span class="text-[8px] text-neutral-400 uppercase font-bold" x-text="point.charging_stop ? 'CHARGED' : 'SOC'"></span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Matrix View -->
+                    <div x-show="showCompareTab" class="space-y-3.5" style="display: none;">
+                        <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block"><i class="fa-solid fa-chart-bar text-cyberBlue mr-0.5"></i> Fleet Performance Summary</span>
+                        
+                        <template x-if="compareLoading">
+                            <div class="text-center py-12 text-xs text-cyberGreen font-bold uppercase animate-pulse">
+                                <i class="fa-solid fa-spinner animate-spin"></i> Simulating vehicle profiles...
+                            </div>
+                        </template>
+
+                        <template x-if="!compareLoading && comparisonData.length > 0">
+                            <div class="space-y-3.5 max-h-[360px] overflow-y-auto pr-1 animate-fade-in">
+                                <template x-for="item in comparisonData" :key="item.vehicle_id">
+                                    <div class="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-3.5 space-y-2.5 transition-all hover:border-cyberGreen/20"
+                                         :class="item.vehicle_id === routeForm.vehicle ? 'border-cyberGreen/30 bg-cyberGreen/5' : ''">
+                                        <!-- Header name -->
+                                        <div class="flex justify-between items-center">
+                                            <span class="font-extrabold text-white text-xs" x-text="item.display_name"></span>
+                                            <template x-if="item.vehicle_id === routeForm.vehicle">
+                                                <span class="badge badge-success border-none text-[8px] font-bold text-black px-1.5 py-0.5 uppercase animate-pulse">Selected</span>
+                                            </template>
+                                        </div>
+
+                                        <!-- Comparative Metrics Bar / SoC details -->
+                                        <div class="space-y-1.5">
+                                            <div class="flex justify-between items-center text-[10px]">
+                                                <span class="text-neutral-400 font-semibold">Arrival SoC</span>
+                                                <span class="font-black" :class="item.final_soc < 15 ? 'text-cyberPink' : (item.final_soc < 30 ? 'text-cyberOrange' : 'text-cyberGreen')" x-text="item.final_soc.toFixed(1) + '%'"></span>
+                                            </div>
+                                            <!-- SVG bar chart progress line -->
+                                            <div class="w-full bg-neutral-800 rounded-full h-1.5 overflow-hidden">
+                                                <div class="h-full rounded-full transition-all duration-500 animate-pulse"
+                                                     :style="`width: ${item.final_soc}%; background-color: ${item.final_soc < 15 ? '#ec4899' : (item.final_soc < 30 ? '#f97316' : '#22c55e')};`"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Comparison specs cards (Grid) -->
+                                        <div class="grid grid-cols-3 gap-1.5 text-[9px] text-center uppercase font-bold text-neutral-400 pt-1">
+                                            <div class="bg-black/35 rounded py-1 px-0.5">
+                                                <span class="text-neutral-500 block text-[7.5px]">Energy</span>
+                                                <span class="text-neutral-200 mt-0.5 block" x-text="item.energy_consumed_kwh + ' kWh'"></span>
+                                            </div>
+                                            <div class="bg-black/35 rounded py-1 px-0.5">
+                                                <span class="text-neutral-500 block text-[7.5px]">Stops</span>
+                                                <span class="text-neutral-200 mt-0.5 block" x-text="item.stops + ' Stop'"></span>
+                                            </div>
+                                            <div class="bg-black/35 rounded py-1 px-0.5">
+                                                <span class="text-neutral-500 block text-[7.5px]">Est. Cost</span>
+                                                <span class="text-cyberGreen mt-0.5 block" x-text="$store.global.formatMoney(item.cost)"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
                     </div>
 
                 </div>
@@ -525,6 +599,9 @@ function portalController() {
             rain: 'none'
         },
         routeResult: null,
+        showCompareTab: false,
+        compareLoading: false,
+        comparisonData: [],
         loading: false,
         routeLayers: [],
         markerLayers: [],
@@ -671,8 +748,9 @@ function portalController() {
                     // Create beautiful custom battery marker
                     const totalPorts = st.ports.length;
                     const availablePorts = st.ports.filter(p => p.status === 'AVAILABLE').length;
+                    const isMaintenance = st.ports.every(p => p.status === 'MAINTENANCE');
                     
-                    const batteryColor = availablePorts > 0 ? '#22c55e' : '#f97316';
+                    const batteryColor = availablePorts > 0 ? '#22c55e' : (isMaintenance ? '#ec4899' : '#f97316');
                     
                     const stationIcon = L.divIcon({
                         className: '',
@@ -691,13 +769,19 @@ function portalController() {
                     // Port information compiler with dynamically converted pricing
                     let portsHtml = st.ports.map(p => {
                         const priceFormatted = Alpine.store('global').formatMoney(p.price_per_kwh);
+                        let badgeColor = '#f97316';
+                        if (p.status === 'AVAILABLE') {
+                            badgeColor = '#22c55e';
+                        } else if (p.status === 'MAINTENANCE') {
+                            badgeColor = '#ec4899';
+                        }
                         return `
                             <div class="flex justify-between items-center text-xs bg-neutral-900 border border-neutral-800/60 p-2 rounded-lg mt-1.5">
                                 <div>
                                     <span class="font-bold text-white block">${p.connector_type} (${p.power_kw}kW)</span>
                                     <span class="text-[9px] text-neutral-400 font-semibold">${priceFormatted}/kWh</span>
                                 </div>
-                                <span class="badge badge-xs border-none font-bold text-[9px] px-2 py-1" style="background-color: ${p.status === 'AVAILABLE' ? '#22c55e' : '#f97316'}; color: #000;">
+                                <span class="badge badge-xs border-none font-bold text-[9px] px-2 py-1" style="background-color: ${badgeColor}; color: #000;">
                                     ${p.status}
                                 </span>
                             </div>
@@ -809,6 +893,43 @@ function portalController() {
             }
         },
 
+        async loadComparisonMatrix() {
+            this.compareLoading = true;
+            this.comparisonData = [];
+
+            try {
+                const token = localStorage.getItem('access_token') || 'mock_testing_token';
+                const payload = {
+                    origin: this.routeForm.origin,
+                    destination: this.routeForm.destination,
+                    start_soc: parseFloat(this.routeForm.startSoc),
+                    vehicle: this.routeForm.vehicle,
+                    temperature_c: parseFloat(this.routeForm.temperature_c),
+                    wind_speed_kmh: parseFloat(this.routeForm.wind_speed_kmh),
+                    wind_direction: this.routeForm.wind_direction,
+                    rain: this.routeForm.rain
+                };
+                const response = await fetch('/api/routing/compare', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (response.ok) {
+                    this.comparisonData = await response.json();
+                } else {
+                    console.error("Comparison matrix failed.");
+                }
+            } catch (err) {
+                console.error("Error loading comparison:", err);
+            } finally {
+                this.compareLoading = false;
+            }
+        },
+
         shareRouteToWhatsapp() {
             if (!this.routeResult) return;
             const originText = this.routeForm.origin.replace(/_/g, ' ');
@@ -899,7 +1020,8 @@ function portalController() {
             const marker = this.stationMarkersMap[data.station_id];
             if (marker) {
                 const availablePorts = station.ports.filter(p => p.status === 'AVAILABLE').length;
-                const batteryColor = availablePorts > 0 ? '#22c55e' : '#f97316';
+                const isMaintenance = station.ports.every(p => p.status === 'MAINTENANCE');
+                const batteryColor = availablePorts > 0 ? '#22c55e' : (isMaintenance ? '#ec4899' : '#f97316');
                 
                 const newIcon = L.divIcon({
                     className: '',
@@ -920,13 +1042,19 @@ function portalController() {
                 // Recompile popup contents reactively
                 let portsHtml = station.ports.map(p => {
                     const priceFormatted = Alpine.store('global').formatMoney(p.price_per_kwh);
+                    let badgeColor = '#f97316';
+                    if (p.status === 'AVAILABLE') {
+                        badgeColor = '#22c55e';
+                    } else if (p.status === 'MAINTENANCE') {
+                        badgeColor = '#ec4899';
+                    }
                     return `
                         <div class="flex justify-between items-center text-xs bg-neutral-900 border border-neutral-800/60 p-2 rounded-lg mt-1.5">
                             <div>
                                 <span class="font-bold text-white block">${p.connector_type} (${p.power_kw}kW)</span>
                                 <span class="text-[9px] text-neutral-400 font-semibold">${priceFormatted}/kWh</span>
                             </div>
-                            <span class="badge badge-xs border-none font-bold text-[9px] px-2 py-1" style="background-color: ${p.status === 'AVAILABLE' ? '#22c55e' : '#f97316'}; color: #000;">
+                            <span class="badge badge-xs border-none font-bold text-[9px] px-2 py-1" style="background-color: ${badgeColor}; color: #000;">
                                 ${p.status}
                             </span>
                         </div>

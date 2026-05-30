@@ -261,7 +261,10 @@ function dashboardController() {
         ocppCost: 0.0,
         ocppTimer: null,
         ocppComplete: false,
+        ocppFault: null,
+        ocppHistory: [],
         activeResId: null,
+        activePortId: null,
         transactions: [],
         reservations: [],
         trips: [],
@@ -454,10 +457,17 @@ function dashboardController() {
             this.ocppEnergy = 0.0;
             this.ocppCost = 0.0;
             this.ocppComplete = false;
+            this.ocppFault = null;
+            this.ocppHistory = [];
             this.activeResId = resId;
+            this.activePortId = portId;
+            
+            this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower });
             
             const modal = document.getElementById('ocpp_charging_modal');
             if (modal) modal.showModal();
+            
+            setTimeout(() => this.drawOcppChart(), 100);
             
             this.ocppTimer = setInterval(() => {
                 if (this.ocppSoc < 85) {
@@ -471,10 +481,172 @@ function dashboardController() {
                     
                     this.ocppEnergy += 0.45;
                     this.ocppCost += 0.45 * 18.5; // standard rate ₹18.50 per unit
+                    
+                    this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower });
+                    this.drawOcppChart();
                 } else {
                     this.stopOcppCharging();
                 }
             }, 250);
+        },
+
+        drawOcppChart() {
+            const canvas = document.getElementById('ocpp_curve_chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            
+            ctx.clearRect(0, 0, w, h);
+            
+            // Draw grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 1; i < 4; i++) {
+                const y = (h / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+                
+                const x = (w / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+            
+            if (this.ocppHistory.length === 0) return;
+            
+            // Plot charging curve line
+            ctx.beginPath();
+            ctx.lineWidth = 2.5;
+            
+            if (this.ocppFault) {
+                ctx.strokeStyle = '#ec4899'; // neon pink
+                ctx.shadowColor = '#ec4899';
+            } else {
+                ctx.strokeStyle = '#06b6d4'; // cyan
+                ctx.shadowColor = '#06b6d4';
+            }
+            ctx.shadowBlur = 8;
+            
+            const maxSoC = 85;
+            const minSoC = 32;
+            const maxPower = 160.0;
+            
+            this.ocppHistory.forEach((pt, idx) => {
+                const xRange = maxSoC - minSoC;
+                const x = 15 + ((pt.soc - minSoC) / (xRange || 1)) * (w - 30);
+                const y = (h - 15) - (pt.power / maxPower) * (h - 25);
+                
+                if (idx === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            // Draw endpoints
+            this.ocppHistory.forEach((pt, idx) => {
+                if (idx === 0 || idx === this.ocppHistory.length - 1) {
+                    const xRange = maxSoC - minSoC;
+                    const x = 15 + ((pt.soc - minSoC) / (xRange || 1)) * (w - 30);
+                    const y = (h - 15) - (pt.power / maxPower) * (h - 25);
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                    ctx.fillStyle = this.ocppFault ? '#ec4899' : '#22c55e';
+                    ctx.fill();
+                    
+                    if (idx === this.ocppHistory.length - 1) {
+                        ctx.fillStyle = '#94a3b8';
+                        ctx.font = '8px sans-serif';
+                        ctx.fillText(`${pt.power.toFixed(0)} kW`, x - 15, y - 8);
+                    }
+                }
+            });
+        },
+
+        async injectOcppFault(faultType) {
+            this.ocppFault = faultType;
+            this.ocppPower = 0.0;
+            clearInterval(this.ocppTimer);
+            
+            this.ocppHistory.push({ soc: this.ocppSoc, power: 0.0 });
+            this.drawOcppChart();
+            
+            const token = localStorage.getItem('access_token') || 'mock_testing_token';
+            try {
+                const response = await fetch(`/api/bookings/port/${this.activePortId}/fault`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ fault_type: faultType })
+                });
+                if (response.ok) {
+                    const res = await response.json();
+                    console.log("Fault successfully injected on backend:", res);
+                    await this.loadReservations();
+                }
+            } catch (err) {
+                console.error("Error injecting fault:", err);
+            }
+        },
+
+        async clearOcppFault() {
+            const token = localStorage.getItem('access_token') || 'mock_testing_token';
+            try {
+                const response = await fetch(`/api/bookings/port/${this.activePortId}/clear-fault`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const res = await response.json();
+                    console.log("Fault cleared on backend:", res);
+                    
+                    this.ocppFault = null;
+                    this.ocppPower = 150.0;
+                    if (this.ocppSoc > 72) {
+                        this.ocppPower = Math.max(30.0, 150.0 - (this.ocppSoc - 72) * 12.0);
+                    } else if (this.ocppSoc > 55) {
+                        this.ocppPower = Math.max(75.0, 150.0 - (this.ocppSoc - 55) * 6.0);
+                    }
+                    
+                    this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower });
+                    this.drawOcppChart();
+                    
+                    this.ocppTimer = setInterval(() => {
+                        if (this.ocppSoc < 85) {
+                            this.ocppSoc += 1;
+                            
+                            if (this.ocppSoc > 72) {
+                                this.ocppPower = Math.max(30.0, this.ocppPower - 12.0);
+                            } else if (this.ocppSoc > 55) {
+                                this.ocppPower = Math.max(75.0, this.ocppPower - 6.0);
+                            }
+                            
+                            this.ocppEnergy += 0.45;
+                            this.ocppCost += 0.45 * 18.5;
+                            
+                            this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower });
+                            this.drawOcppChart();
+                        } else {
+                            this.stopOcppCharging();
+                        }
+                    }, 250);
+                    
+                    await this.loadReservations();
+                }
+            } catch (err) {
+                console.error("Error clearing fault:", err);
+            }
         },
 
         async stopOcppCharging() {
@@ -642,8 +814,10 @@ function dashboardController() {
         <div class="text-center space-y-6">
             <!-- Header Rebrand -->
             <div class="border-b border-neutral-900 pb-3">
-                <span class="badge border-cyberGreen text-cyberGreen font-bold text-[9px] bg-cyberGreen/5 uppercase tracking-wider mb-2 animate-pulse">
-                    <i class="fa-solid fa-rss mr-1"></i> OCPP Live Session
+                <span class="badge border-cyberGreen text-cyberGreen font-bold text-[9px] bg-cyberGreen/5 uppercase tracking-wider mb-2 animate-pulse"
+                      :class="ocppFault ? 'border-cyberPink text-cyberPink bg-cyberPink/5' : ''">
+                    <i class="fa-solid" :class="ocppFault ? 'fa-triangle-exclamation mr-1 animate-pulse' : 'fa-rss mr-1'"></i>
+                    <span x-text="ocppFault ? 'OCPP FAULT INJECTED' : 'OCPP Live Session'"></span>
                 </span>
                 <h3 class="text-lg font-extrabold text-white">GoBharat EV Charging Stream</h3>
             </div>
@@ -654,16 +828,17 @@ function dashboardController() {
                 <svg class="absolute w-full h-full transform -rotate-90">
                     <circle cx="80" cy="80" r="70" stroke="#1f2937" stroke-width="8" fill="transparent" />
                     <!-- Dynamic stroke dasharray for progress representation -->
-                    <circle cx="80" cy="80" r="70" stroke="#22c55e" stroke-width="8" fill="transparent" 
+                    <circle cx="80" cy="80" r="70" :stroke="ocppFault ? '#ec4899' : '#22c55e'" stroke-width="8" fill="transparent" 
                             :stroke-dasharray="440"
                             :stroke-dashoffset="440 - (440 * ocppSoc) / 100"
-                            class="transition-all duration-300 drop-shadow-[0_0_8px_#22c55e]" />
+                            class="transition-all duration-300"
+                            :class="ocppFault ? 'drop-shadow-[0_0_8px_#ec4899]' : 'drop-shadow-[0_0_8px_#22c55e]'" />
                 </svg>
                 
                 <!-- Internal telemetry percentages -->
                 <div class="z-10 text-center">
-                    <span class="text-4xl font-black text-white font-sans tracking-tight animate-pulse" x-text="ocppSoc + '%'"></span>
-                    <span class="text-[9px] font-bold text-neutral-400 block uppercase tracking-widest mt-0.5">State of Charge</span>
+                    <span class="text-4xl font-black text-white font-sans tracking-tight" :class="ocppFault ? 'text-cyberPink animate-pulse' : 'animate-pulse'" x-text="ocppSoc + '%'"></span>
+                    <span class="text-[9px] font-bold text-neutral-400 block uppercase tracking-widest mt-0.5" x-text="ocppFault ? 'FAULT DETECTED' : 'State of Charge'"></span>
                 </div>
             </div>
 
@@ -671,7 +846,7 @@ function dashboardController() {
             <div class="grid grid-cols-2 gap-3 bg-neutral-900/50 p-4 border border-neutral-900 rounded-2xl text-left">
                 <div>
                     <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider block">Power Flow Speed</span>
-                    <span class="text-sm font-extrabold text-cyberBlue" x-text="ocppPower.toFixed(1) + ' kW'"></span>
+                    <span class="text-sm font-extrabold text-cyberBlue" :class="ocppFault ? 'text-cyberPink' : ''" x-text="ocppPower.toFixed(1) + ' kW'"></span>
                 </div>
                 <div>
                     <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider block">Energy Delivered</span>
@@ -683,13 +858,52 @@ function dashboardController() {
                 </div>
             </div>
 
-            <!-- Charging controls -->
+            <!-- Live Charging Curve Canvas -->
+            <div class="space-y-1.5 text-left">
+                <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider block"><i class="fa-solid fa-chart-line text-cyberBlue mr-0.5"></i> Live Charging Curve (Power vs SoC)</span>
+                <canvas id="ocpp_curve_chart" width="360" height="110" class="w-full bg-neutral-950/80 border border-neutral-900 rounded-xl transition-all"></canvas>
+            </div>
+
+            <!-- OCPP Fault Injection Control Panel -->
+            <div class="space-y-2 bg-neutral-900/40 border border-neutral-850 p-3.5 rounded-2xl text-left" x-show="!ocppComplete">
+                <div class="flex justify-between items-center">
+                    <span class="text-[9px] text-neutral-400 font-bold uppercase tracking-wider"><i class="fa-solid fa-triangle-exclamation text-cyberPink mr-0.5 animate-pulse"></i> OCPP Fault Injection Panel</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1.5 pt-1">
+                    <button @click="injectOcppFault('OVER_VOLTAGE')" :disabled="ocppFault"
+                            class="btn btn-xs bg-red-950/40 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-black rounded-lg font-bold text-[8.5px] uppercase tracking-wider py-1.5 h-auto transition-all">
+                        Over-volt
+                    </button>
+                    <button @click="injectOcppFault('THERMAL_LOCKOUT')" :disabled="ocppFault"
+                            class="btn btn-xs bg-orange-950/40 border border-orange-500/30 text-orange-400 hover:bg-orange-500 hover:text-black rounded-lg font-bold text-[8.5px] uppercase tracking-wider py-1.5 h-auto transition-all">
+                        Thermal
+                    </button>
+                    <button @click="injectOcppFault('CONNECTOR_DISCONNECT')" :disabled="ocppFault"
+                            class="btn btn-xs bg-amber-950/40 border border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-black rounded-lg font-bold text-[8.5px] uppercase tracking-wider py-1.5 h-auto transition-all">
+                        Disconnect
+                    </button>
+                </div>
+            </div>
+
+            <!-- Charging & Fault Repair Controls -->
             <div class="pt-2">
-                <template x-if="!ocppComplete">
+                <template x-if="!ocppComplete && !ocppFault">
                     <button @click="stopOcppCharging()"
                             class="btn btn-sm btn-block bg-cyberPink border-none hover:bg-white text-black font-extrabold rounded-xl shadow-[0_0_15px_rgba(236,72,153,0.15)] flex items-center justify-center">
                         Stop Charge Session <i class="fa-solid fa-circle-stop ml-1"></i>
                     </button>
+                </template>
+                
+                <template x-if="!ocppComplete && ocppFault">
+                    <div class="space-y-3">
+                        <div class="alert alert-error bg-cyberPink/10 border border-cyberPink/20 text-cyberPink text-[10px] font-extrabold py-2 px-3 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-circle-exclamation mr-1 animate-ping"></i> FAULT ACTIVE: <span x-text="ocppFault"></span> (PORT MAINTENANCE)
+                        </div>
+                        <button @click="clearOcppFault()"
+                                class="btn btn-sm btn-block bg-cyberGreen border-none text-black font-extrabold rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.15)] flex items-center justify-center">
+                            Repair & Clear Fault <i class="fa-solid fa-wrench ml-1"></i>
+                        </button>
+                    </div>
                 </template>
                 
                 <template x-if="ocppComplete">
