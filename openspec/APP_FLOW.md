@@ -26,15 +26,18 @@ The FastAPI application maps the following frontend Jinja2 routes:
 1.  Driver opens [`/portal`](file:///d:/EV%20CHARGING/app/templates/portal.html).
 2.  Leaflet maps initialize automatically centered at the India national node (`20.5937, 78.9629`).
 3.  Driver navigates to the **Station Finder** glassmorphic card on the Left HUD.
-4.  Driver selects a **State** from the State Dropdown (e.g. `Maharashtra`):
+4.  Driver selects a **Country** from the Country Dropdown (e.g. `USA`):
+    *   *Event Mapping*: Trigger `onCountryChange()`.
+    *   *Viewport Transition*: The State selector dynamically updates to show only states belonging to that country (e.g. `California`, `New York`, `Texas`). Downstream selections (State, City) are auto-cleared. The Map Portal executes `map.fitBounds` to cover all active stations in that country.
+5.  Driver selects a **State** (e.g. `California`):
     *   *Event Mapping*: Trigger `onStateChange()`.
-    *   *Viewport Transition*: The Map Portal filters Leaflet markers to show only Maharashtra nodes, and executes `map.fitBounds` to scale and fit the camera beautifully over Mumbai, Pune, Lonavala, and Nagpur.
-5.  Driver selects **Nagpur**:
+    *   *Viewport Transition*: The City selector dynamically updates to show only cities in California (e.g. `Los Angeles`, `San Francisco`, `Santa Monica`). Downstream selections (City) are auto-cleared. The Map Portal executes `map.fitBounds` to cover all active California stations.
+6.  Driver selects a **City** (e.g. `Nagpur` or `Santa Monica`):
     *   *Event Mapping*: Trigger `onCityChange()`.
-    *   *Viewport Transition*: Map camera executes `map.setView` to focus directly over the Kalmeshwar Flagship Command Hub coordinates (`21.2333, 78.9167`) with a high-fidelity zoom level of `12`.
-6.  Driver clicks the flagship green pin:
-    *   *Popup Render*: Leaflet bindings open a custom popup showing the station name, 3 active sockets (350kW, 150kW, 22kW), pricing structure, and the 100% Green Solar Score.
-7.  Driver clicks **Reserve Port**:
+    *   *Viewport Transition*: Map camera executes `map.setView` to focus directly over the city's filtered stations center with a high-fidelity zoom level of `12`.
+7.  Driver clicks any station pin:
+    *   *Popup Render*: Leaflet bindings open a custom popup showing the station name, active sockets, pricing structure, and the Green Solar Score.
+8.  Driver clicks **Reserve Port**:
     *   *Event Mapping*: Modal popup transitions open, letting the user define reservation duration.
 
 ### 🚗 Journey B: Topographic Route Planning

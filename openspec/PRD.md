@@ -24,19 +24,19 @@ GoBharat EV bridges the gap between core physical sciences and software systems 
 *   **Scope**: Solve optimal paths between junctions using elevation-profile datasets.
 *   **Requirements**:
     *   Dynamic slider to input vehicle starting State-of-Charge (SoC).
-    *   Dropdown to select pre-configured EV models (e.g. Tata Nexon EV, Ather 450X).
+    *   Dropdown to select pre-configured EV models (e.g. Tata Nexon EV, Ather 450X, Tesla Model Y/3, BYD Atto 3, Nissan Leaf, Audi e-tron, Porsche Taycan, MG ZS EV).
     *   Interactive map coordinate plots demonstrating route trajectory.
 
 ### 🔌 Feature 2: Charging Station Locator
-*   **Scope**: Render charging terminals across India with real-time port statuses.
+*   **Scope**: Render charging terminals globally across multiple nations with real-time port statuses.
 *   **Requirements**:
     *   Custom icons reflecting charger availability (Green: Available, Orange: Occupied, Pink: Maintenance).
     *   Popup details showing port connector types, power output (kW), pricing, and solar energy indices.
 
-### 📡 Feature 3: Dynamic Map Filters (Pan-India Navigation)
+### 📡 Feature 3: Dynamic Map Filters (Global Navigation)
 *   **Scope**: Dynamic cascading dropdowns filtering the map by Country, State, and City.
 *   **Requirements**:
-    *   Auto-scaling selectors extracting unique states and cities dynamically from active seed address fields.
+    *   Auto-scaling selectors extracting unique countries, states, and cities dynamically from active seed address fields.
     *   Smooth Leaflet viewport centering: zooming directly (`setView` level `12`) for single targets (like Nagpur), and fitting boundaries (`fitBounds`) for multi-pin results.
 
 ### 🔋 Feature 4: Live OCPP Sandbox & Charging Curves

@@ -100,7 +100,9 @@
                         <label class="label py-0 mb-0.5"><span class="text-[9px] text-neutral-400 font-bold uppercase">Country</span></label>
                         <select x-model="selectedCountry" @change="onCountryChange()" class="select select-bordered select-xs bg-neutral-900 border-neutral-800 text-xs rounded-xl h-8 min-h-8">
                             <option value="ALL">All Countries</option>
-                            <option value="India">India</option>
+                            <template x-for="c in uniqueCountries" :key="c">
+                                <option :value="c" x-text="c"></option>
+                            </template>
                         </select>
                     </div>
 
@@ -161,6 +163,13 @@
                         <option value="tata_tiago_ev">Tata Tiago EV (24.0 kWh Hatchback)</option>
                         <option value="hyundai_ioniq_5">Hyundai Ioniq 5 (72.6 kWh Crossover)</option>
                         <option value="ola_s1_pro">Ola S1 Pro (4.0 kWh Scooter)</option>
+                        <option value="tesla_model_y">Tesla Model Y (75.0 kWh SUV)</option>
+                        <option value="tesla_model_3">Tesla Model 3 (60.0 kWh Sedan)</option>
+                        <option value="byd_atto_3">BYD Atto 3 (60.5 kWh Crossover)</option>
+                        <option value="nissan_leaf">Nissan Leaf (40.0 kWh Hatchback)</option>
+                        <option value="audi_e_tron">Audi e-tron (95.0 kWh SUV)</option>
+                        <option value="porsche_taycan">Porsche Taycan (93.4 kWh Sportscar)</option>
+                        <option value="mg_zs_ev">MG ZS EV (50.3 kWh SUV)</option>
                     </select>
                 </div>
 
@@ -170,7 +179,7 @@
                         <span class="label-text text-neutral-300 font-bold text-xs uppercase tracking-wider">Start State-of-Charge (SoC)</span>
                         <span class="text-sm font-bold text-cyberGreen" x-text="routeForm.startSoc + '%'"></span>
                     </div>
-                    <input type="range" min="15" max="100" x-model="routeForm.startSoc" class="range range-xs range-success bg-neutral-800" />
+                    <input type="range" min="15" max="100" x-model="routeForm.startSoc" @input="calculateRegenLimit()" class="range range-xs range-success bg-neutral-800" />
                 </div>
 
                 <!-- Climate & Aerodynamic Drag Telemetry Override Card -->
@@ -232,6 +241,72 @@
                     </div>
                 </div>
 
+                <!-- Regen & Wet-Road Slip Limiter Card (Feature 4) -->
+                <div class="card bg-neutral-900/50 border border-neutral-800 rounded-xl p-4 space-y-3" x-data="{ openRegen: false }">
+                    <div class="flex justify-between items-center cursor-pointer select-none" @click="openRegen = !openRegen">
+                        <span class="text-neutral-300 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-gauge-simple text-purple-400"></i> Regen & Slip Limiter
+                        </span>
+                        <i class="fa-solid text-neutral-500 text-[10px]" :class="openRegen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </div>
+
+                    <div x-show="openRegen" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 max-h-0"
+                         x-transition:enter-end="opacity-100 max-h-[350px]"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 max-h-[350px]"
+                         x-transition:leave-end="opacity-0 max-h-0"
+                         class="space-y-3.5 pt-2 border-t border-neutral-900/60 overflow-hidden"
+                         style="display: none;">
+                        
+                        <!-- Road Surface Condition Select -->
+                        <div class="form-control w-full">
+                            <label class="label py-0 mb-1"><span class="text-[10px] text-neutral-400 font-bold uppercase">Road Surface Traction</span></label>
+                            <select x-model="regenForm.surface" @change="calculateRegenLimit()" class="select select-bordered select-xs bg-neutral-900 border-neutral-800 text-[10px] font-semibold rounded-lg h-8 min-h-8">
+                                <option value="dry">Dry Asphalt (Traction μ = 0.85)</option>
+                                <option value="wet">Wet Asphalt (Traction μ = 0.45)</option>
+                                <option value="flooded">Flooded Canal (Aquaplane μ = 0.15)</option>
+                            </select>
+                        </div>
+
+                        <!-- Target Regen Level Selector -->
+                        <div class="form-control w-full">
+                            <label class="label py-0 mb-1"><span class="text-[10px] text-neutral-400 font-bold uppercase">Regen Strength Target</span></label>
+                            <select x-model="regenForm.level" @change="calculateRegenLimit()" class="select select-bordered select-xs bg-neutral-900 border-neutral-800 text-[10px] font-semibold rounded-lg h-8 min-h-8">
+                                <option value="low">Low Regen (30% Recapture)</option>
+                                <option value="medium">Medium Regen (60% Recapture)</option>
+                                <option value="high">High Regen (90% Recapture)</option>
+                                <option value="max">Max Cyber-Regen (100% Recapture)</option>
+                            </select>
+                        </div>
+
+                        <!-- Dynamic Calculations Outputs -->
+                        <div class="bg-neutral-955/60 border border-neutral-900 p-3 rounded-xl space-y-2.5 text-xs text-left">
+                            <div class="flex justify-between items-center">
+                                <span class="text-[9px] text-neutral-500 font-bold uppercase">Regen Efficiency Index</span>
+                                <span class="text-xs font-black text-cyberGreen animate-pulse glow-text-green" x-text="regenIndex + '%'"></span>
+                            </div>
+                            
+                            <!-- Progress Bar representing Regen recapture -->
+                            <div class="w-full bg-neutral-805 rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-cyberGreen h-1.5 rounded-full transition-all duration-300 shadow-[0_0_8px_#22c55e]"
+                                     :style="'width: ' + regenIndex + '%'"
+                                     :class="regenIndex < 30 ? 'bg-cyberPink shadow-[0_0_8px_#ec4899]' : (regenIndex < 70 ? 'bg-cyberOrange shadow-[0_0_8px_#f97316]' : 'bg-cyberGreen shadow-[0_0_8px_#22c55e]')"></div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center text-[10px] border-t border-neutral-905 pt-2" x-show="regenSlipTriggered">
+                                <span class="text-cyberPink font-bold flex items-center gap-1.5">
+                                    <i class="fa-solid fa-triangle-exclamation animate-ping"></i> SLIP LIMITER ACTIVE
+                                </span>
+                                <span class="text-neutral-400 font-semibold text-[8px] uppercase">ABS/ESP Safety Trigger</span>
+                            </div>
+                            
+                            <p class="text-[9px] text-neutral-400 leading-normal font-medium" x-text="regenExplanation"></p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Plan Button -->
                 <button @click="planRoute()" :disabled="loading || !routeForm.origin || !routeForm.destination" 
                         class="btn btn-block bg-gradient-to-r from-cyberGreen to-cyberBlue border-none text-black font-extrabold hover:brightness-110 py-3 rounded-xl transition-all duration-300 shadow-[0_0_15px_rgba(34,197,94,0.2)]">
@@ -242,6 +317,28 @@
                         <span><i class="fa-solid fa-bolt mr-1"></i> Solve Optimal Path</span>
                     </template>
                 </button>
+
+                <!-- Topographic Isorange Reachability Finder -->
+                <div class="card bg-neutral-900/50 border border-neutral-800 rounded-xl p-4 space-y-3 mt-4">
+                    <div class="flex items-center justify-between border-b border-neutral-900 pb-2">
+                        <span class="text-neutral-300 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-nodes text-cyberBlue animate-pulse"></i> Isorange Reachability
+                        </span>
+                        <span class="text-[9px] text-cyberBlue font-bold uppercase tracking-widest bg-cyberBlue/10 border border-cyberBlue/25 px-2 py-0.5 rounded">
+                            Range Bubble
+                        </span>
+                    </div>
+                    <p class="text-neutral-400 text-[10px]">Compute topography-aware reachability boundary showing where you can drive with SoC &ge; 10%.</p>
+                    <button @click="calculateIsorange()" :disabled="loadingIsorange || !routeForm.origin" 
+                            class="btn btn-block btn-xs h-9 min-h-9 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-white font-bold rounded-xl transition-all duration-300 hover:shadow-[0_0_10px_rgba(6,182,212,0.15)] flex items-center justify-center gap-2">
+                        <template x-if="loadingIsorange">
+                            <span class="loading loading-spinner loading-xs"></span>
+                        </template>
+                        <template x-if="!loadingIsorange">
+                            <span><i class="fa-solid fa-expand text-cyberBlue"></i> Draw Range Bubble</span>
+                        </template>
+                    </button>
+                </div>
             </div>
 
             <!-- Telemetry Results View -->
@@ -631,11 +728,13 @@
 function portalController() {
     return {
         map: null,
+        tileLayer: null,
         graphNodes: [],
         stations: [],
         selectedCountry: 'ALL',
         selectedState: 'ALL',
         selectedCity: 'ALL',
+        uniqueCountries: [],
         uniqueStates: [],
         uniqueCities: [],
         filteredStationsCount: 0,
@@ -649,11 +748,20 @@ function portalController() {
             wind_direction: 'none',
             rain: 'none'
         },
+        regenForm: {
+            surface: 'dry',
+            level: 'high'
+        },
+        regenIndex: 90,
+        regenSlipTriggered: false,
+        regenExplanation: 'Dry asphalt allows maximum kinetic energy recapture (Traction coefficient μ = 0.85). Normal regenerative operations.',
         routeResult: null,
         showCompareTab: false,
         compareLoading: false,
         comparisonData: [],
         loading: false,
+        loadingIsorange: false,
+        isorangeLayer: null,
         routeLayers: [],
         markerLayers: [],
         stationMarkers: [],
@@ -736,14 +844,32 @@ function portalController() {
                 localStorage.setItem('user_email', 'user@ev.com');
             }
 
-            // Initialize Map using CartoDB Dark tiles
+            // Initialize Map dynamically based on active theme
             this.map = L.map('map', { zoomControl: false }).setView([20.5937, 78.9629], 5);
             
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            const initialTheme = Alpine.store('global').theme;
+            const tileUrl = initialTheme === 'light'
+                ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+            
+            this.tileLayer = L.tileLayer(tileUrl, {
                 attribution: '© OpenStreetMap, © CARTO',
                 subdomains: 'abcd',
                 maxZoom: 20
             }).addTo(this.map);
+
+            window.addEventListener('theme-changed', (e) => {
+                this.updateMapTiles(e.detail);
+                if (this.isorangeLayer) {
+                    const theme = e.detail;
+                    const borderCol = theme === 'light' ? '#2563eb' : '#06b6d4';
+                    const fillCol = theme === 'light' ? '#3b82f6' : '#22d3ee';
+                    this.isorangeLayer.setStyle({
+                        color: borderCol,
+                        fillColor: fillCol
+                    });
+                }
+            });
 
             L.control.zoom({ position: 'bottomright' }).addTo(this.map);
 
@@ -780,6 +906,47 @@ function portalController() {
                     this.planRoute();
                 }
             });
+
+            // Initialize Regen & Slip calculations
+            this.calculateRegenLimit();
+        },
+
+        calculateRegenLimit() {
+            const startSoc = parseFloat(this.routeForm.startSoc || 100);
+            let socCurtailment = 1.0;
+            if (startSoc >= 95) socCurtailment = 0.0;
+            else if (startSoc >= 80) socCurtailment = (95.0 - startSoc) / 15.0;
+            
+            let baseRegen = 0.90;
+            if (this.regenForm.level === 'low') baseRegen = 0.30;
+            else if (this.regenForm.level === 'medium') baseRegen = 0.60;
+            else if (this.regenForm.level === 'high') baseRegen = 0.90;
+            else if (this.regenForm.level === 'max') baseRegen = 1.00;
+            
+            let tractionCoeff = 1.0;
+            let explanation = '';
+            let slipTriggered = false;
+            
+            if (this.regenForm.surface === 'dry') {
+                tractionCoeff = 1.0;
+                explanation = 'Dry asphalt allows maximum kinetic energy recapture (Traction coefficient μ = 0.85). Normal regenerative operations.';
+            } else if (this.regenForm.surface === 'wet') {
+                tractionCoeff = 0.60;
+                slipTriggered = true;
+                explanation = 'Wet asphalt (μ = 0.45) reduces traction. The ABS/ESP slip limiter curtails kinetic energy recovery to 60% of capacity to prevent wheel-lock on slippery surfaces.';
+            } else if (this.regenForm.surface === 'flooded') {
+                tractionCoeff = 0.15;
+                slipTriggered = true;
+                explanation = 'Severe Flooding / Aquaplane risk (μ = 0.15). Regenerative braking is heavily curtailed to 15% to maintain directional safety and tire contact.';
+            }
+            
+            if (startSoc >= 80) {
+                explanation += ` Battery SoC is elevated at ${startSoc}%, curtailing recapture potential because the cells cannot absorb high charge rates near capacity.`;
+            }
+            
+            this.regenIndex = Math.round(baseRegen * socCurtailment * tractionCoeff * 100);
+            this.regenSlipTriggered = slipTriggered;
+            this.regenExplanation = explanation;
         },
 
         async loadStations() {
@@ -878,36 +1045,34 @@ function portalController() {
         },
 
         updateFilters() {
-            // 1. Get unique states
+            // Compute unique countries
+            const countries = new Set();
+            this.stations.forEach(st => {
+                const parsed = this.parseStationAddress(st.address);
+                if (parsed.country) {
+                    countries.add(parsed.country);
+                }
+            });
+            this.uniqueCountries = Array.from(countries).sort();
+
+            // Compute unique states based on selectedCountry
             const states = new Set();
             this.stations.forEach(st => {
                 const parsed = this.parseStationAddress(st.address);
-                if (parsed.state) {
-                    states.add(parsed.state);
+                if (this.selectedCountry === 'ALL' || parsed.country === this.selectedCountry) {
+                    if (parsed.state) {
+                        states.add(parsed.state);
+                    }
                 }
             });
             this.uniqueStates = Array.from(states).sort();
 
-            // 2. Filter stations based on state & city
-            this.filterMarkers();
-        },
+            // If selectedState is not in uniqueStates anymore (due to country change), reset it
+            if (this.selectedState !== 'ALL' && !this.uniqueStates.includes(this.selectedState)) {
+                this.selectedState = 'ALL';
+            }
 
-        parseStationAddress(address) {
-            const parts = address.split(',').map(p => p.trim());
-            if (parts.length < 2) return { city: 'Unknown', state: 'Unknown', country: 'India' };
-            
-            const lastPart = parts[parts.length - 1];
-            // Remove zip code digits and trim to get state
-            const state = lastPart.replace(/\d+/g, '').trim();
-            const city = parts[parts.length - 2];
-            
-            return { city: city, state: state, country: 'India' };
-        },
-
-        filterMarkers() {
-            let count = 0;
-            
-            // Update cities dropdown list based on state selection
+            // Compute unique cities based on selectedCountry and selectedState
             if (this.selectedState === 'ALL') {
                 this.uniqueCities = [];
                 this.selectedCity = 'ALL';
@@ -915,13 +1080,47 @@ function portalController() {
                 const cities = new Set();
                 this.stations.forEach(st => {
                     const parsed = this.parseStationAddress(st.address);
-                    if (parsed.state === this.selectedState && parsed.city) {
+                    const matchCountry = (this.selectedCountry === 'ALL' || parsed.country === this.selectedCountry);
+                    if (matchCountry && parsed.state === this.selectedState && parsed.city) {
                         cities.add(parsed.city);
                     }
                 });
                 this.uniqueCities = Array.from(cities).sort();
             }
 
+            // If selectedCity is not in uniqueCities anymore, reset it
+            if (this.selectedCity !== 'ALL' && !this.uniqueCities.includes(this.selectedCity)) {
+                this.selectedCity = 'ALL';
+            }
+
+            this.filterMarkers();
+        },
+
+        parseStationAddress(address) {
+            const parts = address.split(',').map(p => p.trim());
+            if (parts.length < 3) {
+                // Fallback for older formats or short addresses
+                if (parts.length === 2) {
+                    const lastPart = parts[parts.length - 1];
+                    const state = lastPart.replace(/\d+/g, '').trim();
+                    const city = parts[parts.length - 2];
+                    return { city: city, state: state, country: 'India' };
+                }
+                return { city: 'Unknown', state: 'Unknown', country: 'India' };
+            }
+            
+            const country = parts[parts.length - 1];
+            const statePart = parts[parts.length - 2];
+            // Remove zip code digits and trim to get state
+            const state = statePart.replace(/\d+/g, '').trim();
+            const city = parts[parts.length - 3];
+            
+            return { city: city, state: state, country: country };
+        },
+
+        filterMarkers() {
+            let count = 0;
+            
             // Check each station and hide/show marker
             this.stations.forEach(st => {
                 const parsed = this.parseStationAddress(st.address);
@@ -958,7 +1157,18 @@ function portalController() {
             });
 
             if (bounds.length > 0) {
-                if (bounds.length === 1) {
+                if (this.selectedCity !== 'ALL') {
+                    // Zoom dynamically over the city bounds/center
+                    let sumLat = 0;
+                    let sumLng = 0;
+                    bounds.forEach(b => {
+                        sumLat += b[0];
+                        sumLng += b[1];
+                    });
+                    const centerLat = sumLat / bounds.length;
+                    const centerLng = sumLng / bounds.length;
+                    this.map.setView([centerLat, centerLng], 12);
+                } else if (bounds.length === 1) {
                     this.map.setView(bounds[0], 12);
                 } else {
                     this.map.fitBounds(bounds, { padding: [50, 50] });
@@ -970,28 +1180,58 @@ function portalController() {
         },
 
         onCountryChange() {
-            if (this.selectedCountry === 'ALL') {
-                this.selectedState = 'ALL';
-                this.selectedCity = 'ALL';
+            if (this.isorangeLayer) {
+                this.map.removeLayer(this.isorangeLayer);
+                this.isorangeLayer = null;
             }
-            this.filterMarkers();
+            this.selectedState = 'ALL';
+            this.selectedCity = 'ALL';
+            this.updateFilters();
             this.zoomToFilteredStations();
         },
 
         onStateChange() {
+            if (this.isorangeLayer) {
+                this.map.removeLayer(this.isorangeLayer);
+                this.isorangeLayer = null;
+            }
             this.selectedCity = 'ALL';
-            this.filterMarkers();
+            this.updateFilters();
             this.zoomToFilteredStations();
         },
 
         onCityChange() {
-            this.filterMarkers();
+            if (this.isorangeLayer) {
+                this.map.removeLayer(this.isorangeLayer);
+                this.isorangeLayer = null;
+            }
+            this.updateFilters();
             this.zoomToFilteredStations();
+        },
+
+        updateMapTiles(theme) {
+            if (this.tileLayer) {
+                this.map.removeLayer(this.tileLayer);
+            }
+            const url = theme === 'light'
+                ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+            this.tileLayer = L.tileLayer(url, {
+                attribution: '© OpenStreetMap, © CARTO',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(this.map);
         },
 
         async planRoute() {
             this.loading = true;
             this.routeResult = null;
+
+            // Clear existing isorange layer if any
+            if (this.isorangeLayer) {
+                this.map.removeLayer(this.isorangeLayer);
+                this.isorangeLayer = null;
+            }
 
             // Clear existing route layers
             this.routeLayers.forEach(layer => this.map.removeLayer(layer));
@@ -1057,6 +1297,66 @@ function portalController() {
                 alert("Fail to connect to solver API.");
             } finally {
                 this.loading = false;
+            }
+        },
+
+        async calculateIsorange() {
+            this.loadingIsorange = true;
+            
+            if (this.isorangeLayer) {
+                this.map.removeLayer(this.isorangeLayer);
+                this.isorangeLayer = null;
+            }
+
+            try {
+                const token = localStorage.getItem('access_token') || 'mock_testing_token';
+                const payload = {
+                    origin: this.routeForm.origin,
+                    start_soc: parseFloat(this.routeForm.startSoc),
+                    vehicle: this.routeForm.vehicle,
+                    temperature_c: parseFloat(this.routeForm.temperature_c),
+                    wind_speed_kmh: parseFloat(this.routeForm.wind_speed_kmh),
+                    wind_direction: this.routeForm.wind_direction,
+                    rain: this.routeForm.rain
+                };
+                const response = await fetch('/api/routing/isorange', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    const geojson = data.geojson;
+                    
+                    const activeTheme = Alpine.store('global').theme;
+                    const borderCol = activeTheme === 'light' ? '#2563eb' : '#06b6d4';
+                    const fillCol = activeTheme === 'light' ? '#3b82f6' : '#22d3ee';
+                    
+                    this.isorangeLayer = L.geoJSON(geojson, {
+                        style: {
+                            color: borderCol,
+                            weight: 3,
+                            opacity: 0.85,
+                            fillColor: fillCol,
+                            fillOpacity: 0.15,
+                            dashArray: '4, 4'
+                        }
+                    }).addTo(this.map);
+                    
+                    const bounds = this.isorangeLayer.getBounds();
+                    this.map.fitBounds(bounds, { padding: [50, 50] });
+                } else {
+                    alert("Error calculating reachability: " + data.detail);
+                }
+            } catch (err) {
+                console.error("Isorange error:", err);
+                alert("Failed to connect to range boundary API.");
+            } finally {
+                this.loadingIsorange = false;
             }
         },
 

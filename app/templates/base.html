@@ -248,6 +248,117 @@
         .pulse-border-blue {
             animation: pulseGlowBlue 2.5s infinite;
         }
+
+        /* High-Visibility Light Theme overrides */
+        html[data-theme="light"] .glass-panel {
+            background: rgba(255, 255, 255, 0.85) !important;
+            border-color: rgba(15, 23, 42, 0.08) !important;
+        }
+
+        html[data-theme="light"] header.glass-panel {
+            background: rgba(255, 255, 255, 0.85) !important;
+            border-color: rgba(15, 23, 42, 0.08) !important;
+        }
+
+        html[data-theme="light"] .text-neutral-100 {
+            color: #0f172a !important;
+        }
+
+        html[data-theme="light"] .text-neutral-300 {
+            color: #334155 !important;
+        }
+
+        html[data-theme="light"] .text-neutral-400 {
+            color: #475569 !important;
+        }
+
+        html[data-theme="light"] .text-neutral-500 {
+            color: #64748b !important;
+        }
+
+        html[data-theme="light"] .bg-neutral-900,
+        html[data-theme="light"] .bg-neutral-950,
+        html[data-theme="light"] .bg-neutral-900\/50,
+        html[data-theme="light"] .bg-neutral-900\/60,
+        html[data-theme="light"] .bg-neutral-900\/40,
+        html[data-theme="light"] .bg-neutral-900\/30 {
+            background-color: #ffffff !important;
+        }
+
+        html[data-theme="light"] .border-neutral-800,
+        html[data-theme="light"] .border-neutral-800\/60,
+        html[data-theme="light"] .border-neutral-900,
+        html[data-theme="light"] .border-neutral-950 {
+            border-color: #cbd5e1 !important;
+        }
+
+        html[data-theme="light"] select,
+        html[data-theme="light"] input[type="text"],
+        html[data-theme="light"] input[type="password"],
+        html[data-theme="light"] input[type="email"],
+        html[data-theme="light"] input[type="tel"],
+        html[data-theme="light"] input[type="date"],
+        html[data-theme="light"] input[type="time"] {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        html[data-theme="light"] select:focus,
+        html[data-theme="light"] input:focus {
+            border-color: #22c55e !important;
+        }
+
+        html[data-theme="light"] .dropdown-content {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+
+        html[data-theme="light"] .dropdown-content a {
+            color: #0f172a !important;
+        }
+
+        html[data-theme="light"] .card {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        html[data-theme="light"] .alert-success {
+            background-color: #22c55e !important;
+            color: #000000 !important;
+        }
+
+        html[data-theme="light"] .custom-leaflet-popup .leaflet-popup-content-wrapper,
+        html[data-theme="light"] .custom-leaflet-popup .leaflet-popup-tip {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        html[data-theme="light"] .custom-leaflet-popup h4,
+        html[data-theme="light"] .custom-leaflet-popup span,
+        html[data-theme="light"] .custom-leaflet-popup p {
+            color: #0f172a !important;
+        }
+
+        html[data-theme="light"] .glass-panel-glow-green,
+        html[data-theme="light"] .glass-panel-glow-orange,
+        html[data-theme="light"] .glass-panel-glow-blue {
+            background: #ffffff !important;
+        }
+        
+        html[data-theme="light"] .pulse-border-orange {
+            animation: none !important;
+            border: 1px solid rgba(249, 115, 22, 0.4) !important;
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.15) !important;
+        }
+        
+        html[data-theme="light"] .pulse-border-green {
+            animation: none !important;
+            border: 1px solid rgba(34, 197, 94, 0.4) !important;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.15) !important;
+        }
     </style>
     <!-- goVolt Global Store for Currency, Unit & Theme switches -->
     <script>

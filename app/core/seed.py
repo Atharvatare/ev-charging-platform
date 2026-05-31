@@ -12,7 +12,7 @@ SEED_STATIONS = [
     # --- MAHARASHTRA (Nagpur / Mumbai / Pune / Highway) ---
     {
         "name": "GoBharat EV Flagship Command Hub",
-        "address": "Kalmeshwar Town Center, Nagpur, Maharashtra 441501",
+        "address": "Kalmeshwar Town Center, Nagpur, Maharashtra 441501, India",
         "lat": 21.2333,
         "lng": 78.9167,
         "rating": 5.0,
@@ -25,7 +25,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Jio-bp Pulse - BKC Hub",
-        "address": "G Block BKC, Bandra Kurla Complex, Mumbai, Maharashtra 400051",
+        "address": "G Block BKC, Bandra Kurla Complex, Mumbai, Maharashtra 400051, India",
         "lat": 19.0600,
         "lng": 72.8600,
         "rating": 4.9,
@@ -38,7 +38,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Tata Power EZ Charge - Bandra Reclamation",
-        "address": "Bandra Reclamation Flyover, Bandra West, Mumbai, Maharashtra 400050",
+        "address": "Bandra Reclamation Flyover, Bandra West, Mumbai, Maharashtra 400050, India",
         "lat": 19.0430,
         "lng": 72.8340,
         "rating": 4.8,
@@ -50,7 +50,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Zeon Charging - Hinjawadi IT Park",
-        "address": "Phase 1 Hinjawadi Info Tech Park, Pune, Maharashtra 411057",
+        "address": "Phase 1 Hinjawadi Info Tech Park, Pune, Maharashtra 411057, India",
         "lat": 18.5913,
         "lng": 73.7386,
         "rating": 4.7,
@@ -62,7 +62,7 @@ SEED_STATIONS = [
     },
     {
         "name": "KSEB Charge - Lonavala Expressway Stop",
-        "address": "Mumbai-Pune Expressway Toll Stop, Lonavala, Maharashtra 410401",
+        "address": "Mumbai-Pune Expressway Toll Stop, Lonavala, Maharashtra 410401, India",
         "lat": 18.7500,
         "lng": 73.4000,
         "rating": 4.6,
@@ -75,7 +75,7 @@ SEED_STATIONS = [
     # --- DELHI NCR ---
     {
         "name": "EESL Supercharger - Connaught Place",
-        "address": "Radial Road 1, Connaught Place, New Delhi, Delhi 110001",
+        "address": "Radial Road 1, Connaught Place, New Delhi, Delhi 110001, India",
         "lat": 28.6304,
         "lng": 77.2177,
         "rating": 4.7,
@@ -87,7 +87,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Fortum Charge - Gurgaon Cyber City",
-        "address": "DLF Cyber City Phase 2, Gurugram, Haryana 122002",
+        "address": "DLF Cyber City Phase 2, Gurugram, Haryana 122002, India",
         "lat": 28.4950,
         "lng": 77.0878,
         "rating": 4.8,
@@ -99,7 +99,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Jio-bp Pulse - Noida Sector 62",
-        "address": "Block C Sector 62 Industrial Area, Noida, Uttar Pradesh 201301",
+        "address": "Block C Sector 62 Industrial Area, Noida, Uttar Pradesh 201301, India",
         "lat": 28.6223,
         "lng": 77.3588,
         "rating": 4.5,
@@ -112,7 +112,7 @@ SEED_STATIONS = [
     # --- KARNATAKA (Bengaluru / Highway) ---
     {
         "name": "Ather Grid Hub - Indiranagar",
-        "address": "100 Feet Rd, Indiranagar, Bengaluru, Karnataka 560038",
+        "address": "100 Feet Rd, Indiranagar, Bengaluru, Karnataka 560038, India",
         "lat": 12.9784,
         "lng": 77.6408,
         "rating": 4.8,
@@ -124,7 +124,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Tata Power - Koramangala Grid",
-        "address": "80 Feet Road, 4th Block Koramangala, Bengaluru, Karnataka 560034",
+        "address": "80 Feet Road, 4th Block Koramangala, Bengaluru, Karnataka 560034, India",
         "lat": 12.9352,
         "lng": 77.6244,
         "rating": 4.6,
@@ -136,7 +136,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Ather Grid - Whitefield IT Corridor",
-        "address": "ITPB Main Road, Whitefield, Bengaluru, Karnataka 560066",
+        "address": "ITPB Main Road, Whitefield, Bengaluru, Karnataka 560066, India",
         "lat": 12.9698,
         "lng": 77.7499,
         "rating": 4.5,
@@ -149,7 +149,7 @@ SEED_STATIONS = [
     # --- TAMIL NADU (Chennai / Highway) ---
     {
         "name": "Zeon Charging - OMR Tech Corridor",
-        "address": "Rajiv Gandhi Salai OMR, Adyar, Chennai, Tamil Nadu 600020",
+        "address": "Rajiv Gandhi Salai OMR, Adyar, Chennai, Tamil Nadu 600020, India",
         "lat": 12.9229,
         "lng": 80.2312,
         "rating": 4.7,
@@ -161,7 +161,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Tata Power - Adyar Central",
-        "address": "Sardar Patel Road, Adyar, Chennai, Tamil Nadu 600020",
+        "address": "Sardar Patel Road, Adyar, Chennai, Tamil Nadu 600020, India",
         "lat": 13.0063,
         "lng": 80.2574,
         "rating": 4.5,
@@ -173,7 +173,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Zeon Charging - Krishnagiri Highway Stop",
-        "address": "Krishnagiri Highway NH44, Krishnagiri, Tamil Nadu 635001",
+        "address": "Krishnagiri Highway NH44, Krishnagiri, Tamil Nadu 635001, India",
         "lat": 12.5265,
         "lng": 78.2140,
         "rating": 4.4,
@@ -186,7 +186,7 @@ SEED_STATIONS = [
     # --- TELANGANA ---
     {
         "name": "GMR Pulse - Shamshabad Airport",
-        "address": "RGIA Terminal Arrivals Road, Shamshabad, Hyderabad, Telangana 500409",
+        "address": "RGIA Terminal Arrivals Road, Shamshabad, Hyderabad, Telangana 500409, India",
         "lat": 17.2403,
         "lng": 78.4294,
         "rating": 4.6,
@@ -198,7 +198,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Ather Grid - Gachibowli Outer Ring Road",
-        "address": "ISB Road, Gachibowli Financial District, Hyderabad, Telangana 500032",
+        "address": "ISB Road, Gachibowli Financial District, Hyderabad, Telangana 500032, India",
         "lat": 17.4401,
         "lng": 78.3489,
         "rating": 4.8,
@@ -211,7 +211,7 @@ SEED_STATIONS = [
     # --- WEST BENGAL ---
     {
         "name": "Bengal EcoCharge - Salt Lake Sector V",
-        "address": "GP Block, Sector V, Salt Lake, Kolkata, West Bengal 700091",
+        "address": "GP Block, Sector V, Salt Lake, Kolkata, West Bengal 700091, India",
         "lat": 22.5726,
         "lng": 88.4339,
         "rating": 4.5,
@@ -223,7 +223,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Tata Power - Eco Park Town",
-        "address": "Major Arterial Road, New Town Eco Park, Kolkata, West Bengal 700156",
+        "address": "Major Arterial Road, New Town Eco Park, Kolkata, West Bengal 700156, India",
         "lat": 22.6105,
         "lng": 88.4682,
         "rating": 4.6,
@@ -235,7 +235,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Fortum Charge - Howrah Junction",
-        "address": "Howrah Station Road, Howrah, West Bengal 711101",
+        "address": "Howrah Station Road, Howrah, West Bengal 711101, India",
         "lat": 22.5855,
         "lng": 88.3414,
         "rating": 4.4,
@@ -248,7 +248,7 @@ SEED_STATIONS = [
     # --- GUJARAT ---
     {
         "name": "Jio-bp Pulse - SG Highway",
-        "address": "Sarkhej - Gandhinagar Highway, Bodakdev, Ahmedabad, Gujarat 380054",
+        "address": "Sarkhej - Gandhinagar Highway, Bodakdev, Ahmedabad, Gujarat 380054, India",
         "lat": 23.0225,
         "lng": 72.5714,
         "rating": 4.7,
@@ -260,7 +260,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Tata Power - Surat Diamond Bourse",
-        "address": "Surat Diamond Bourse Road, Surat, Gujarat 395007",
+        "address": "Surat Diamond Bourse Road, Surat, Gujarat 395007, India",
         "lat": 21.1702,
         "lng": 72.8311,
         "rating": 4.8,
@@ -273,7 +273,7 @@ SEED_STATIONS = [
     # --- KERALA ---
     {
         "name": "KSEB Charge - Kochi Infopark",
-        "address": "Infopark Campus Road, Kakkanad, Kochi, Kerala 682030",
+        "address": "Infopark Campus Road, Kakkanad, Kochi, Kerala 682030, India",
         "lat": 9.9816,
         "lng": 76.3276,
         "rating": 4.8,
@@ -285,7 +285,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Fortum Charge - Trivandrum Central",
-        "address": "MG Road, Thiruvananthapuram, Kerala 695001",
+        "address": "MG Road, Thiruvananthapuram, Kerala 695001, India",
         "lat": 8.5074,
         "lng": 76.9511,
         "rating": 4.5,
@@ -298,7 +298,7 @@ SEED_STATIONS = [
     # --- RAJASTHAN ---
     {
         "name": "Rajasthan EcoPulse - Jaipur Pink City",
-        "address": "Tonk Road Near Nehru Garden, Jaipur, Rajasthan 302015",
+        "address": "Tonk Road Near Nehru Garden, Jaipur, Rajasthan 302015, India",
         "lat": 26.9124,
         "lng": 75.7873,
         "rating": 4.6,
@@ -310,7 +310,7 @@ SEED_STATIONS = [
     },
     {
         "name": "Tata Power - Udaipur Highway Stop",
-        "address": "NH8 Highway Halt, Udaipur, Rajasthan 313001",
+        "address": "NH8 Highway Halt, Udaipur, Rajasthan 313001, India",
         "lat": 24.5854,
         "lng": 73.7125,
         "rating": 4.5,
@@ -319,22 +319,250 @@ SEED_STATIONS = [
             {"connector": "CCS2", "power": 120.0, "price": 17.5, "status": "AVAILABLE"},
             {"connector": "Type 2 AC", "power": 22.0, "price": 11.0, "status": "AVAILABLE"}
         ]
+    },
+    # --- NEW NAGPUR LOCATIONS (Expanding local density to 5 stations) ---
+    {
+        "name": "Tata Power EZ Charge - Nagpur Airport",
+        "address": "Wardha Rd, Nagpur Airport, Nagpur, Maharashtra 440005, India",
+        "lat": 21.0922,
+        "lng": 79.0594,
+        "rating": 4.7,
+        "solar": {"output": 40.0, "storage": 120.0, "score": 92},
+        "ports": [
+            {"connector": "CCS2", "power": 150.0, "price": 16.5, "status": "AVAILABLE"},
+            {"connector": "Type 2 AC", "power": 22.0, "price": 10.0, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "Jio-bp Pulse - Sadar Residency Road",
+        "address": "Residency Rd, Sadar, Nagpur, Maharashtra 440001, India",
+        "lat": 21.1633,
+        "lng": 79.0805,
+        "rating": 4.8,
+        "solar": {"output": 35.0, "storage": 100.0, "score": 90},
+        "ports": [
+            {"connector": "CCS2", "power": 150.0, "price": 17.0, "status": "AVAILABLE"},
+            {"connector": "Type 2 AC", "power": 22.0, "price": 11.0, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "Zeon Charging - Dharampeth Hub",
+        "address": "West High Court Rd, Dharampeth, Nagpur, Maharashtra 440010, India",
+        "lat": 21.1428,
+        "lng": 79.0596,
+        "rating": 4.9,
+        "solar": {"output": 45.0, "storage": 130.0, "score": 95},
+        "ports": [
+            {"connector": "CCS2", "power": 250.0, "price": 18.0, "status": "AVAILABLE"},
+            {"connector": "Type 2 AC", "power": 22.0, "price": 11.5, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "KSEB Charge - Manish Nagar Ring Road",
+        "address": "Manish Nagar Ring Rd, Nagpur, Maharashtra 440015, India",
+        "lat": 21.0995,
+        "lng": 79.0833,
+        "rating": 4.6,
+        "solar": {"output": 30.0, "storage": 90.0, "score": 88},
+        "ports": [
+            {"connector": "CCS2", "power": 120.0, "price": 16.0, "status": "AVAILABLE"},
+            {"connector": "Type 2 AC", "power": 22.0, "price": 10.0, "status": "AVAILABLE"}
+        ]
+    },
+    # --- USA ---
+    {
+        "name": "Tesla Supercharger - Santa Monica",
+        "address": "1401 Santa Monica Blvd, Santa Monica, CA 90404, USA",
+        "lat": 34.0242,
+        "lng": -118.4864,
+        "rating": 4.9,
+        "solar": {"output": 100.0, "storage": 400.0, "score": 99},
+        "ports": [
+            {"connector": "CCS2", "power": 250.0, "price": 28.0, "status": "AVAILABLE"},
+            {"connector": "CCS2", "power": 250.0, "price": 28.0, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "ChargePoint - San Francisco Central",
+        "address": "766 Harrison St, San Francisco, CA 94107, USA",
+        "lat": 37.7812,
+        "lng": -122.4011,
+        "rating": 4.7,
+        "solar": {"output": 50.0, "storage": 150.0, "score": 90},
+        "ports": [
+            {"connector": "CCS2", "power": 120.0, "price": 32.0, "status": "AVAILABLE"},
+            {"connector": "Type 2 AC", "power": 22.0, "price": 15.0, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "EVgo - Los Angeles DTLA",
+        "address": "700 W 7th St, Los Angeles, CA 90017, USA",
+        "lat": 34.0494,
+        "lng": -118.2588,
+        "rating": 4.8,
+        "solar": {"output": 60.0, "storage": 200.0, "score": 94},
+        "ports": [
+            {"connector": "CCS2", "power": 150.0, "price": 30.0, "status": "AVAILABLE"},
+            {"connector": "CCS2", "power": 100.0, "price": 25.0, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "Tesla Supercharger - Manhattan",
+        "address": "233 W 54th St, New York, NY 10019, USA",
+        "lat": 40.7644,
+        "lng": -73.9829,
+        "rating": 4.8,
+        "solar": {"output": 30.0, "storage": 100.0, "score": 85},
+        "ports": [
+            {"connector": "CCS2", "power": 250.0, "price": 35.0, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "Electrify America - JFK Airport",
+        "address": "JFK Airport Access Rd, New York, NY 11430, USA",
+        "lat": 40.6413,
+        "lng": -73.7781,
+        "rating": 4.6,
+        "solar": {"output": 80.0, "storage": 300.0, "score": 96},
+        "ports": [
+            {"connector": "CCS2", "power": 350.0, "price": 29.0, "status": "AVAILABLE"},
+            {"connector": "CCS2", "power": 150.0, "price": 24.0, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "Tesla Supercharger - Austin Gigafactory",
+        "address": "13101 Harold Green Rd, Austin, TX 78725, USA",
+        "lat": 30.2224,
+        "lng": -97.6180,
+        "rating": 5.0,
+        "solar": {"output": 150.0, "storage": 500.0, "score": 100},
+        "ports": [
+            {"connector": "CCS2", "power": 350.0, "price": 20.0, "status": "AVAILABLE"},
+            {"connector": "CCS2", "power": 250.0, "price": 18.0, "status": "AVAILABLE"}
+        ]
+    },
+    # --- UNITED KINGDOM ---
+    {
+        "name": "bp pulse - Westminster Central",
+        "address": "21 Great Smith St, London, England SW1P 3DJ, United Kingdom",
+        "lat": 51.4984,
+        "lng": -0.1299,
+        "rating": 4.7,
+        "solar": {"output": 20.0, "storage": 80.0, "score": 80},
+        "ports": [
+            {"connector": "CCS2", "power": 150.0, "price": 42.0, "status": "AVAILABLE"},
+            {"connector": "Type 2 AC", "power": 22.0, "price": 25.0, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "Shell Recharge - Heathrow Airport",
+        "address": "Terminal 2 Arrivals, London, England TW6 1EW, United Kingdom",
+        "lat": 51.4697,
+        "lng": -0.4508,
+        "rating": 4.6,
+        "solar": {"output": 40.0, "storage": 120.0, "score": 88},
+        "ports": [
+            {"connector": "CCS2", "power": 150.0, "price": 45.0, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "Tesla Supercharger - London Tower Hill",
+        "address": "Lower Thames St, London, England EC3R 6EE, United Kingdom",
+        "lat": 51.5088,
+        "lng": -0.0811,
+        "rating": 4.8,
+        "solar": {"output": 30.0, "storage": 100.0, "score": 85},
+        "ports": [
+            {"connector": "CCS2", "power": 250.0, "price": 38.0, "status": "AVAILABLE"}
+        ]
+    },
+    # --- NORWAY ---
+    {
+        "name": "Tesla Supercharger - Oslo Central",
+        "address": "Jernbanetorget 1, Oslo, Oslo 0154, Norway",
+        "lat": 59.9111,
+        "lng": 10.7528,
+        "rating": 4.9,
+        "solar": {"output": 40.0, "storage": 160.0, "score": 95},
+        "ports": [
+            {"connector": "CCS2", "power": 250.0, "price": 30.0, "status": "AVAILABLE"},
+            {"connector": "CCS2", "power": 150.0, "price": 25.0, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "Recharge - Aker Brygge Marina",
+        "address": "Dokkveien 1, Oslo, Oslo 0250, Norway",
+        "lat": 59.9118,
+        "lng": 10.7275,
+        "rating": 4.7,
+        "solar": {"output": 50.0, "storage": 200.0, "score": 98},
+        "ports": [
+            {"connector": "CCS2", "power": 150.0, "price": 32.0, "status": "AVAILABLE"}
+        ]
+    },
+    # --- GERMANY ---
+    {
+        "name": "Ionity - Munich Central Hub",
+        "address": "Arnulfstrasse 1, Munich, Bavaria 80335, Germany",
+        "lat": 48.1402,
+        "lng": 11.5583,
+        "rating": 4.8,
+        "solar": {"output": 60.0, "storage": 240.0, "score": 96},
+        "ports": [
+            {"connector": "CCS2", "power": 350.0, "price": 35.0, "status": "AVAILABLE"},
+            {"connector": "CCS2", "power": 150.0, "price": 29.0, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "EnBW - Munich East",
+        "address": "Am Moosfeld 3, Munich, Bavaria 81829, Germany",
+        "lat": 48.1325,
+        "lng": 11.6625,
+        "rating": 4.7,
+        "solar": {"output": 40.0, "storage": 150.0, "score": 92},
+        "ports": [
+            {"connector": "CCS2", "power": 150.0, "price": 31.0, "status": "AVAILABLE"}
+        ]
+    },
+    # --- JAPAN ---
+    {
+        "name": "CHAdeMO - Shinjuku Central",
+        "address": "1-1-3 Nishi-Shinjuku, Tokyo, Tokyo 160-0023, Japan",
+        "lat": 35.6905,
+        "lng": 139.6995,
+        "rating": 4.7,
+        "solar": {"output": 25.0, "storage": 100.0, "score": 88},
+        "ports": [
+            {"connector": "CCS2", "power": 100.0, "price": 22.0, "status": "AVAILABLE"},
+            {"connector": "Type 2 AC", "power": 22.0, "price": 10.0, "status": "AVAILABLE"}
+        ]
+    },
+    {
+        "name": "Tesla Supercharger - Roppongi Hills",
+        "address": "6-10-1 Roppongi, Tokyo, Tokyo 106-6108, Japan",
+        "lat": 35.6598,
+        "lng": 139.7302,
+        "rating": 4.9,
+        "solar": {"output": 35.0, "storage": 120.0, "score": 93},
+        "ports": [
+            {"connector": "CCS2", "power": 250.0, "price": 25.0, "status": "AVAILABLE"}
+        ]
     }
 ]
 
 def seed_database(force: bool = False):
     """Seeds the database with users and spatial charging stations, with auto-upgrade support."""
     with Session(engine) as session:
-        # Auto-detect old database schema and upgrade to new Pan-India 25-station grid
+        # Auto-detect old database schema and upgrade to new global 44-station grid
         existing_stations = session.exec(select(Station)).all()
         has_old_data = False
         if existing_stations:
-            # Force upgrade if database has less than 25 stations
-            if len(existing_stations) < 25:
+            # Force upgrade if database has less than 44 stations
+            if len(existing_stations) < 44:
                 has_old_data = True
 
         if force or has_old_data:
-            print("Auto-upgrading database tables for clean pan-India re-seeding...")
+            print("Auto-upgrading database tables for clean global and local re-seeding...")
             # Clear solar insights
             for item in session.exec(select(SolarInsight)).all():
                 session.delete(item)
@@ -406,7 +634,7 @@ def seed_database(force: bool = False):
                     )
                     session.add(port)
             session.commit()
-            print("Seeded 25 high-fidelity Pan-India EV Charging Stations across multiple states!")
+            print("Seeded 44 high-fidelity global and local EV Charging Stations!")
         else:
             print("Database already contains the latest stations. Skipping spatial seed.")
 

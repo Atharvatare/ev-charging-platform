@@ -57,6 +57,83 @@ VEHICLE_PROFILES = {
         "regen_efficiency": 0.52,
         "auxiliary_draw_w": 110.0,
         "display_name": "Ola S1 Pro"
+    },
+    "tesla_model_y": {
+        "mass_kg": 2000.0,
+        "drag_coeff": 0.23,
+        "frontal_area": 2.5,
+        "rolling_coeff": 0.011,
+        "battery_capacity_kwh": 75.0,
+        "efficiency": 0.93,
+        "regen_efficiency": 0.78,
+        "auxiliary_draw_w": 1400.0,
+        "display_name": "Tesla Model Y"
+    },
+    "tesla_model_3": {
+        "mass_kg": 1800.0,
+        "drag_coeff": 0.219,
+        "frontal_area": 2.2,
+        "rolling_coeff": 0.011,
+        "battery_capacity_kwh": 60.0,
+        "efficiency": 0.93,
+        "regen_efficiency": 0.78,
+        "auxiliary_draw_w": 1300.0,
+        "display_name": "Tesla Model 3"
+    },
+    "byd_atto_3": {
+        "mass_kg": 1750.0,
+        "drag_coeff": 0.29,
+        "frontal_area": 2.4,
+        "rolling_coeff": 0.012,
+        "battery_capacity_kwh": 60.5,
+        "efficiency": 0.90,
+        "regen_efficiency": 0.70,
+        "auxiliary_draw_w": 1200.0,
+        "display_name": "BYD Atto 3"
+    },
+    "nissan_leaf": {
+        "mass_kg": 1580.0,
+        "drag_coeff": 0.28,
+        "frontal_area": 2.3,
+        "rolling_coeff": 0.012,
+        "battery_capacity_kwh": 40.0,
+        "efficiency": 0.89,
+        "regen_efficiency": 0.68,
+        "auxiliary_draw_w": 1100.0,
+        "display_name": "Nissan Leaf"
+    },
+    "audi_e_tron": {
+        "mass_kg": 2500.0,
+        "drag_coeff": 0.28,
+        "frontal_area": 2.7,
+        "rolling_coeff": 0.011,
+        "battery_capacity_kwh": 95.0,
+        "efficiency": 0.91,
+        "regen_efficiency": 0.72,
+        "auxiliary_draw_w": 1600.0,
+        "display_name": "Audi e-tron"
+    },
+    "porsche_taycan": {
+        "mass_kg": 2200.0,
+        "drag_coeff": 0.22,
+        "frontal_area": 2.3,
+        "rolling_coeff": 0.010,
+        "battery_capacity_kwh": 93.4,
+        "efficiency": 0.94,
+        "regen_efficiency": 0.80,
+        "auxiliary_draw_w": 1500.0,
+        "display_name": "Porsche Taycan"
+    },
+    "mg_zs_ev": {
+        "mass_kg": 1620.0,
+        "drag_coeff": 0.30,
+        "frontal_area": 2.4,
+        "rolling_coeff": 0.012,
+        "battery_capacity_kwh": 50.3,
+        "efficiency": 0.90,
+        "regen_efficiency": 0.70,
+        "auxiliary_draw_w": 1200.0,
+        "display_name": "MG ZS EV"
     }
 }
 

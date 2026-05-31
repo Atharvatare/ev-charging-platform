@@ -22,6 +22,16 @@ class RoutePlanRequest(BaseModel):
     wind_direction: Optional[str] = "none"
     rain: Optional[str] = "none"
 
+class IsorangeRequest(BaseModel):
+    origin: str
+    start_soc: float = 100.0
+    vehicle: Optional[str] = "tata_nexon_ev_max"
+    temperature_c: Optional[float] = 25.0
+    wind_speed_kmh: Optional[float] = 0.0
+    wind_direction: Optional[str] = "none"
+    rain: Optional[str] = "none"
+
+
 @router.get("/nodes")
 def get_graph_nodes():
     """Returns a list of all supported SF road network intersections and stations with coordinates."""
@@ -189,4 +199,118 @@ def compare_fleet_routing(
             continue
             
     return comparisons
+
+
+@router.post("/isorange")
+def calculate_isorange_contour(
+    req: IsorangeRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Computes all reachable nodes (SoC >= 10.0%) from origin given EV profile and environmental overrides.
+    Sorts coordinates by polar angle to construct a standard GeoJSON Polygon closed loop.
+    """
+    import math
+    import heapq
+    from app.engines.battery import VEHICLE_PROFILES, EVEnergyModel
+    from app.engines.router import build_road_network
+
+    if req.origin not in SF_GRAPH_NODES:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Origin node is outside network coverage.")
+
+    try:
+        profile = VEHICLE_PROFILES.get(req.vehicle, VEHICLE_PROFILES["tata_nexon_ev_max"])
+        ev_model = EVEnergyModel(
+            mass_kg=profile["mass_kg"],
+            drag_coeff=profile["drag_coeff"],
+            frontal_area=profile["frontal_area"],
+            rolling_coeff=profile["rolling_coeff"],
+            battery_capacity_kwh=profile["battery_capacity_kwh"],
+            efficiency=profile["efficiency"],
+            regen_efficiency=profile["regen_efficiency"],
+            auxiliary_draw_w=profile["auxiliary_draw_w"],
+            temperature_c=req.temperature_c,
+            wind_speed_kmh=req.wind_speed_kmh,
+            wind_direction=req.wind_direction,
+            rain=req.rain
+        )
+        
+        graph = build_road_network(ev_model)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    # Dijkstra traversal to maximize remaining SoC
+    pq = [(-req.start_soc, req.origin)]
+    max_soc = {node: -1.0 for node in graph.nodes}
+    max_soc[req.origin] = req.start_soc
+    
+    while pq:
+        neg_soc, current_node = heapq.heappop(pq)
+        current_soc = -neg_soc
+        
+        if current_soc < max_soc[current_node]:
+            continue
+            
+        for neighbor in graph.neighbors(current_node):
+            edge_data = graph[current_node][neighbor]
+            energy_kwh = edge_data["energy"]
+            soc_loss = (energy_kwh / ev_model.capacity) * 100.0
+            next_soc = current_soc - soc_loss
+            next_soc = min(max(next_soc, 0.0), 100.0)
+            
+            if next_soc > max_soc[neighbor]:
+                max_soc[neighbor] = next_soc
+                heapq.heappush(pq, (-next_soc, neighbor))
+
+    # Filter reachable nodes (SoC >= 10.0%)
+    reachable_nodes = [node for node, val in max_soc.items() if val >= 10.0]
+
+    origin_lat = SF_GRAPH_NODES[req.origin]["lat"]
+    origin_lng = SF_GRAPH_NODES[req.origin]["lng"]
+
+    # Extract coordinates for reachable boundary
+    boundary_coords = []
+    for node in reachable_nodes:
+        if node == req.origin:
+            continue
+        lat = SF_GRAPH_NODES[node]["lat"]
+        lng = SF_GRAPH_NODES[node]["lng"]
+        boundary_coords.append((lng, lat))
+
+    # Fallback if fewer than 3 boundary nodes are reachable
+    if len(boundary_coords) < 3:
+        fallback_coords = []
+        for i in range(12):
+            angle = (i * 30.0) * (math.pi / 180.0)
+            lat = origin_lat + 0.02 * math.sin(angle)
+            lng = origin_lng + 0.02 * math.cos(angle)
+            fallback_coords.append([lng, lat])
+        fallback_coords.append(fallback_coords[0])  # Close ring
+        
+        geojson_geom = {
+            "type": "Polygon",
+            "coordinates": [fallback_coords]
+        }
+    else:
+        # Sort boundary coordinates by polar angle relative to the origin coordinate
+        def get_polar_angle(coord):
+            lng, lat = coord
+            return math.atan2(lat - origin_lat, lng - origin_lng)
+
+        boundary_coords.sort(key=get_polar_angle)
+        
+        polygon_coords = [[lng, lat] for lng, lat in boundary_coords]
+        polygon_coords.append(polygon_coords[0])  # Close ring
+        
+        geojson_geom = {
+            "type": "Polygon",
+            "coordinates": [polygon_coords]
+        }
+
+    return {
+        "reachable_nodes": reachable_nodes,
+        "max_soc": {k: round(v, 2) for k, v in max_soc.items() if v >= 10.0},
+        "geojson": geojson_geom
+    }
+
 

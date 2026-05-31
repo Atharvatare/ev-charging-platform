@@ -30,8 +30,8 @@ class Port(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     # Relationship
-    station: Optional[Station] = Relationship(back_populates="ports")
-    reservations: List["Reservation"] = Relationship(back_populates="port", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    station: Optional[Station] = Relationship(back_populates="ports", exclude=True)
+    reservations: List["Reservation"] = Relationship(back_populates="port", exclude=True, sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 class SolarInsight(SQLModel, table=True):
     __tablename__ = "solar_insights"
@@ -44,4 +44,4 @@ class SolarInsight(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     # Relationship
-    station: Optional[Station] = Relationship(back_populates="solar_insights")
+    station: Optional[Station] = Relationship(back_populates="solar_insights", exclude=True)

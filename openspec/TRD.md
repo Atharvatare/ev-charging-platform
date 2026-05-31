@@ -25,7 +25,7 @@
 
 ### 🗺️ Physical Route Solver
 *   `POST /api/routing/plan`: Evaluates A* path calculations across topographic nodes, incorporating environmental drag parameters.
-*   `POST /api/routing/compare`: Simulates route calculations in parallel across all 5 standard EV models.
+*   `POST /api/routing/compare`: Simulates route calculations in parallel across all standard EV models.
 
 ### 🔋 Charging Station Inventory
 *   `GET /api/stations/`: Retrieves all seeded stations, including active ports and real-time solar insight matrices.

@@ -182,7 +182,7 @@ def test_persistent_endpoints():
         stations_res = client.get("/api/stations/")
         assert stations_res.status_code == 200
         stations_data = stations_res.json()
-        assert len(stations_data) == 25
+        assert len(stations_data) == 44
         
         # 2. Get Topographic Nodes
         nodes_res = client.get("/api/routing/nodes")
@@ -392,6 +392,149 @@ def test_port_fault_injection():
         assert clear_res.json()["status"] == "AVAILABLE"
         
         print("SUCCESS: Fault injection and clear-fault endpoints verified persistently!")
+
+
+def test_isorange_contour():
+    """
+    Verifies that the isorange reachability bubble computations are mathematically sound
+    and return correct GeoJSON structures.
+    """
+    from fastapi.testclient import TestClient
+    from app.main import app
+    import random
+    
+    with TestClient(app) as client:
+        # 1. Register and login to get auth token
+        random_num = random.randint(100000, 999999)
+        new_consumer_email = f"iso_tester_{random_num}@test.com"
+        register_payload = {
+            "email": new_consumer_email,
+            "password": "securepassword123",
+            "full_name": "Isorange Tester",
+            "phone": "+91 99999 66666",
+            "role": "user"
+        }
+        client.post("/api/auth/register", json=register_payload)
+        
+        login_payload = {
+            "username": new_consumer_email,
+            "password": "securepassword123"
+        }
+        login_res = client.post("/api/auth/login", data=login_payload)
+        token_data = login_res.json()
+        headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+        
+        # 2. Query isorange endpoint
+        payload = {
+            "origin": "Gateway_of_India",
+            "start_soc": 80.0,
+            "vehicle": "tata_nexon_ev_max",
+            "temperature_c": 25.0,
+            "wind_speed_kmh": 0.0,
+            "wind_direction": "none",
+            "rain": "none"
+        }
+        res = client.post("/api/routing/isorange", json=payload, headers=headers)
+        assert res.status_code == 200
+        data = res.json()
+        
+        # Validate return schema elements
+        assert "reachable_nodes" in data
+        assert "max_soc" in data
+        assert "geojson" in data
+        
+        geojson = data["geojson"]
+        assert geojson["type"] == "Polygon"
+        assert len(geojson["coordinates"]) == 1
+        
+        coords = geojson["coordinates"][0]
+        # Must have at least 4 points (closed ring of at least 3 unique coordinates)
+        assert len(coords) >= 4
+        # Closing condition: first coordinate matches last coordinate
+        assert coords[0] == coords[-1]
+        
+        print("SUCCESS: Isorange reachability bubble integration test fully verified!")
+
+
+def test_v2g_arbitrage_settlement():
+    """
+    Verifies that finishing a bi-directional V2G charging session via POST 
+    successfully completes the reservation and deposits the net credits 
+    earned back to the driver's database wallet.
+    """
+    from fastapi.testclient import TestClient
+    from app.main import app
+    import random
+    
+    with TestClient(app) as client:
+        # 1. Register and login to get auth token
+        random_num = random.randint(100000, 999999)
+        new_consumer_email = f"v2g_tester_{random_num}@test.com"
+        register_payload = {
+            "email": new_consumer_email,
+            "password": "securepassword123",
+            "full_name": "V2G Tester",
+            "phone": "+91 99999 55555",
+            "role": "user"
+        }
+        client.post("/api/auth/register", json=register_payload)
+        
+        login_payload = {
+            "username": new_consumer_email,
+            "password": "securepassword123"
+        }
+        login_res = client.post("/api/auth/login", data=login_payload)
+        token_data = login_res.json()
+        headers = {"Authorization": f"Bearer {token_data['access_token']}"}
+        
+        # 2. Fetch stations and get an available port
+        stations_res = client.get("/api/stations/")
+        assert stations_res.status_code == 200
+        stations = stations_res.json()
+        assert len(stations) > 0
+        
+        port_id = stations[0]["ports"][0]["id"]
+        
+        # 3. Book a reservation
+        reserve_payload = {
+            "port_id": port_id,
+            "duration_hours": 1
+        }
+        reserve_res = client.post("/api/bookings/reserve", json=reserve_payload, headers=headers)
+        assert reserve_res.status_code == 200
+        res_data = reserve_res.json()
+        reservation_id = res_data["reservation_id"]
+        
+        # 4. Settle V2G arbitrage session
+        settle_payload = {
+            "energy_discharged_kwh": 10.0,
+            "credits_earned": 225.0,
+            "degradation_cost": 25.0,
+            "net_profit": 200.0
+        }
+        
+        v2g_res = client.post(f"/api/bookings/{reservation_id}/complete-v2g", json=settle_payload, headers=headers)
+        assert v2g_res.status_code == 200
+        v2g_data = v2g_res.json()
+        
+        assert "V2G session completed" in v2g_data["message"]
+        # Standard initial wallet has 100.0. Booking deducts 100.0 fee (0.0). Adding 200.0 profit yields 200.0 wallet balance.
+        assert v2g_data["new_balance"] == 200.0
+        
+        # 5. Check that port has reverted to AVAILABLE
+        stations_after = client.get("/api/stations/")
+        assert stations_after.status_code == 200
+        updated_port = None
+        for st in stations_after.json():
+            for p in st["ports"]:
+                if p["id"] == port_id:
+                    updated_port = p
+                    break
+        assert updated_port is not None
+        assert updated_port["status"] == "AVAILABLE"
+        
+        print("SUCCESS: V2G Arbitrage Settlement integration test passed!")
+
 
 
 

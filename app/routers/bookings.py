@@ -262,6 +262,74 @@ async def complete_charging_session(
     return {"message": "Session completed and settled persistently.", "new_balance": current_user.wallet_balance}
 
 
+class SettleV2GSessionRequest(BaseModel):
+    energy_discharged_kwh: float
+    credits_earned: float
+    degradation_cost: float
+    net_profit: float
+
+
+@router.post("/{reservation_id}/complete-v2g")
+async def complete_v2g_session(
+    reservation_id: UUID,
+    req: SettleV2GSessionRequest,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Completes a V2G discharging arbitrage session, restores port status to AVAILABLE,
+    and deposits the net earnings (net_profit) back to the user's database wallet balance.
+    """
+    res = session.get(Reservation, reservation_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reservation record not found.")
+
+    if res.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied.")
+
+    if res.status != "PENDING":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only active reservations can be completed.")
+
+    # 1. Restore port status
+    port = session.get(Port, res.port_id)
+    if port:
+        port.status = "AVAILABLE"
+        session.add(port)
+
+    # 2. Update Reservation status
+    res.status = "COMPLETED"
+    session.add(res)
+
+    # 3. Deposit net arbitrage profit to wallet
+    current_user.wallet_balance += req.net_profit
+    session.add(current_user)
+
+    # 4. Log wallet transaction
+    ledger = WalletTransaction(
+        user_id=current_user.id,
+        amount=req.net_profit,
+        transaction_type="DEPOSIT",
+        description=f"V2G VPP Discharging Settle - {port.connector_type if port else 'Bi-directional Port'}"
+    )
+    session.add(ledger)
+    
+    session.commit()
+    
+    if port:
+        await manager.broadcast({
+            "type": "PORT_STATUS_UPDATE",
+            "station_id": str(port.station_id),
+            "port_id": str(port.id),
+            "status": port.status
+        })
+    
+    return {
+        "message": "V2G session completed and settled persistently.",
+        "new_balance": current_user.wallet_balance
+    }
+
+
+
 class FaultRequest(BaseModel):
     fault_type: str
 

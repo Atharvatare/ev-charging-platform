@@ -237,6 +237,90 @@
                 </div>
             </div>
 
+            <!-- Dynamic Solar Grid Schedule Optimizer (Dynamic Upgrade) -->
+            <div class="card glass-panel border border-neutral-800 rounded-3xl p-6 shadow-2xl mt-8" x-data="solarOptimizerController()" x-init="init()">
+                <div class="flex justify-between items-center mb-6 border-b border-neutral-900 pb-3">
+                    <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-solar-panel text-cyberGreen glow-text-green animate-pulse"></i> Smart Solar Grid Optimizer
+                    </h3>
+                    <span class="text-[9px] text-cyberBlue font-bold uppercase tracking-widest bg-cyberBlue/10 border border-cyberBlue/25 px-2.5 py-1 rounded-lg">Eco Smart Grid</span>
+                </div>
+
+                <p class="text-xs text-neutral-400 mb-6 leading-relaxed">
+                    Optimize your charging schedule based on real-time monsoonal solar generation forecasts. Avoid peak carbon hours and secure discounted solar tariffs by scheduling your charge during peak solar yields!
+                </p>
+
+                <!-- Input Controls -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="form-control w-full">
+                        <label class="label py-0 mb-1"><span class="text-[10px] text-neutral-400 font-bold uppercase">Required Energy</span></label>
+                        <div class="flex gap-2">
+                            <input type="number" x-model.number="targetKwh" min="5" max="100" class="input input-bordered input-sm bg-neutral-900 border-neutral-800 focus:border-cyberGreen text-xs rounded-xl flex-grow h-8 focus:outline-none" />
+                            <span class="text-xs font-bold text-neutral-350 flex items-center">kWh</span>
+                        </div>
+                    </div>
+                    <div class="form-control w-full">
+                        <label class="label py-0 mb-1"><span class="text-[10px] text-neutral-400 font-bold uppercase">Select Charger Location</span></label>
+                        <select x-model="selectedLocation" class="select select-bordered select-xs bg-neutral-900 border-neutral-800 text-xs rounded-xl h-8 min-h-8">
+                            <option value="GoBharat Flagship (Nagpur)">GoBharat Flagship (Nagpur)</option>
+                            <option value="BKC Supercharger (Mumbai)">BKC Supercharger (Mumbai)</option>
+                            <option value="Oslo Central Grid (Norway)">Oslo Central Grid (Norway)</option>
+                            <option value="Munich Central Hub (Germany)">Munich Central Hub (Germany)</option>
+                            <option value="Austin Giga Grid (Texas)">Austin Giga Grid (Texas)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Run button -->
+                <button @click="optimizeSchedule()" class="btn btn-sm btn-block bg-gradient-to-r from-cyberGreen to-cyberBlue text-black font-extrabold border-none hover:from-white hover:to-white rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.15)] mb-6">
+                    Find Greenest Charging Slot <i class="fa-solid fa-bolt ml-1"></i>
+                </button>
+
+                <!-- 2-Column Forecast & Results Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Column 1: Live Forecast Chart (Span 2) -->
+                    <div class="md:col-span-2 space-y-2">
+                        <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block"><i class="fa-solid fa-chart-area text-cyberBlue mr-0.5"></i> 24h Solar Irradiance & Carbon Load Forecast</span>
+                        <canvas id="solar_forecast_chart" width="360" height="150" class="w-full bg-neutral-950/80 border border-neutral-900 rounded-xl"></canvas>
+                    </div>
+
+                    <!-- Column 2: Optimizer Outputs (Span 1) -->
+                    <div class="md:col-span-1 space-y-4">
+                        <template x-if="optimalSlot">
+                            <div class="space-y-3.5 bg-neutral-900/55 p-4 border border-neutral-800 rounded-2xl animate-fade-in text-left">
+                                <span class="text-[9px] text-cyberGreen font-bold uppercase tracking-widest block glow-text-green"><i class="fa-solid fa-circle-check mr-0.5 animate-bounce"></i> Optimal Slot Found</span>
+                                
+                                <div>
+                                    <span class="text-[8px] text-neutral-500 font-bold uppercase">Optimal Window</span>
+                                    <span class="text-xs font-extrabold text-white block mt-0.5" x-text="optimalSlot.time"></span>
+                                </div>
+                                
+                                <div>
+                                    <span class="text-[8px] text-neutral-500 font-bold uppercase">Renewable Share</span>
+                                    <span class="text-xs font-extrabold text-cyberGreen block mt-0.5" x-text="optimalSlot.renewability + '% Solar' "></span>
+                                </div>
+
+                                <div>
+                                    <span class="text-[8px] text-neutral-500 font-bold uppercase">Estimated Cost</span>
+                                    <span class="text-xs font-extrabold text-cyberBlue block mt-0.5" x-text="$store.global.formatMoney(optimalSlot.cost) + ' (Save ' + optimalSlot.savings + '%)'"></span>
+                                </div>
+
+                                <button @click="reserveOptimalSlot()" class="btn btn-xs btn-block bg-cyberGreen border-none text-black font-extrabold hover:bg-white rounded-lg py-1.5 mt-2">
+                                    Reserve this Slot <i class="fa-solid fa-calendar text-[9px] ml-1"></i>
+                                </button>
+                            </div>
+                        </template>
+
+                        <template x-if="!optimalSlot">
+                            <div class="h-full flex flex-col items-center justify-center text-center p-6 border border-dashed border-neutral-800 rounded-2xl min-h-[175px]">
+                                <i class="fa-solid fa-calculator text-2xl text-neutral-600 mb-2 animate-pulse"></i>
+                                <span class="text-[10px] text-neutral-400 font-semibold leading-relaxed">Enter target kWh & click calculate to optimize carbon footprints!</span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </div>
@@ -265,6 +349,30 @@ function dashboardController() {
         ocppHistory: [],
         activeResId: null,
         activePortId: null,
+        ocppMode: 'G2V',
+        ocppV2GTargetSoC: 30,
+        ocppV2GEarnings: 0.0,
+        ocppV2GWearCost: 0.0,
+        ocppV2GNetProfit: 0.0,
+        ocppV2GStability: 85.0,
+        batteryTemp: 28.0,
+        ambientTemp: 32.0,
+        chillerActive: true,
+        batterySoh: 100.0,
+        sohDecayPercent: 0.0,
+        throttlingActive: false,
+        ocppMode: 'G2V',
+        ocppV2GTargetSoC: 30,
+        ocppV2GEarnings: 0.0,
+        ocppV2GWearCost: 0.0,
+        ocppV2GNetProfit: 0.0,
+        ocppV2GStability: 85.0,
+        batteryTemp: 28.0,
+        ambientTemp: 32.0,
+        chillerActive: true,
+        batterySoh: 100.0,
+        sohDecayPercent: 0.0,
+        throttlingActive: false,
         transactions: [],
         reservations: [],
         trips: [],
@@ -462,7 +570,17 @@ function dashboardController() {
             this.activeResId = resId;
             this.activePortId = portId;
             
-            this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower });
+            this.ocppMode = 'G2V';
+            this.ocppV2GEarnings = 0.0;
+            this.ocppV2GWearCost = 0.0;
+            this.ocppV2GNetProfit = 0.0;
+            this.ocppV2GStability = 85.0;
+            this.batteryTemp = 28.0;
+            this.batterySoh = 100.0;
+            this.sohDecayPercent = 0.0;
+            this.throttlingActive = false;
+            
+            this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower, temp: this.batteryTemp });
             
             const modal = document.getElementById('ocpp_charging_modal');
             if (modal) modal.showModal();
@@ -470,22 +588,66 @@ function dashboardController() {
             setTimeout(() => this.drawOcppChart(), 100);
             
             this.ocppTimer = setInterval(() => {
-                if (this.ocppSoc < 85) {
-                    this.ocppSoc += 1;
-                    
-                    if (this.ocppSoc > 72) {
-                        this.ocppPower = Math.max(30.0, this.ocppPower - 12.0);
-                    } else if (this.ocppSoc > 55) {
-                        this.ocppPower = Math.max(75.0, this.ocppPower - 6.0);
+                // Thermodynamics equation
+                const heatGen = (this.ocppPower * this.ocppPower) * 0.00003;
+                const heatTransfer = (parseFloat(this.ambientTemp) - this.batteryTemp) * 0.02;
+                const chillerEffect = this.chillerActive ? -0.45 : 0.0;
+                
+                this.batteryTemp += heatGen + heatTransfer + chillerEffect;
+                this.batteryTemp = Math.max(15.0, Math.min(85.0, this.batteryTemp));
+                
+                // Electrothermal SOH decay
+                const sohDecay = (Math.abs(this.ocppPower) * 0.0000003) * (this.batteryTemp > 45.0 ? (this.batteryTemp - 40.0) * 0.2 : 1.0);
+                this.sohDecayPercent += sohDecay * 100;
+                this.batterySoh = Math.max(80.0, 100.0 - this.sohDecayPercent);
+                
+                if (this.ocppMode === 'V2G') {
+                    // V2G Discharging mode
+                    if (this.ocppSoc > parseFloat(this.ocppV2GTargetSoC)) {
+                        this.ocppSoc -= 1;
+                        this.ocppPower = -50.0;
+                        
+                        this.ocppEnergy += 0.35;
+                        this.ocppV2GEarnings += 0.35 * 22.50; // ₹22.50/kWh peak
+                        this.ocppV2GWearCost += 0.35 * 2.50; // ₹2.50/kWh wear
+                        this.ocppV2GNetProfit = this.ocppV2GEarnings - this.ocppV2GWearCost;
+                        
+                        this.ocppV2GStability = Math.min(99.0, Math.max(80.0, this.ocppV2GStability + (Math.random() - 0.5) * 3));
+                        
+                        this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower, temp: this.batteryTemp });
+                        this.drawOcppChart();
+                    } else {
+                        this.stopOcppCharging();
                     }
-                    
-                    this.ocppEnergy += 0.45;
-                    this.ocppCost += 0.45 * 18.5; // standard rate ₹18.50 per unit
-                    
-                    this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower });
-                    this.drawOcppChart();
                 } else {
-                    this.stopOcppCharging();
+                    // G2V Charging mode
+                    if (this.ocppSoc < 85) {
+                        this.ocppSoc += 1;
+                        
+                        let targetPower = 150.0;
+                        if (this.ocppSoc > 72) {
+                            targetPower = Math.max(30.0, 150.0 - (this.ocppSoc - 72) * 12.0);
+                        } else if (this.ocppSoc > 55) {
+                            targetPower = Math.max(75.0, 150.0 - (this.ocppSoc - 55) * 6.0);
+                        }
+                        
+                        // Active thermal throttling
+                        if (this.batteryTemp > 50.0) {
+                            this.throttlingActive = true;
+                            this.ocppPower = Math.min(targetPower, 45.0);
+                        } else {
+                            this.throttlingActive = false;
+                            this.ocppPower = targetPower;
+                        }
+                        
+                        this.ocppEnergy += 0.45;
+                        this.ocppCost += 0.45 * 18.5; // standard rate ₹18.50 per unit
+                        
+                        this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower, temp: this.batteryTemp });
+                        this.drawOcppChart();
+                    } else {
+                        this.stopOcppCharging();
+                    }
                 }
             }, 250);
         },
@@ -518,27 +680,43 @@ function dashboardController() {
             
             if (this.ocppHistory.length === 0) return;
             
-            // Plot charging curve line
+            // Draw zero reference line for bi-directional flow
+            const yZero = (h - 15) - ((0 - (-60.0)) / 220.0) * (h - 25);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(0, yZero);
+            ctx.lineTo(w, yZero);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Plot charging/discharging curve line
             ctx.beginPath();
             ctx.lineWidth = 2.5;
             
             if (this.ocppFault) {
-                ctx.strokeStyle = '#ec4899'; // neon pink
+                ctx.strokeStyle = '#ec4899';
                 ctx.shadowColor = '#ec4899';
+            } else if (this.ocppMode === 'V2G') {
+                ctx.strokeStyle = '#d946ef'; // Neon Magenta for V2G
+                ctx.shadowColor = '#d946ef';
             } else {
-                ctx.strokeStyle = '#06b6d4'; // cyan
+                ctx.strokeStyle = '#06b6d4';
                 ctx.shadowColor = '#06b6d4';
             }
             ctx.shadowBlur = 8;
             
             const maxSoC = 85;
-            const minSoC = 32;
+            const minSoC = 15; // Set lower limit map to show V2G discharge
+            const minPower = -60.0;
             const maxPower = 160.0;
+            const powerRange = 220.0;
             
             this.ocppHistory.forEach((pt, idx) => {
                 const xRange = maxSoC - minSoC;
                 const x = 15 + ((pt.soc - minSoC) / (xRange || 1)) * (w - 30);
-                const y = (h - 15) - (pt.power / maxPower) * (h - 25);
+                const y = (h - 15) - ((pt.power - minPower) / powerRange) * (h - 25);
                 
                 if (idx === 0) {
                     ctx.moveTo(x, y);
@@ -549,16 +727,35 @@ function dashboardController() {
             ctx.stroke();
             ctx.shadowBlur = 0;
             
+            // Plot battery temp as a subtle secondary red line on the same canvas!
+            ctx.beginPath();
+            ctx.lineWidth = 1.2;
+            ctx.strokeStyle = '#ef4444';
+            ctx.setLineDash([2, 2]);
+            this.ocppHistory.forEach((pt, idx) => {
+                const xRange = maxSoC - minSoC;
+                const x = 15 + ((pt.soc - minSoC) / (xRange || 1)) * (w - 30);
+                // Map temp (15C to 85C) onto the height
+                const y = (h - 15) - ((pt.temp - 15.0) / 70.0) * (h - 25);
+                if (idx === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
             // Draw endpoints
             this.ocppHistory.forEach((pt, idx) => {
                 if (idx === 0 || idx === this.ocppHistory.length - 1) {
                     const xRange = maxSoC - minSoC;
                     const x = 15 + ((pt.soc - minSoC) / (xRange || 1)) * (w - 30);
-                    const y = (h - 15) - (pt.power / maxPower) * (h - 25);
+                    const y = (h - 15) - ((pt.power - minPower) / powerRange) * (h - 25);
                     
                     ctx.beginPath();
                     ctx.arc(x, y, 4, 0, 2 * Math.PI);
-                    ctx.fillStyle = this.ocppFault ? '#ec4899' : '#22c55e';
+                    ctx.fillStyle = this.ocppFault ? '#ec4899' : (this.ocppMode === 'V2G' ? '#d946ef' : '#22c55e');
                     ctx.fill();
                     
                     if (idx === this.ocppHistory.length - 1) {
@@ -575,7 +772,7 @@ function dashboardController() {
             this.ocppPower = 0.0;
             clearInterval(this.ocppTimer);
             
-            this.ocppHistory.push({ soc: this.ocppSoc, power: 0.0 });
+            this.ocppHistory.push({ soc: this.ocppSoc, power: 0.0, temp: this.batteryTemp });
             this.drawOcppChart();
             
             const token = localStorage.getItem('access_token') || 'mock_testing_token';
@@ -612,33 +809,60 @@ function dashboardController() {
                     console.log("Fault cleared on backend:", res);
                     
                     this.ocppFault = null;
-                    this.ocppPower = 150.0;
-                    if (this.ocppSoc > 72) {
-                        this.ocppPower = Math.max(30.0, 150.0 - (this.ocppSoc - 72) * 12.0);
-                    } else if (this.ocppSoc > 55) {
-                        this.ocppPower = Math.max(75.0, 150.0 - (this.ocppSoc - 55) * 6.0);
-                    }
+                    this.ocppPower = this.ocppMode === 'V2G' ? -50.0 : 150.0;
                     
-                    this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower });
+                    this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower, temp: this.batteryTemp });
                     this.drawOcppChart();
                     
                     this.ocppTimer = setInterval(() => {
-                        if (this.ocppSoc < 85) {
-                            this.ocppSoc += 1;
-                            
-                            if (this.ocppSoc > 72) {
-                                this.ocppPower = Math.max(30.0, this.ocppPower - 12.0);
-                            } else if (this.ocppSoc > 55) {
-                                this.ocppPower = Math.max(75.0, this.ocppPower - 6.0);
+                        // Thermodynamics
+                        const heatGen = (this.ocppPower * this.ocppPower) * 0.00003;
+                        const heatTransfer = (parseFloat(this.ambientTemp) - this.batteryTemp) * 0.02;
+                        const chillerEffect = this.chillerActive ? -0.45 : 0.0;
+                        this.batteryTemp = Math.max(15.0, Math.min(85.0, this.batteryTemp + heatGen + heatTransfer + chillerEffect));
+                        
+                        // SOH degradation
+                        const sohDecay = (Math.abs(this.ocppPower) * 0.0000003) * (this.batteryTemp > 45.0 ? (this.batteryTemp - 40.0) * 0.2 : 1.0);
+                        this.sohDecayPercent += sohDecay * 100;
+                        this.batterySoh = Math.max(80.0, 100.0 - this.sohDecayPercent);
+                        
+                        if (this.ocppMode === 'V2G') {
+                            if (this.ocppSoc > parseFloat(this.ocppV2GTargetSoC)) {
+                                this.ocppSoc -= 1;
+                                this.ocppPower = -50.0;
+                                this.ocppEnergy += 0.35;
+                                this.ocppV2GEarnings += 0.35 * 22.50;
+                                this.ocppV2GWearCost += 0.35 * 2.50;
+                                this.ocppV2GNetProfit = this.ocppV2GEarnings - this.ocppV2GWearCost;
+                                this.ocppV2GStability = Math.min(99.0, Math.max(80.0, this.ocppV2GStability + (Math.random() - 0.5) * 3));
+                                this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower, temp: this.batteryTemp });
+                                this.drawOcppChart();
+                            } else {
+                                this.stopOcppCharging();
                             }
-                            
-                            this.ocppEnergy += 0.45;
-                            this.ocppCost += 0.45 * 18.5;
-                            
-                            this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower });
-                            this.drawOcppChart();
                         } else {
-                            this.stopOcppCharging();
+                            if (this.ocppSoc < 85) {
+                                this.ocppSoc += 1;
+                                let targetPower = 150.0;
+                                if (this.ocppSoc > 72) {
+                                    targetPower = Math.max(30.0, this.ocppPower - 12.0);
+                                } else if (this.ocppSoc > 55) {
+                                    targetPower = Math.max(75.0, this.ocppPower - 6.0);
+                                }
+                                if (this.batteryTemp > 50.0) {
+                                    this.throttlingActive = true;
+                                    this.ocppPower = Math.min(targetPower, 45.0);
+                                } else {
+                                    this.throttlingActive = false;
+                                    this.ocppPower = targetPower;
+                                }
+                                this.ocppEnergy += 0.45;
+                                this.ocppCost += 0.45 * 18.5;
+                                this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower, temp: this.batteryTemp });
+                                this.drawOcppChart();
+                            } else {
+                                this.stopOcppCharging();
+                            }
                         }
                     }, 250);
                     
@@ -657,25 +881,50 @@ function dashboardController() {
             const resId = this.activeResId;
             
             try {
-                const response = await fetch(`/api/bookings/${resId}/complete`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ cost: this.ocppCost })
-                });
-                if (response.ok) {
-                    const result = await response.json();
-                    this.walletBalance = result.new_balance;
-                    await this.loadReservations();
-                    await this.loadTransactions();
+                if (this.ocppMode === 'V2G') {
+                    const response = await fetch(`/api/bookings/${resId}/complete-v2g`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            energy_discharged_kwh: this.ocppEnergy,
+                            credits_earned: this.ocppV2GEarnings,
+                            degradation_cost: this.ocppV2GWearCost,
+                            net_profit: this.ocppV2GNetProfit
+                        })
+                    });
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.walletBalance = result.new_balance;
+                        await this.loadReservations();
+                        await this.loadTransactions();
+                    } else {
+                        const err = await response.json();
+                        console.error("V2G Settlement failed:", err.detail);
+                    }
                 } else {
-                    const err = await response.json();
-                    console.error("OCPP Settlement failed:", err.detail);
+                    const response = await fetch(`/api/bookings/${resId}/complete`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ cost: this.ocppCost })
+                    });
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.walletBalance = result.new_balance;
+                        await this.loadReservations();
+                        await this.loadTransactions();
+                    } else {
+                        const err = await response.json();
+                        console.error("OCPP Settlement failed:", err.detail);
+                    }
                 }
             } catch (err) {
-                console.error("OCPP Complete error:", err);
+                console.error("Error stopping OCPP:", err);
             }
             
             setTimeout(() => {
@@ -735,6 +984,205 @@ function dashboardController() {
                     }, 8000);
                 }
             }
+        }
+    };
+}
+
+function solarOptimizerController() {
+    return {
+        targetKwh: 35,
+        selectedLocation: 'GoBharat Flagship (Nagpur)',
+        optimalSlot: null,
+        forecastData: [],
+
+        init() {
+            // Generate standard 24h forecast data upon startup
+            this.generateForecastData();
+            // Draw chart once DOM loads
+            setTimeout(() => this.drawForecastChart(), 100);
+            
+            // Listen to theme-changed to redraw chart with correct colors!
+            window.addEventListener('theme-changed', () => {
+                setTimeout(() => this.drawForecastChart(), 50);
+            });
+        },
+
+        generateForecastData() {
+            const data = [];
+            const isNagpur = this.selectedLocation.includes('Nagpur');
+            const isOslo = this.selectedLocation.includes('Oslo');
+            
+            for (let hour = 0; hour < 24; hour++) {
+                // Peak solar is at noon (hour 12)
+                let solarKwh = 0;
+                if (hour >= 6 && hour <= 18) {
+                    // Standard solar curve using sine wave
+                    const radian = ((hour - 6) / 12) * Math.PI;
+                    solarKwh = Math.sin(radian) * (isNagpur ? 85.0 : (isOslo ? 45.0 : 65.0));
+                    // Add monsoonal / environmental noise
+                    solarKwh = Math.max(0.0, solarKwh + (Math.random() - 0.5) * 5);
+                }
+                
+                // Carbon intensity grid load (inverse of solar, peak in evening)
+                let carbonLoad = 350; // gCO2/kWh
+                if (hour >= 18 && hour <= 22) {
+                    carbonLoad = 550 + Math.random() * 50;
+                } else if (hour >= 10 && hour <= 15) {
+                    carbonLoad = 120 + Math.random() * 30; // low carbon load due to solar feed
+                } else {
+                    carbonLoad = 280 + Math.random() * 40;
+                }
+                
+                data.push({
+                    hour: hour,
+                    solar: Math.round(solarKwh * 10) / 10,
+                    carbon: Math.round(carbonLoad)
+                });
+            }
+            this.forecastData = data;
+        },
+
+        drawForecastChart() {
+            const canvas = document.getElementById('solar_forecast_chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const theme = Alpine.store('global').theme;
+            
+            ctx.clearRect(0, 0, w, h);
+            
+            // Draw grid
+            ctx.strokeStyle = theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 1; i < 4; i++) {
+                const y = (h / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+            
+            if (this.forecastData.length === 0) return;
+            
+            // 1. Draw Solar curve area
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(34, 197, 94, 0.1)';
+            ctx.moveTo(15, h - 15);
+            
+            const maxSolar = 100.0;
+            this.forecastData.forEach((d, idx) => {
+                const x = 15 + (idx / 23) * (w - 30);
+                const y = (h - 15) - (d.solar / maxSolar) * (h - 30);
+                ctx.lineTo(x, y);
+            });
+            ctx.lineTo(w - 15, h - 15);
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw Solar curve line
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#22c55e'; // cyberGreen
+            this.forecastData.forEach((d, idx) => {
+                const x = 15 + (idx / 23) * (w - 30);
+                const y = (h - 15) - (d.solar / maxSolar) * (h - 30);
+                if (idx === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Draw Carbon load curve
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#f97316'; // cyberOrange
+            ctx.setLineDash([3, 3]);
+            const maxCarbon = 600.0;
+            this.forecastData.forEach((d, idx) => {
+                const x = 15 + (idx / 23) * (w - 30);
+                const y = (h - 15) - (d.carbon / maxCarbon) * (h - 30);
+                if (idx === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset
+            
+            // Draw hours labels
+            ctx.fillStyle = theme === 'light' ? '#64748b' : '#94a3b8';
+            ctx.font = '8px sans-serif';
+            [0, 6, 12, 18, 23].forEach(hour => {
+                const x = 15 + (hour / 23) * (w - 30);
+                ctx.fillText(`${hour}:00`, x - 10, h - 4);
+            });
+        },
+
+        optimizeSchedule() {
+            // Re-generate to add noise and update location changes
+            this.generateForecastData();
+            setTimeout(() => this.drawForecastChart(), 20);
+
+            // Simple solver: find a 2-hour consecutive block between hour 8 and 18 with the highest solar output
+            let bestHour = 12;
+            let maxYield = 0;
+            
+            for (let hour = 8; hour <= 16; hour++) {
+                const yieldSum = this.forecastData[hour].solar + this.forecastData[hour + 1].solar;
+                if (yieldSum > maxYield) {
+                    maxYield = yieldSum;
+                    bestHour = hour;
+                }
+            }
+
+            const peakRenewability = Math.round((this.forecastData[bestHour].solar / 85.0) * 100);
+            const savings = Math.round(15 + (maxYield / 170.0) * 20); // 15% to 35% savings
+            
+            // Standard rate is ₹15/kWh, solar discount applies savings
+            const rateKwh = 15.0 * (1 - savings / 100);
+            const totalCost = this.targetKwh * rateKwh;
+
+            this.optimalSlot = {
+                time: `${bestHour}:00 - ${bestHour + 2}:00`,
+                renewability: Math.min(100, Math.max(70, peakRenewability)),
+                cost: totalCost,
+                savings: savings,
+                bestHour: bestHour
+            };
+            
+            // Highlight optimal window on forecast chart
+            this.highlightOptimalChartWindow();
+        },
+
+        highlightOptimalChartWindow() {
+            const canvas = document.getElementById('solar_forecast_chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const bestHour = this.optimalSlot.bestHour;
+
+            // Re-draw baseline first
+            this.drawForecastChart();
+
+            // Draw highlight overlay box
+            const x1 = 15 + (bestHour / 23) * (w - 30);
+            const x2 = 15 + ((bestHour + 2) / 23) * (w - 30);
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.15)'; // glowing cyan overlay
+            ctx.fillRect(x1, 5, x2 - x1, h - 20);
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x1, 5, x2 - x1, h - 20);
+
+            // Draw text overlay
+            ctx.fillStyle = '#06b6d4';
+            ctx.font = 'bold 8px sans-serif';
+            ctx.fillText('PEAK SOLAR', x1 + 2, 14);
+        },
+
+        reserveOptimalSlot() {
+            alert(`🎉 Optimal eco-charge window (${this.optimalSlot.time}) reserved successfully!\nWe have locked in your ₹${this.optimalSlot.cost.toFixed(2)} Solar-Discounted energy tariff.`);
+            // Reset
+            this.optimalSlot = null;
+            this.drawForecastChart();
         }
     };
 }
@@ -800,10 +1248,7 @@ function dashboardController() {
                 </button>
             </div>
         </div>
-    </div>
-</dialog>
-
-<!-- Interactive Holographic OCPP Live Charging Simulator Dialog -->
+  <!-- Interactive Holographic OCPP Live Charging Simulator Dialog -->
 <dialog id="ocpp_charging_modal" class="modal">
     <div class="modal-box glass-panel border border-neutral-850 rounded-3xl p-8 max-w-md bg-neutral-950 text-white relative overflow-hidden">
          
@@ -813,13 +1258,61 @@ function dashboardController() {
 
         <div class="text-center space-y-6">
             <!-- Header Rebrand -->
-            <div class="border-b border-neutral-900 pb-3">
-                <span class="badge border-cyberGreen text-cyberGreen font-bold text-[9px] bg-cyberGreen/5 uppercase tracking-wider mb-2 animate-pulse"
+            <div class="border-b border-neutral-900 pb-3 flex justify-between items-center">
+                <div class="text-left">
+                    <h3 class="text-sm font-extrabold text-white">GoBharat EV Charging Stream</h3>
+                    <p class="text-[9px] text-neutral-400">Real-time bi-directional telemetry coordinator</p>
+                </div>
+                <span class="badge border-cyberGreen text-cyberGreen font-bold text-[9px] bg-cyberGreen/5 uppercase tracking-wider animate-pulse"
                       :class="ocppFault ? 'border-cyberPink text-cyberPink bg-cyberPink/5' : ''">
                     <i class="fa-solid" :class="ocppFault ? 'fa-triangle-exclamation mr-1 animate-pulse' : 'fa-rss mr-1'"></i>
                     <span x-text="ocppFault ? 'OCPP FAULT INJECTED' : 'OCPP Live Session'"></span>
                 </span>
-                <h3 class="text-lg font-extrabold text-white">GoBharat EV Charging Stream</h3>
+            </div>
+
+            <!-- G2V vs V2G Mode Selection Segment (Disabled if complete) -->
+            <div class="grid grid-cols-2 gap-2 bg-neutral-900/60 p-1 rounded-xl border border-neutral-800" x-show="!ocppComplete">
+                <button @click="ocppMode = 'G2V'; ocppPower = 150.0" :disabled="ocppHistory.length > 1"
+                        :class="ocppMode === 'G2V' ? 'bg-gradient-to-r from-cyberGreen/10 to-cyberBlue/10 text-white border-cyberGreen/30 shadow-md' : 'text-neutral-400 border-transparent hover:text-white'"
+                        class="btn btn-xs py-1.5 border rounded-lg h-auto font-bold text-[8.5px] uppercase tracking-wider transition-all">
+                    <i class="fa-solid fa-charging-station mr-0.5"></i> G2V Charge
+                </button>
+                <button @click="ocppMode = 'V2G'; ocppPower = -50.0" :disabled="ocppHistory.length > 1"
+                        :class="ocppMode === 'V2G' ? 'bg-gradient-to-r from-cyberGreen/10 to-cyberBlue/10 text-white border-cyberGreen/30 shadow-md' : 'text-neutral-400 border-transparent hover:text-white'"
+                        class="btn btn-xs py-1.5 border rounded-lg h-auto font-bold text-[8.5px] uppercase tracking-wider transition-all">
+                    <i class="fa-solid fa-rotate mr-0.5"></i> V2G Arbitrage
+                </button>
+            </div>
+
+            <!-- Active controls for temperature & V2G limits -->
+            <div class="grid grid-cols-2 gap-3 bg-neutral-900/30 border border-neutral-900 p-4 rounded-2xl text-left" x-show="!ocppComplete">
+                <!-- Ambient Temperature Slider -->
+                <div class="form-control w-full">
+                    <div class="flex justify-between items-center mb-0.5">
+                        <span class="text-[8px] text-neutral-400 font-bold uppercase">Ambient Temp</span>
+                        <span class="text-xs font-bold text-cyberBlue" x-text="ambientTemp + ' °C'"></span>
+                    </div>
+                    <input type="range" min="-10" max="50" x-model="ambientTemp" class="range range-xs range-info bg-neutral-850" />
+                </div>
+
+                <!-- Chiller Active Toggle -->
+                <div class="form-control w-full flex flex-col justify-between">
+                    <span class="text-[8px] text-neutral-400 font-bold uppercase block mb-1">Battery Chiller</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" x-model="chillerActive" class="sr-only peer" />
+                        <div class="w-7 h-4 bg-neutral-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyberGreen"></div>
+                        <span class="ml-2 text-[9px] font-bold text-neutral-350" x-text="chillerActive ? 'ON' : 'OFF'"></span>
+                    </label>
+                </div>
+
+                <!-- Target Minimum Discharging SoC Slider -->
+                <div class="form-control w-full col-span-2 border-t border-neutral-900 pt-3" x-show="ocppMode === 'V2G'">
+                    <div class="flex justify-between items-center mb-0.5">
+                        <span class="text-[8px] text-neutral-400 font-bold uppercase">Target Min Discharge SoC</span>
+                        <span class="text-xs font-bold text-cyberPink" x-text="ocppV2GTargetSoC + '%'"></span>
+                    </div>
+                    <input type="range" min="15" max="80" x-model="ocppV2GTargetSoC" :disabled="ocppHistory.length > 1" class="range range-xs range-secondary bg-neutral-850" />
+                </div>
             </div>
 
             <!-- Pulsing Circular Telemetry HUD Progress Ring -->
@@ -828,44 +1321,67 @@ function dashboardController() {
                 <svg class="absolute w-full h-full transform -rotate-90">
                     <circle cx="80" cy="80" r="70" stroke="#1f2937" stroke-width="8" fill="transparent" />
                     <!-- Dynamic stroke dasharray for progress representation -->
-                    <circle cx="80" cy="80" r="70" :stroke="ocppFault ? '#ec4899' : '#22c55e'" stroke-width="8" fill="transparent" 
+                    <circle cx="80" cy="80" r="70" :stroke="ocppFault ? '#ec4899' : (ocppMode === 'V2G' ? '#d946ef' : '#22c55e')" stroke-width="8" fill="transparent" 
                             :stroke-dasharray="440"
                             :stroke-dashoffset="440 - (440 * ocppSoc) / 100"
                             class="transition-all duration-300"
-                            :class="ocppFault ? 'drop-shadow-[0_0_8px_#ec4899]' : 'drop-shadow-[0_0_8px_#22c55e]'" />
+                            :class="ocppFault ? 'drop-shadow-[0_0_8px_#ec4899]' : (ocppMode === 'V2G' ? 'drop-shadow-[0_0_8px_#d946ef]' : 'drop-shadow-[0_0_8px_#22c55e]')" />
                 </svg>
                 
                 <!-- Internal telemetry percentages -->
                 <div class="z-10 text-center">
                     <span class="text-4xl font-black text-white font-sans tracking-tight" :class="ocppFault ? 'text-cyberPink animate-pulse' : 'animate-pulse'" x-text="ocppSoc + '%'"></span>
-                    <span class="text-[9px] font-bold text-neutral-400 block uppercase tracking-widest mt-0.5" x-text="ocppFault ? 'FAULT DETECTED' : 'State of Charge'"></span>
+                    <span class="text-[9px] font-bold text-neutral-400 block uppercase tracking-widest mt-0.5" x-text="ocppFault ? 'FAULT DETECTED' : (ocppMode === 'V2G' ? 'DISCHARGING GRID' : 'State of Charge')"></span>
                 </div>
             </div>
 
-            <!-- Live Session Metrics Grid (2 Columns) -->
-            <div class="grid grid-cols-2 gap-3 bg-neutral-900/50 p-4 border border-neutral-900 rounded-2xl text-left">
+            <!-- Warning Banners for Active Throttling -->
+            <div class="alert bg-pink-950/20 border border-cyberPink/20 text-cyberPink text-[9px] font-extrabold py-2 px-3 rounded-xl flex items-center justify-center animate-pulse" x-show="throttlingActive && !ocppComplete">
+                <i class="fa-solid fa-temperature-arrow-up mr-1 text-xs animate-bounce"></i> THERMAL THROTTLING ACTIVE: Cell > 50°C (Capped at 45 kW)
+            </div>
+
+            <!-- Live Session Metrics Grid (3 Columns) -->
+            <div class="grid grid-cols-3 gap-2 bg-neutral-900/50 p-4 border border-neutral-900 rounded-2xl text-left text-[11px]">
                 <div>
-                    <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider block">Power Flow Speed</span>
-                    <span class="text-sm font-extrabold text-cyberBlue" :class="ocppFault ? 'text-cyberPink' : ''" x-text="ocppPower.toFixed(1) + ' kW'"></span>
+                    <span class="text-[8px] text-neutral-500 font-bold uppercase tracking-wider block">Power Flow</span>
+                    <span class="text-xs font-black text-cyberBlue" :class="ocppPower < 0 ? 'text-purple-450' : ''" x-text="ocppPower.toFixed(1) + ' kW'"></span>
                 </div>
                 <div>
-                    <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider block">Energy Delivered</span>
-                    <span class="text-sm font-extrabold text-white" x-text="ocppEnergy.toFixed(2) + ' kWh'"></span>
+                    <span class="text-[8px] text-neutral-500 font-bold uppercase tracking-wider block">Cell Temp</span>
+                    <span class="text-xs font-black" :class="batteryTemp > 50 ? 'text-cyberPink animate-pulse' : (batteryTemp > 40 ? 'text-cyberOrange' : 'text-cyberGreen')" x-text="batteryTemp.toFixed(1) + ' °C'"></span>
                 </div>
-                <div class="mt-2 pt-2 border-t border-neutral-900/60 col-span-2 flex justify-between items-center">
-                    <span class="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">Accrued Session Cost</span>
-                    <span class="text-sm font-extrabold text-cyberGreen" x-text="$store.global.formatMoney(ocppCost)"></span>
+                <div>
+                    <span class="text-[8px] text-neutral-500 font-bold uppercase tracking-wider block">Battery SOH</span>
+                    <span class="text-xs font-black text-white block truncate" x-text="batterySoh.toFixed(4) + '%'"></span>
+                </div>
+                <div class="mt-2 pt-2 border-t border-neutral-900/60 col-span-3 flex justify-between items-center text-xs" x-show="ocppMode === 'G2V'">
+                    <span class="text-[8px] text-neutral-400 font-bold uppercase tracking-wider">Accrued Session Cost</span>
+                    <span class="text-xs font-extrabold text-cyberGreen" x-text="$store.global.formatMoney(ocppCost)"></span>
+                </div>
+                <div class="mt-2 pt-2 border-t border-neutral-900/60 col-span-3 grid grid-cols-3 gap-2 text-[10px]" x-show="ocppMode === 'V2G'">
+                    <div class="text-left">
+                        <span class="text-[8px] text-neutral-500 font-bold uppercase">Grid Credits</span>
+                        <span class="text-xs font-bold text-cyberGreen block" x-text="'+₹' + ocppV2GEarnings.toFixed(2)"></span>
+                    </div>
+                    <div class="text-left">
+                        <span class="text-[8px] text-neutral-500 font-bold uppercase">Battery Wear</span>
+                        <span class="text-xs font-bold text-cyberPink block" x-text="'-₹' + ocppV2GWearCost.toFixed(2)"></span>
+                    </div>
+                    <div class="text-left">
+                        <span class="text-[8px] text-neutral-500 font-bold uppercase">Net Profit</span>
+                        <span class="text-xs font-black text-cyberBlue block" x-text="'₹' + ocppV2GNetProfit.toFixed(2)"></span>
+                    </div>
                 </div>
             </div>
 
             <!-- Live Charging Curve Canvas -->
             <div class="space-y-1.5 text-left">
-                <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider block"><i class="fa-solid fa-chart-line text-cyberBlue mr-0.5"></i> Live Charging Curve (Power vs SoC)</span>
+                <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider block"><i class="fa-solid fa-chart-line text-cyberBlue mr-0.5"></i> Live Curve (Power & Temp vs SoC)</span>
                 <canvas id="ocpp_curve_chart" width="360" height="110" class="w-full bg-neutral-950/80 border border-neutral-900 rounded-xl transition-all"></canvas>
             </div>
 
             <!-- OCPP Fault Injection Control Panel -->
-            <div class="space-y-2 bg-neutral-900/40 border border-neutral-850 p-3.5 rounded-2xl text-left" x-show="!ocppComplete">
+            <div class="space-y-2 bg-neutral-900/40 border border-neutral-850 p-3.5 rounded-2xl text-left" x-show="!ocppComplete && ocppMode === 'G2V'">
                 <div class="flex justify-between items-center">
                     <span class="text-[9px] text-neutral-400 font-bold uppercase tracking-wider"><i class="fa-solid fa-triangle-exclamation text-cyberPink mr-0.5 animate-pulse"></i> OCPP Fault Injection Panel</span>
                 </div>
@@ -890,7 +1406,7 @@ function dashboardController() {
                 <template x-if="!ocppComplete && !ocppFault">
                     <button @click="stopOcppCharging()"
                             class="btn btn-sm btn-block bg-cyberPink border-none hover:bg-white text-black font-extrabold rounded-xl shadow-[0_0_15px_rgba(236,72,153,0.15)] flex items-center justify-center">
-                        Stop Charge Session <i class="fa-solid fa-circle-stop ml-1"></i>
+                        <span x-text="ocppMode === 'V2G' ? 'Stop Discharge & Settle' : 'Stop Charge Session'"></span> <i class="fa-solid fa-circle-stop ml-1"></i>
                     </button>
                 </template>
                 
@@ -913,6 +1429,8 @@ function dashboardController() {
                 </template>
             </div>
         </div>
+    </div>
+</dialog>
     </div>
 </dialog>
 {% endblock %}

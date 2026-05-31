@@ -143,7 +143,10 @@ def Field(
     return pydantic.Field(**p_kwargs)
 
 def Relationship(*args, **kwargs):
-    return pydantic.Field(default=None)
+    f_kwargs = {"default": None}
+    if "exclude" in kwargs:
+        f_kwargs["exclude"] = kwargs["exclude"]
+    return pydantic.Field(**f_kwargs)
 
 class SelectQuery:
     def __init__(self, model_class):
