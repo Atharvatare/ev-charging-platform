@@ -20,7 +20,15 @@ class MockDBStore:
 db_store = MockDBStore()
 
 # Mock SQLAlchemy / SQLModel Engine
-engine = None
+import os
+from sqlmodel import create_engine, SQLModel
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    engine = create_engine(DATABASE_URL, echo=False)
+else:
+    engine = None
 
 def _link_relationships(entity):
     if not entity:
@@ -160,13 +168,23 @@ class InMemorySession:
 # FASTAPI DEPENDENCY GENERATOR
 # -------------------------------------------------------------
 def get_session():
-    """Yields our high-speed, deadlock-free InMemorySession."""
-    session = InMemorySession()
-    try:
-        yield session
-    finally:
-        session.close()
+    """Yields either a real SQLModel Session or our high-speed, deadlock-free InMemorySession."""
+    if DATABASE_URL:
+        from sqlmodel import Session
+        with Session(engine) as session:
+            yield session
+    else:
+        session = InMemorySession()
+        try:
+            yield session
+        finally:
+            session.close()
 
 def init_db():
-    """Self-healing pure-Python database bootstrap."""
-    print("IN-MEMORY DB INIT: Pure Python memory schemas loaded successfully.")
+    """Self-healing database bootstrap."""
+    if DATABASE_URL:
+        from sqlmodel import SQLModel
+        SQLModel.metadata.create_all(engine)
+        print("DATABASE INIT SUCCESS: PostgreSQL Tables Synced!")
+    else:
+        print("IN-MEMORY DB INIT: Pure Python memory schemas loaded successfully.")

@@ -246,6 +246,9 @@ def rebuild_all_models():
         except Exception:
             pass
 
+def create_engine(*args, **kwargs):
+    return None
+
 def select(model_class):
     rebuild_all_models()
     return SelectQuery(model_class)
@@ -266,3 +269,36 @@ class Session:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.session.close()
+
+
+# -------------------------------------------------------------
+# DYNAMIC PRODUCTION LOADER
+# -------------------------------------------------------------
+import os
+import sys
+import importlib
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    try:
+        # Resolve real sqlmodel module by temporarily removing current dir from import search path
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        sys_path_backup = list(sys.path)
+        if current_dir in sys.path:
+            sys.path.remove(current_dir)
+        if '' in sys.path:
+            sys.path.remove('')
+            
+        real_sqlmodel = importlib.import_module("sqlmodel")
+        sys.path = sys_path_backup
+        
+        # Override all mock entities with real library implementations
+        globals().update({k: v for k, v in real_sqlmodel.__dict__.items() if not k.startswith('__')})
+        
+        # Expose sqlalchemy text for raw SQL queries support
+        from sqlalchemy import text
+        globals()['text'] = text
+        print("[OK] GoBharat EV: Connected to cloud SQL backend via SQLModel package.")
+    except Exception as e:
+        print(f"[ERROR] Database module loader failure: {e}. Falling back to in-memory mode.")
