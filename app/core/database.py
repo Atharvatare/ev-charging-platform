@@ -3,18 +3,25 @@ from sqlmodel import create_engine, SQLModel, Session
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Auto-correct database URL prefixes for compatibility
+# Validate connection string dialect
+is_valid_db_url = False
 if DATABASE_URL:
-    # Support legacy postgres:// prefix (e.g. from some Supabase/Heroku connection strings)
+    # Auto-correct database URL prefixes for compatibility
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    
-    # Force psycopg2 driver fallback (postgresql://) which is highly stable on serverless Vercel runtimes
-    if DATABASE_URL.startswith("postgresql+psycopg://"):
+        is_valid_db_url = True
+    elif DATABASE_URL.startswith("postgresql+psycopg://"):
         DATABASE_URL = DATABASE_URL.replace("postgresql+psycopg://", "postgresql://", 1)
+        is_valid_db_url = True
+    elif DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("sqlite://"):
+        is_valid_db_url = True
 
-if not DATABASE_URL:
-    DATABASE_URL = "sqlite:///ev_charging.db"
+if not is_valid_db_url:
+    # If running on Vercel serverless environment, use /tmp/ for SQLite writable database
+    if os.getenv("VERCEL") or os.getenv("NOW_BUILDER"):
+        DATABASE_URL = "sqlite:////tmp/ev_charging.db"
+    else:
+        DATABASE_URL = "sqlite:///ev_charging.db"
 
 # SQLite specific connect args: check_same_thread=False
 connect_args = {}
