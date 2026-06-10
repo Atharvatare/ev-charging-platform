@@ -753,6 +753,109 @@
 
 <!-- Leaflet controller logic fully dynamic -->
 <script>
+const ALL_COUNTRIES = [
+    "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
+    "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
+    "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia",
+    "Denmark", "Djibouti", "Dominica", "Dominican Republic",
+    "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia",
+    "Fiji", "Finland", "France",
+    "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana",
+    "Haiti", "Honduras", "Hungary",
+    "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast",
+    "Jamaica", "Japan", "Jordan",
+    "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan",
+    "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
+    "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar",
+    "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway",
+    "Oman",
+    "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal",
+    "Qatar",
+    "Romania", "Russia", "Rwanda",
+    "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria",
+    "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
+    "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "USA", "Uruguay", "Uzbekistan",
+    "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+    "Yemen",
+    "Zambia", "Zimbabwe"
+];
+
+const INDIAN_GEOGRAPHY = {
+    "Maharashtra": {
+        "Nagpur": ["Nagpur City", "Kalmeshwar", "Sadar", "Dharampeth", "Manish Nagar Hub", "Manish Nagar", "Hingna", "Kamptee"],
+        "Mumbai": ["Mumbai Central", "BKC Hub", "Bandra Reclamation", "Bandra West", "Andheri", "Colaba", "Dadar"],
+        "Pune": ["Pune City", "Hinjawadi", "Lonavala", "Shivajinagar", "Kothrud", "Hadapsar"],
+        "Thane": ["Thane City", "Kalyan", "Dombivli", "Navi Mumbai"],
+        "Nashik": ["Nashik City", "Panchavati", "Deolali"]
+    },
+    "Delhi": {
+        "New Delhi": ["Connaught Place", "Chanakyapuri", "Dwarka", "Saket"],
+        "North Delhi": ["Rohini", "Model Town", "Civil Lines"]
+    },
+    "Karnataka": {
+        "Bengaluru": ["Indiranagar", "Koramangala", "Whitefield", "Jayanagar", "Yelahanka", "Electronic City"],
+        "Mysuru": ["Mysore City", "Gokulam", "Vidyaranyapuram"]
+    },
+    "Tamil Nadu": {
+        "Chennai": ["Adyar central", "Adyar", "OMR Tech Corridor", "T Nagar", "Velachery", "Mylapore"],
+        "Krishnagiri": ["Krishnagiri Town", "Hosur"]
+    },
+    "Telangana": {
+        "Hyderabad": ["Gachibowli", "Shamshabad", "Madhapur", "Secunderabad", "Banjara Hills"]
+    },
+    "West Bengal": {
+        "Kolkata": ["Salt Lake Sector V", "New Town Eco Park", "Howrah", "Park Street", "Alipore"]
+    },
+    "Gujarat": {
+        "Ahmedabad": ["Bodakdev", "SG Highway", "Satellite", "Navrangpura"],
+        "Surat": ["Surat Diamond Bourse", "Adajan", "Varachha"]
+    },
+    "Kerala": {
+        "Ernakulam": ["Kochi Infopark", "Kakkanad", "Aluva"],
+        "Thiruvananthapuram": ["Trivandrum Central", "MG Road"]
+    },
+    "Rajasthan": {
+        "Jaipur": ["Jaipur Pink City", "Tonk Road", "Malviya Nagar"],
+        "Udaipur": ["Udaipur City", "NH8 Highway Halt"]
+    }
+};
+
+const GLOBAL_GEOGRAPHY = {
+    "India": INDIAN_GEOGRAPHY,
+    "USA": {
+        "California": {
+            "Los Angeles": ["Santa Monica", "Los Angeles DTLA", "Beverly Hills"],
+            "San Francisco": ["San Francisco Central", "SOMA", "Financial District"]
+        },
+        "New York": {
+            "New York City": ["Manhattan", "Brooklyn", "JFK Airport", "Queens"]
+        },
+        "Texas": {
+            "Travis": ["Austin Gigafactory", "Downtown Austin"]
+        }
+    },
+    "United Kingdom": {
+        "England": {
+            "London": ["Westminster Central", "Heathrow Airport", "London Tower Hill"]
+        }
+    },
+    "Norway": {
+        "Oslo": {
+            "Oslo County": ["Oslo Central", "Aker Brygge Marina"]
+        }
+    },
+    "Germany": {
+        "Bavaria": {
+            "Munich": ["Munich Central Hub", "Munich East"]
+        }
+    },
+    "Japan": {
+        "Tokyo": {
+            "Tokyo Prefecture": ["Shinjuku Central", "Roppongi Hills"]
+        }
+    }
+};
+
 function portalController() {
     return {
         map: null,
@@ -1081,18 +1184,19 @@ function portalController() {
         },
 
         updateFilters() {
-            // Compute unique countries
-            const countries = new Set();
-            this.stations.forEach(st => {
-                const parsed = this.parseStationAddress(st.address);
-                if (parsed.country) {
-                    countries.add(parsed.country);
-                }
-            });
-            this.uniqueCountries = Array.from(countries).sort();
+            // Use the complete static list of Earth's countries
+            this.uniqueCountries = ALL_COUNTRIES;
 
             // Compute unique states based on selectedCountry
             const states = new Set();
+            
+            // 1. First, check if we have static geography database entries for the selectedCountry
+            if (this.selectedCountry !== 'ALL' && GLOBAL_GEOGRAPHY[this.selectedCountry]) {
+                const countryGeo = GLOBAL_GEOGRAPHY[this.selectedCountry];
+                Object.keys(countryGeo).forEach(st => states.add(st));
+            }
+            
+            // 2. Also add any states found in pre-seeded stations matching this country
             this.stations.forEach(st => {
                 const parsed = this.parseStationAddress(st.address);
                 if (this.selectedCountry === 'ALL' || parsed.country === this.selectedCountry) {
@@ -1109,11 +1213,14 @@ function portalController() {
             }
 
             // Compute unique districts based on selectedCountry and selectedState
-            if (this.selectedState === 'ALL') {
-                this.uniqueDistricts = [];
-                this.selectedDistrict = 'ALL';
-            } else {
-                const districts = new Set();
+            const districts = new Set();
+            if (this.selectedState !== 'ALL') {
+                // 1. Load from static geography database
+                if (GLOBAL_GEOGRAPHY[this.selectedCountry] && GLOBAL_GEOGRAPHY[this.selectedCountry][this.selectedState]) {
+                    const stateGeo = GLOBAL_GEOGRAPHY[this.selectedCountry][this.selectedState];
+                    Object.keys(stateGeo).forEach(d => districts.add(d));
+                }
+                // 2. Load from pre-seeded stations
                 this.stations.forEach(st => {
                     const parsed = this.parseStationAddress(st.address);
                     const matchCountry = (this.selectedCountry === 'ALL' || parsed.country === this.selectedCountry);
@@ -1121,8 +1228,8 @@ function portalController() {
                         districts.add(parsed.district);
                     }
                 });
-                this.uniqueDistricts = Array.from(districts).sort();
             }
+            this.uniqueDistricts = Array.from(districts).sort();
 
             // If selectedDistrict is not in uniqueDistricts anymore, reset it
             if (this.selectedDistrict !== 'ALL' && !this.uniqueDistricts.includes(this.selectedDistrict)) {
@@ -1130,11 +1237,16 @@ function portalController() {
             }
 
             // Compute unique towns based on selectedCountry, selectedState, and selectedDistrict
-            if (this.selectedDistrict === 'ALL') {
-                this.uniqueTowns = [];
-                this.selectedTown = 'ALL';
-            } else {
-                const towns = new Set();
+            const towns = new Set();
+            if (this.selectedDistrict !== 'ALL') {
+                // 1. Load from static geography database
+                if (GLOBAL_GEOGRAPHY[this.selectedCountry] && 
+                    GLOBAL_GEOGRAPHY[this.selectedCountry][this.selectedState] && 
+                    GLOBAL_GEOGRAPHY[this.selectedCountry][this.selectedState][this.selectedDistrict]) {
+                    const distGeo = GLOBAL_GEOGRAPHY[this.selectedCountry][this.selectedState][this.selectedDistrict];
+                    distGeo.forEach(t => towns.add(t));
+                }
+                // 2. Load from pre-seeded stations
                 this.stations.forEach(st => {
                     const parsed = this.parseStationAddress(st.address);
                     const matchCountry = (this.selectedCountry === 'ALL' || parsed.country === this.selectedCountry);
@@ -1143,8 +1255,8 @@ function portalController() {
                         towns.add(parsed.town);
                     }
                 });
-                this.uniqueTowns = Array.from(towns).sort();
             }
+            this.uniqueTowns = Array.from(towns).sort();
 
             // If selectedTown is not in uniqueTowns anymore, reset it
             if (this.selectedTown !== 'ALL' && !this.uniqueTowns.includes(this.selectedTown)) {
@@ -1250,8 +1362,43 @@ function portalController() {
                     this.map.fitBounds(bounds, { padding: [50, 50] });
                 }
             } else {
-                // Default center
-                this.map.setView([20.5937, 78.9629], 5);
+                // If no pre-seeded stations match, perform dynamic geocoding zoom!
+                let query = '';
+                if (this.selectedTown !== 'ALL') query = `${this.selectedTown}, `;
+                if (this.selectedDistrict !== 'ALL') query += `${this.selectedDistrict}, `;
+                if (this.selectedState !== 'ALL') query += `${this.selectedState}, `;
+                if (this.selectedCountry !== 'ALL') query += `${this.selectedCountry}`;
+                
+                if (query) {
+                    this.geocodeAndZoom(query);
+                } else {
+                    this.map.setView([20.5937, 78.9629], 5);
+                }
+            }
+        },
+
+        async geocodeAndZoom(query) {
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+                // Add polite user-agent header as per Nominatim usage policy
+                const response = await fetch(url, {
+                    headers: { 'User-Agent': 'GoBharatEV-Charging-Locator-App' }
+                });
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    
+                    let zoom = 5;
+                    if (this.selectedTown !== 'ALL') zoom = 14;
+                    else if (this.selectedDistrict !== 'ALL') zoom = 11;
+                    else if (this.selectedState !== 'ALL') zoom = 8;
+                    else if (this.selectedCountry !== 'ALL') zoom = 5;
+                    
+                    this.map.setView([lat, lon], zoom);
+                }
+            } catch (err) {
+                console.error("Nominatim Geocoding API failed:", err);
             }
         },
 
