@@ -2,6 +2,17 @@ import os
 from sqlmodel import create_engine, SQLModel, Session
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Auto-correct database URL prefixes for compatibility
+if DATABASE_URL:
+    # Support legacy postgres:// prefix (e.g. from some Supabase/Heroku connection strings)
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    
+    # Force psycopg2 driver fallback (postgresql://) which is highly stable on serverless Vercel runtimes
+    if DATABASE_URL.startswith("postgresql+psycopg://"):
+        DATABASE_URL = DATABASE_URL.replace("postgresql+psycopg://", "postgresql://", 1)
+
 if not DATABASE_URL:
     DATABASE_URL = "sqlite:///ev_charging.db"
 
