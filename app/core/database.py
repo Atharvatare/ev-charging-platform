@@ -183,6 +183,13 @@ def get_session():
 def init_db():
     """Self-healing database bootstrap."""
     if DATABASE_URL:
+        # Import all models to register them with SQLAlchemy metadata
+        from app.models.user import User
+        from app.models.station import Station, Port, SolarInsight
+        from app.models.booking import Reservation, WalletTransaction
+        from app.models.routing import RouteTrip
+        from app.models.ticket import SupportTicket
+
         from sqlmodel import SQLModel
         SQLModel.metadata.create_all(engine)
         print("DATABASE INIT SUCCESS: PostgreSQL Tables Synced!")

@@ -6,6 +6,7 @@ from app.core.database import engine
 from app.core.security import get_password_hash
 from app.models.user import User
 from app.models.station import Station, Port, SolarInsight
+from app.models.booking import Reservation, WalletTransaction
 
 # High-fidelity nationwide charging station profiles centered across major states in India (25 stations)
 SEED_STATIONS = [
@@ -552,6 +553,11 @@ SEED_STATIONS = [
 
 def seed_database(force: bool = False):
     """Seeds the database with users and spatial charging stations, with auto-upgrade support."""
+    # Ensure tables exist in the database before querying or seeding if using a real database engine
+    if engine is not None:
+        from sqlmodel import SQLModel
+        SQLModel.metadata.create_all(engine)
+    
     with Session(engine) as session:
         # Auto-detect old database schema and upgrade to new global 44-station grid
         existing_stations = session.exec(select(Station)).all()

@@ -305,6 +305,13 @@ if DATABASE_URL:
         # Override all mock entities with real library implementations
         globals().update({k: v for k, v in real_sqlmodel.__dict__.items() if not k.startswith('__')})
         
+        # Wrap Relationship to pop the 'exclude' keyword argument which is only needed for the mock serializer
+        real_relationship = real_sqlmodel.Relationship
+        def Relationship_wrapper(*args, **kwargs):
+            kwargs.pop("exclude", None)
+            return real_relationship(*args, **kwargs)
+        globals()['Relationship'] = Relationship_wrapper
+        
         # Expose sqlalchemy text for raw SQL queries support
         from sqlalchemy import text
         globals()['text'] = text
