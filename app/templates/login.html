@@ -82,7 +82,7 @@
             <!-- Quick Link / Mock Tester Bypass -->
             <div class="text-center pt-4 border-t border-neutral-900 mt-6">
                 <button @click="triggerDeveloperBypass()" class="btn btn-link btn-xs text-neutral-500 hover:text-cyberGreen font-bold uppercase tracking-wider no-underline text-[9px]">
-                    <i class="fa-solid fa-flaskmr-0.5"></i> Trigger Fast Developer Bypass
+                    <i class="fa-solid fa-flask mr-0.5"></i> Trigger Fast Developer Bypass
                 </button>
             </div>
         </div>
@@ -192,7 +192,11 @@ function authController() {
                         window.location.href = '/dashboard';
                     }, 1200);
                 } else {
-                    this.errorMessage = data.detail || 'Incorrect email or password.';
+                    if (Array.isArray(data.detail)) {
+                        this.errorMessage = data.detail.map(err => err.msg).join(', ');
+                    } else {
+                        this.errorMessage = data.detail || 'Incorrect email or password.';
+                    }
                 }
             } catch (err) {
                 console.error("Login fault:", err);
@@ -232,7 +236,11 @@ function authController() {
                         this.submitLogin();
                     }, 1500);
                 } else {
-                    this.errorMessage = data.detail || 'Failed to register account.';
+                    if (Array.isArray(data.detail)) {
+                        this.errorMessage = data.detail.map(err => err.msg).join(', ');
+                    } else {
+                        this.errorMessage = data.detail || 'Failed to register account.';
+                    }
                 }
             } catch (err) {
                 console.error("Register fault:", err);

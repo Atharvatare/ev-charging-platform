@@ -3,7 +3,7 @@
 {% block title %}GoBharat EV - Support Hub & Ticketing Center{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto pt-20 pb-12 px-6 animate-fade-in" x-data="supportController()">
+<div class="max-w-6xl mx-auto pt-20 pb-12 px-6 animate-fade-in" x-data="supportController()" x-init="initSupport()">
 
     <!-- Header Hero Section -->
     <div class="text-center max-w-3xl mx-auto mb-16 border-b border-neutral-900 pb-10">
@@ -71,6 +71,45 @@
                     <p>
                         Drivers filing support tickets through this hub can expect direct engineering support or dispatch updates regarding local charger maintenance protocols within standard operational timelines.
                     </p>
+                </div>
+            </div>
+
+            <!-- Driver Ticket Tracking Registry -->
+            <div class="card glass-panel border border-neutral-800 rounded-3xl p-8 space-y-6 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-neutral-900 pb-3">
+                    <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-ticket text-cyberBlue"></i> Driver Ticket Tracking registry
+                    </h3>
+                    <span class="badge border-cyberBlue text-cyberBlue bg-cyberBlue/5 font-extrabold text-[9px] uppercase tracking-widest px-2.5 py-1"
+                          x-text="tickets.length + ' Registered Tickets'"></span>
+                </div>
+
+                <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                    <template x-for="ticket in tickets" :key="ticket.id">
+                        <div class="bg-neutral-900/40 border border-neutral-950 p-4 rounded-xl space-y-3 relative hover:border-cyberBlue/10 transition-all duration-300 animate-fade-in">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="badge text-[9px] font-extrabold px-2 py-0.5 rounded border-none"
+                                          :class="ticket.status === 'OPEN' ? 'bg-cyberBlue text-black' : 'bg-cyberGreen text-black'"
+                                          x-text="ticket.status === 'OPEN' ? 'PENDING' : 'APPROVED / RESOLVED'"></span>
+                                    <h4 class="font-bold text-white text-xs mt-2" x-text="ticket.subject"></h4>
+                                </div>
+                                <span class="text-[9px] text-neutral-500 font-mono" x-text="formatDate(ticket.created_at)"></span>
+                            </div>
+                            <div class="text-[10px] text-neutral-400 flex justify-between">
+                                <span x-text="'Driver: ' + ticket.name"></span>
+                                <span x-text="maskEmail(ticket.email)"></span>
+                            </div>
+                            <p class="text-neutral-400 text-xs italic" x-text="'“' + ticket.message + '”'"></p>
+                        </div>
+                    </template>
+
+                    <template x-if="tickets.length === 0">
+                        <div class="text-center py-8 text-neutral-550 text-xs">
+                            <i class="fa-solid fa-folder-open text-lg mb-2 block text-neutral-700"></i>
+                            No tickets currently registered. Submit a ticket on the right to start tracking.
+                        </div>
+                    </template>
                 </div>
             </div>
 
@@ -153,6 +192,26 @@ function supportController() {
         submitting: false,
         submitted: false,
         ticketId: '',
+        tickets: [],
+
+        initSupport() {
+            const email = localStorage.getItem('user_email');
+            if (email) {
+                this.supportForm.email = email;
+            }
+            this.loadTickets();
+        },
+
+        async loadTickets() {
+            try {
+                const response = await fetch('/api/contact/tickets');
+                if (response.ok) {
+                    this.tickets = await response.json();
+                }
+            } catch (err) {
+                console.error("Error loading support tickets:", err);
+            }
+        },
 
         async submitTicket() {
             this.submitting = true;
@@ -166,6 +225,8 @@ function supportController() {
                     const result = await response.json();
                     this.ticketId = result.ticket_id || ('TKT_' + Math.floor(Math.random() * 900000 + 100000));
                     this.submitted = true;
+                    // Instantly reload tickets after submission
+                    await this.loadTickets();
                 } else {
                     alert("Ticket submission failed on backend.");
                 }
@@ -178,14 +239,32 @@ function supportController() {
         },
 
         resetForm() {
+            const savedEmail = localStorage.getItem('user_email') || '';
             this.supportForm = {
                 name: '',
-                email: '',
+                email: savedEmail,
                 subject: '',
                 message: ''
             };
             this.submitted = false;
             this.ticketId = '';
+        },
+
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + 
+                   date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+        },
+
+        maskEmail(email) {
+            if (!email) return '';
+            const parts = email.split('@');
+            if (parts.length !== 2) return email;
+            const name = parts[0];
+            const domain = parts[1];
+            if (name.length <= 3) return '***@' + domain;
+            return name.substring(0, 3) + '***@' + domain;
         }
     };
 }

@@ -117,13 +117,24 @@
                         </select>
                     </div>
 
-                    <!-- City Filter -->
+                    <!-- District Filter -->
                     <div class="form-control w-full">
-                        <label class="label py-0 mb-0.5"><span class="text-[9px] text-neutral-400 font-bold uppercase">City</span></label>
-                        <select x-model="selectedCity" @change="onCityChange()" class="select select-bordered select-xs bg-neutral-900 border-neutral-800 text-xs rounded-xl h-8 min-h-8" :disabled="selectedState === 'ALL'">
-                            <option value="ALL">All Cities</option>
-                            <template x-for="c in uniqueCities" :key="c">
-                                <option :value="c" x-text="c"></option>
+                        <label class="label py-0 mb-0.5"><span class="text-[9px] text-neutral-400 font-bold uppercase">District</span></label>
+                        <select x-model="selectedDistrict" @change="onDistrictChange()" class="select select-bordered select-xs bg-neutral-900 border-neutral-800 text-xs rounded-xl h-8 min-h-8" :disabled="selectedState === 'ALL'">
+                            <option value="ALL">All Districts</option>
+                            <template x-for="d in uniqueDistricts" :key="d">
+                                <option :value="d" x-text="d"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <!-- Town Filter -->
+                    <div class="form-control w-full">
+                        <label class="label py-0 mb-0.5"><span class="text-[9px] text-neutral-400 font-bold uppercase">Town</span></label>
+                        <select x-model="selectedTown" @change="onTownChange()" class="select select-bordered select-xs bg-neutral-900 border-neutral-800 text-xs rounded-xl h-8 min-h-8" :disabled="selectedDistrict === 'ALL'">
+                            <option value="ALL">All Towns</option>
+                            <template x-for="t in uniqueTowns" :key="t">
+                                <option :value="t" x-text="t"></option>
                             </template>
                         </select>
                     </div>
@@ -751,10 +762,12 @@ function portalController() {
         stations: [],
         selectedCountry: 'ALL',
         selectedState: 'ALL',
-        selectedCity: 'ALL',
+        selectedDistrict: 'ALL',
+        selectedTown: 'ALL',
         uniqueCountries: [],
         uniqueStates: [],
-        uniqueCities: [],
+        uniqueDistricts: [],
+        uniqueTowns: [],
         filteredStationsCount: 0,
         routeForm: {
             origin: '',
@@ -1095,25 +1108,47 @@ function portalController() {
                 this.selectedState = 'ALL';
             }
 
-            // Compute unique cities based on selectedCountry and selectedState
+            // Compute unique districts based on selectedCountry and selectedState
             if (this.selectedState === 'ALL') {
-                this.uniqueCities = [];
-                this.selectedCity = 'ALL';
+                this.uniqueDistricts = [];
+                this.selectedDistrict = 'ALL';
             } else {
-                const cities = new Set();
+                const districts = new Set();
                 this.stations.forEach(st => {
                     const parsed = this.parseStationAddress(st.address);
                     const matchCountry = (this.selectedCountry === 'ALL' || parsed.country === this.selectedCountry);
-                    if (matchCountry && parsed.state === this.selectedState && parsed.city) {
-                        cities.add(parsed.city);
+                    if (matchCountry && parsed.state === this.selectedState && parsed.district) {
+                        districts.add(parsed.district);
                     }
                 });
-                this.uniqueCities = Array.from(cities).sort();
+                this.uniqueDistricts = Array.from(districts).sort();
             }
 
-            // If selectedCity is not in uniqueCities anymore, reset it
-            if (this.selectedCity !== 'ALL' && !this.uniqueCities.includes(this.selectedCity)) {
-                this.selectedCity = 'ALL';
+            // If selectedDistrict is not in uniqueDistricts anymore, reset it
+            if (this.selectedDistrict !== 'ALL' && !this.uniqueDistricts.includes(this.selectedDistrict)) {
+                this.selectedDistrict = 'ALL';
+            }
+
+            // Compute unique towns based on selectedCountry, selectedState, and selectedDistrict
+            if (this.selectedDistrict === 'ALL') {
+                this.uniqueTowns = [];
+                this.selectedTown = 'ALL';
+            } else {
+                const towns = new Set();
+                this.stations.forEach(st => {
+                    const parsed = this.parseStationAddress(st.address);
+                    const matchCountry = (this.selectedCountry === 'ALL' || parsed.country === this.selectedCountry);
+                    const matchState = (this.selectedState === 'ALL' || parsed.state === this.selectedState);
+                    if (matchCountry && matchState && parsed.district === this.selectedDistrict && parsed.town) {
+                        towns.add(parsed.town);
+                    }
+                });
+                this.uniqueTowns = Array.from(towns).sort();
+            }
+
+            // If selectedTown is not in uniqueTowns anymore, reset it
+            if (this.selectedTown !== 'ALL' && !this.uniqueTowns.includes(this.selectedTown)) {
+                this.selectedTown = 'ALL';
             }
 
             this.filterMarkers();
@@ -1121,24 +1156,29 @@ function portalController() {
 
         parseStationAddress(address) {
             const parts = address.split(',').map(p => p.trim());
-            if (parts.length < 3) {
-                // Fallback for older formats or short addresses
-                if (parts.length === 2) {
-                    const lastPart = parts[parts.length - 1];
-                    const state = lastPart.replace(/\d+/g, '').trim();
-                    const city = parts[parts.length - 2];
-                    return { city: city, state: state, country: 'India' };
-                }
-                return { city: 'Unknown', state: 'Unknown', country: 'India' };
+            
+            // Standard format: [Town/Area], [District/City], [State Zip], [Country]
+            let country = 'India';
+            let state = 'Unknown';
+            let district = 'Unknown';
+            let town = 'Unknown';
+            
+            if (parts.length >= 1) {
+                country = parts[parts.length - 1];
+            }
+            if (parts.length >= 2) {
+                state = parts[parts.length - 2].replace(/\d+/g, '').trim();
+            }
+            if (parts.length >= 3) {
+                district = parts[parts.length - 3];
+            }
+            if (parts.length >= 4) {
+                town = parts[parts.length - 4];
+            } else {
+                town = district;
             }
             
-            const country = parts[parts.length - 1];
-            const statePart = parts[parts.length - 2];
-            // Remove zip code digits and trim to get state
-            const state = statePart.replace(/\d+/g, '').trim();
-            const city = parts[parts.length - 3];
-            
-            return { city: city, state: state, country: country };
+            return { country, state, district, town };
         },
 
         filterMarkers() {
@@ -1151,10 +1191,11 @@ function portalController() {
                 
                 let matchCountry = (this.selectedCountry === 'ALL' || parsed.country === this.selectedCountry);
                 let matchState = (this.selectedState === 'ALL' || parsed.state === this.selectedState);
-                let matchCity = (this.selectedCity === 'ALL' || parsed.city === this.selectedCity);
+                let matchDistrict = (this.selectedDistrict === 'ALL' || parsed.district === this.selectedDistrict);
+                let matchTown = (this.selectedTown === 'ALL' || parsed.town === this.selectedTown);
                 
                 if (marker) {
-                    if (matchCountry && matchState && matchCity) {
+                    if (matchCountry && matchState && matchDistrict && matchTown) {
                         marker.addTo(this.map);
                         count++;
                     } else {
@@ -1172,16 +1213,28 @@ function portalController() {
                 const parsed = this.parseStationAddress(st.address);
                 let matchCountry = (this.selectedCountry === 'ALL' || parsed.country === this.selectedCountry);
                 let matchState = (this.selectedState === 'ALL' || parsed.state === this.selectedState);
-                let matchCity = (this.selectedCity === 'ALL' || parsed.city === this.selectedCity);
+                let matchDistrict = (this.selectedDistrict === 'ALL' || parsed.district === this.selectedDistrict);
+                let matchTown = (this.selectedTown === 'ALL' || parsed.town === this.selectedTown);
 
-                if (matchCountry && matchState && matchCity) {
+                if (matchCountry && matchState && matchDistrict && matchTown) {
                     bounds.push([st.latitude, st.longitude]);
                 }
             });
 
             if (bounds.length > 0) {
-                if (this.selectedCity !== 'ALL') {
-                    // Zoom dynamically over the city bounds/center
+                if (this.selectedTown !== 'ALL') {
+                    // Zoom dynamically over the town center
+                    let sumLat = 0;
+                    let sumLng = 0;
+                    bounds.forEach(b => {
+                        sumLat += b[0];
+                        sumLng += b[1];
+                    });
+                    const centerLat = sumLat / bounds.length;
+                    const centerLng = sumLng / bounds.length;
+                    this.map.setView([centerLat, centerLng], 14);
+                } else if (this.selectedDistrict !== 'ALL') {
+                    // Zoom dynamically over the district bounds/center
                     let sumLat = 0;
                     let sumLng = 0;
                     bounds.forEach(b => {
@@ -1208,7 +1261,8 @@ function portalController() {
                 this.isorangeLayer = null;
             }
             this.selectedState = 'ALL';
-            this.selectedCity = 'ALL';
+            this.selectedDistrict = 'ALL';
+            this.selectedTown = 'ALL';
             this.updateFilters();
             this.zoomToFilteredStations();
         },
@@ -1218,12 +1272,23 @@ function portalController() {
                 this.map.removeLayer(this.isorangeLayer);
                 this.isorangeLayer = null;
             }
-            this.selectedCity = 'ALL';
+            this.selectedDistrict = 'ALL';
+            this.selectedTown = 'ALL';
             this.updateFilters();
             this.zoomToFilteredStations();
         },
 
-        onCityChange() {
+        onDistrictChange() {
+            if (this.isorangeLayer) {
+                this.map.removeLayer(this.isorangeLayer);
+                this.isorangeLayer = null;
+            }
+            this.selectedTown = 'ALL';
+            this.updateFilters();
+            this.zoomToFilteredStations();
+        },
+
+        onTownChange() {
             if (this.isorangeLayer) {
                 this.map.removeLayer(this.isorangeLayer);
                 this.isorangeLayer = null;
