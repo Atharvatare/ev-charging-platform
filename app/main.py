@@ -29,9 +29,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create static directories if they do not exist
-os.makedirs("app/static/css", exist_ok=True)
-os.makedirs("app/static/js", exist_ok=True)
+# Create static directories if they do not exist (safely caught for Vercel's read-only runtime)
+try:
+    os.makedirs("app/static/css", exist_ok=True)
+    os.makedirs("app/static/js", exist_ok=True)
+except OSError:
+    pass
 
 # Mount static folder
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
