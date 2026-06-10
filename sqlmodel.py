@@ -289,9 +289,18 @@ if DATABASE_URL:
             sys.path.remove(current_dir)
         if '' in sys.path:
             sys.path.remove('')
+        if '.' in sys.path:
+            sys.path.remove('.')
             
+        # Temporarily remove ourselves from sys.modules to force loading the real site-packages package
+        our_module = sys.modules.pop("sqlmodel", None)
+        
         real_sqlmodel = importlib.import_module("sqlmodel")
+        
+        # Restore sys.path and sys.modules
         sys.path = sys_path_backup
+        if our_module:
+            sys.modules["sqlmodel"] = our_module
         
         # Override all mock entities with real library implementations
         globals().update({k: v for k, v in real_sqlmodel.__dict__.items() if not k.startswith('__')})
