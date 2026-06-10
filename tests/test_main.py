@@ -1,7 +1,23 @@
+import os
 import pytest
+
+# Ensure tests run against a clean, isolated test database file
+os.environ["DATABASE_URL"] = "sqlite:///test_ev_charging.db"
+if os.path.exists("test_ev_charging.db"):
+    try:
+        os.remove("test_ev_charging.db")
+    except Exception:
+        pass
+
 from app.engines.battery import EVEnergyModel
 from app.engines.router import compute_route
 from app.engines.queue_predictor import forecast_station_queue
+
+# Initialize and seed test database synchronously to prevent race conditions
+from app.core.database import init_db
+from app.core.seed import seed_database
+init_db()
+seed_database()
 
 def test_battery_physics_climb():
     """
