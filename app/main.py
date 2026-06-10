@@ -55,8 +55,7 @@ app.include_router(chatbot.router)
 # -------------------------------------------------------------
 @app.on_event("startup")
 def on_startup():
-    """Triggers PostgreSQL schema build and spatial coordinates seeding with environment audits in a background thread."""
-    import threading
+    """Triggers PostgreSQL schema build and spatial coordinates seeding with environment audits synchronously."""
     print("--------------------------------------------------")
     print("BOOTING GOBHARAT EV DATABASE ENGINE...")
     
@@ -67,19 +66,16 @@ def on_startup():
     else:
         print("[OK] Security Check: Backend SECRET_KEY configured securely.")
         
-    def run_db_initialization():
-        try:
-            print("[BACKGROUND] Starting database init & seeding...")
-            init_db()
-            print("[BACKGROUND] DATABASE INIT SUCCESS: Tables Synced!")
-            seed_database()
-            print("[BACKGROUND] DATABASE SEED SUCCESS: Seeding complete!")
-        except Exception as e:
-            print(f"[BACKGROUND] DATABASE STARTUP FAULT: {e}")
+    try:
+        print("Starting database init & seeding...")
+        init_db()
+        print("DATABASE INIT SUCCESS: Tables Synced!")
+        seed_database()
+        print("DATABASE SEED SUCCESS: Seeding complete!")
+    except Exception as e:
+        print(f"DATABASE STARTUP FAULT: {e}")
             
-    # Run in a background thread to prevent blocking serverless boot and timing out
-    threading.Thread(target=run_db_initialization, daemon=True).start()
-    print("FastAPI main thread ready to handle requests.")
+    print("FastAPI ready to handle requests.")
     print("--------------------------------------------------")
 
 # -------------------------------------------------------------
