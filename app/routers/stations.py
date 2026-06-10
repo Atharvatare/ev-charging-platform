@@ -14,44 +14,49 @@ router = APIRouter(prefix="/api/stations", tags=["Charging Stations"])
 @router.get("/")
 def list_stations(session: Session = Depends(get_session)):
     """Retrieves all EV charging stations with pre-loaded relations."""
-    stations = session.exec(select(Station)).all()
-    
-    serialized = []
-    for station in stations:
-        ports = [
-            {
-                "id": p.id,
-                "connector_type": p.connector_type,
-                "power_kw": p.power_kw,
-                "price_per_kwh": p.price_per_kwh,
-                "status": p.status
-            }
-            for p in station.ports
-        ]
+    try:
+        stations = session.exec(select(Station)).all()
         
-        solar = None
-        if station.solar_insights:
-            si = station.solar_insights[0]
-            solar = {
-                "id": si.id,
-                "solar_output_kw": si.solar_output_kw,
-                "battery_storage_kwh": si.battery_storage_kwh,
-                "renewable_percentage": si.renewable_percentage,
-                "updated_at": si.updated_at
-            }
+        serialized = []
+        for station in stations:
+            ports = [
+                {
+                    "id": p.id,
+                    "connector_type": p.connector_type,
+                    "power_kw": p.power_kw,
+                    "price_per_kwh": p.price_per_kwh,
+                    "status": p.status
+                }
+                for p in station.ports
+            ]
             
-        serialized.append({
-            "id": station.id,
-            "name": station.name,
-            "address": station.address,
-            "latitude": station.latitude,
-            "longitude": station.longitude,
-            "rating": station.rating,
-            "ports": ports,
-            "solar_insights": solar
-        })
-        
-    return serialized
+            solar = None
+            if station.solar_insights:
+                si = station.solar_insights[0]
+                solar = {
+                    "id": si.id,
+                    "solar_output_kw": si.solar_output_kw,
+                    "battery_storage_kwh": si.battery_storage_kwh,
+                    "renewable_percentage": si.renewable_percentage,
+                    "updated_at": si.updated_at
+                }
+                
+            serialized.append({
+                "id": station.id,
+                "name": station.name,
+                "address": station.address,
+                "latitude": station.latitude,
+                "longitude": station.longitude,
+                "rating": station.rating,
+                "ports": ports,
+                "solar_insights": solar
+            })
+            
+        return serialized
+    except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
+        return {"error": str(e), "traceback": tb}
 
 @router.get("/nearby")
 def get_nearby_stations(
