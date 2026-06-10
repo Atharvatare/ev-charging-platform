@@ -55,8 +55,9 @@ def list_stations(session: Session = Depends(get_session)):
         return serialized
     except Exception as e:
         import traceback
+        from app.core.database import DATABASE_URL
         tb = traceback.format_exc()
-        return {"error": str(e), "traceback": tb}
+        return {"error": str(e), "database_url": DATABASE_URL, "traceback": tb}
 
 @router.get("/nearby")
 def get_nearby_stations(
