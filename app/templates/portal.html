@@ -138,6 +138,51 @@
                             </template>
                         </select>
                     </div>
+
+                    <!-- Or Search Any Location (Autocomplete) -->
+                    <div class="form-control w-full relative mt-1.5 pt-2 border-t border-neutral-800/40" x-data="{ openSuggestions: false }">
+                        <label class="label py-0 mb-0.5">
+                            <span class="text-[9px] text-cyberGreen font-bold uppercase tracking-wider flex items-center gap-1">
+                                <i class="fa-solid fa-magnifying-glass-location"></i> Or Search Any Town, City, or Village
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                placeholder="Type to search (e.g. Vasant Kunj, Kalka)..." 
+                                class="input input-bordered input-xs w-full bg-neutral-900 border-neutral-800 text-xs rounded-xl h-8 min-h-8 focus:border-cyberGreen pr-8 text-neutral-200"
+                                x-model="townSearchQuery"
+                                @input.debounce.300ms="fetchTownSuggestions()"
+                                @focus="openSuggestions = true; showTownSuggestions = true"
+                                @click.away="openSuggestions = false; showTownSuggestions = false"
+                            />
+                            <div class="absolute right-2 top-2 flex items-center">
+                                <span x-show="loadingTownSuggestions" class="loading loading-spinner loading-xs text-cyberGreen w-3 h-3"></span>
+                                <i x-show="!loadingTownSuggestions && !townSearchQuery" class="fa-solid fa-magnifying-glass text-[10px] text-neutral-500"></i>
+                                <button type="button" x-show="!loadingTownSuggestions && townSearchQuery" @click="townSearchQuery = ''; townSuggestions = [];" class="hover:text-white text-neutral-500">
+                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Suggestions Dropdown -->
+                        <div 
+                            x-show="openSuggestions && showTownSuggestions && townSuggestions.length > 0" 
+                            class="absolute left-0 right-0 z-[1050] w-full max-h-60 overflow-y-auto bg-neutral-950/95 border border-neutral-800 rounded-xl shadow-2xl mt-1 py-1 backdrop-blur-md"
+                            style="display: none; top: 100%;"
+                        >
+                            <template x-for="s in townSuggestions" :key="s.place_id">
+                                <button 
+                                    type="button"
+                                    @click="selectTownSuggestion(s)" 
+                                    class="w-full text-left px-3 py-2 hover:bg-neutral-900 border-b border-neutral-900/50 last:border-0 flex flex-col gap-0.5 transition-colors duration-150"
+                                >
+                                    <span class="font-bold text-white text-[11px]" x-text="s.name"></span>
+                                    <span class="text-[9px] text-neutral-400 truncate" x-text="s.display_name"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -780,7 +825,56 @@ const ALL_COUNTRIES = [
     "Zambia", "Zimbabwe"
 ];
 
+const COUNTRY_CODES = {
+    "Afghanistan": "af", "Albania": "al", "Algeria": "dz", "Andorra": "ad", "Angola": "ao", "Antigua and Barbuda": "ag", "Argentina": "ar", "Armenia": "am", "Australia": "au", "Austria": "at", "Azerbaijan": "az",
+    "Bahamas": "bs", "Bahrain": "bh", "Bangladesh": "bd", "Barbados": "bb", "Belarus": "by", "Belgium": "be", "Belize": "bz", "Benin": "bj", "Bhutan": "bt", "Bolivia": "bo", "Bosnia and Herzegovina": "ba", "Botswana": "bw", "Brazil": "br", "Brunei": "bn", "Bulgaria": "bg", "Burkina Faso": "bf", "Burundi": "bi",
+    "Cabo Verde": "cv", "Cambodia": "kh", "Cameroon": "cm", "Canada": "ca", "Central African Republic": "cf", "Chad": "td", "Chile": "cl", "China": "cn", "Colombia": "co", "Comoros": "km", "Congo": "cg", "Costa Rica": "cr", "Croatia": "hr", "Cuba": "cu", "Cyprus": "cy", "Czechia": "cz",
+    "Denmark": "dk", "Djibouti": "dj", "Dominica": "dm", "Dominican Republic": "do",
+    "Ecuador": "ec", "Egypt": "eg", "El Salvador": "sv", "Equatorial Guinea": "gq", "Eritrea": "er", "Estonia": "ee", "Eswatini": "sz", "Ethiopia": "et",
+    "Fiji": "fj", "Finland": "fi", "France": "fr",
+    "Gabon": "ga", "Gambia": "gm", "Georgia": "ge", "Germany": "de", "Ghana": "gh", "Greece": "gr", "Grenada": "gd", "Guatemala": "gt", "Guinea": "gn", "Guinea-Bissau": "gw", "Guyana": "gy",
+    "Haiti": "ht", "Honduras": "hn", "Hungary": "hu",
+    "Iceland": "is", "India": "in", "Indonesia": "id", "Iran": "ir", "Iraq": "iq", "Ireland": "ie", "Israel": "il", "Italy": "it", "Ivory Coast": "ci",
+    "Jamaica": "jm", "Japan": "jp", "Jordan": "jo",
+    "Kazakhstan": "kz", "Kenya": "ke", "Kiribati": "ki", "Kuwait": "kw", "Kyrgyzstan": "kg",
+    "Laos": "la", "Latvia": "lv", "Lebanon": "lb", "Lesotho": "ls", "Liberia": "lr", "Libya": "ly", "Liechtenstein": "li", "Lithuania": "lt", "Luxembourg": "lu",
+    "Madagascar": "mg", "Malawi": "mw", "Malaysia": "my", "Maldives": "mv", "Mali": "ml", "Malta": "mt", "Marshall Islands": "mh", "Mauritania": "mr", "Mauritius": "mu", "Mexico": "mx", "Micronesia": "fm", "Moldova": "md", "Monaco": "mc", "Mongolia": "mn", "Montenegro": "me", "Morocco": "ma", "Mozambique": "mz", "Myanmar": "mm",
+    "Namibia": "na", "Nauru": "nr", "Nepal": "np", "Netherlands": "nl", "New Zealand": "nz", "Nicaragua": "ni", "Niger": "ne", "Nigeria": "ng", "North Korea": "kp", "North Macedonia": "mk", "Norway": "no",
+    "Oman": "om",
+    "Pakistan": "pk", "Palau": "pw", "Palestine": "ps", "Panama": "pa", "Papua New Guinea": "pg", "Paraguay": "py", "Peru": "pe", "Philippines": "ph", "Poland": "pl", "Portugal": "pt",
+    "Qatar": "qa",
+    "Romania": "ro", "Russia": "ru", "Rwanda": "rw",
+    "Saint Kitts and Nevis": "kn", "Saint Lucia": "lc", "Saint Vincent and the Grenadines": "vc", "Samoa": "ws", "San Marino": "sm", "Sao Tome and Principe": "st", "Saudi Arabia": "sa", "Senegal": "sn", "Serbia": "rs", "Seychelles": "sc", "Sierra Leone": "sl", "Singapore": "sg", "Slovakia": "sk", "Slovenia": "si", "Solomon Islands": "sb", "Somalia": "so", "South Africa": "za", "South Korea": "kr", "South Sudan": "ss", "Spain": "es", "Sri Lanka": "lk", "Sudan": "sd", "Suriname": "sr", "Sweden": "se", "Switzerland": "ch", "Syria": "sy",
+    "Taiwan": "tw", "Tajikistan": "tj", "Tanzania": "tz", "Thailand": "th", "Timor-Leste": "tl", "Togo": "tg", "Tonga": "to", "Trinidad and Tobago": "tt", "Tunisia": "tn", "Turkey": "tr", "Turkmenistan": "tm", "Tuvalu": "tv",
+    "Uganda": "ug", "Ukraine": "ua", "United Arab Emirates": "ae", "United Kingdom": "gb", "United States": "us", "USA": "us", "Uruguay": "uy", "Uzbekistan": "uz",
+    "Vanuatu": "vu", "Vatican City": "va", "Venezuela": "ve", "Vietnam": "vn",
+    "Yemen": "ye",
+    "Zambia": "zm", "Zimbabwe": "zw"
+};
+
 const INDIAN_GEOGRAPHY = {
+    "Andhra Pradesh": {},
+    "Arunachal Pradesh": {},
+    "Assam": {},
+    "Bihar": {},
+    "Chhattisgarh": {},
+    "Goa": {},
+    "Gujarat": {
+        "Ahmedabad": ["Bodakdev", "SG Highway", "Satellite", "Navrangpura"],
+        "Surat": ["Surat Diamond Bourse", "Adajan", "Varachha"]
+    },
+    "Haryana": {},
+    "Himachal Pradesh": {},
+    "Jharkhand": {},
+    "Karnataka": {
+        "Bengaluru": ["Indiranagar", "Koramangala", "Whitefield", "Jayanagar", "Yelahanka", "Electronic City"],
+        "Mysuru": ["Mysore City", "Gokulam", "Vidyaranyapuram"]
+    },
+    "Kerala": {
+        "Ernakulam": ["Kochi Infopark", "Kakkanad", "Aluva"],
+        "Thiruvananthapuram": ["Trivandrum Central", "MG Road"]
+    },
+    "Madhya Pradesh": {},
     "Maharashtra": {
         "Nagpur": ["Nagpur City", "Kalmeshwar", "Sadar", "Dharampeth", "Manish Nagar Hub", "Manish Nagar", "Hingna", "Kamptee"],
         "Mumbai": ["Mumbai Central", "BKC Hub", "Bandra Reclamation", "Bandra West", "Andheri", "Colaba", "Dadar"],
@@ -788,14 +882,17 @@ const INDIAN_GEOGRAPHY = {
         "Thane": ["Thane City", "Kalyan", "Dombivli", "Navi Mumbai"],
         "Nashik": ["Nashik City", "Panchavati", "Deolali"]
     },
-    "Delhi": {
-        "New Delhi": ["Connaught Place", "Chanakyapuri", "Dwarka", "Saket"],
-        "North Delhi": ["Rohini", "Model Town", "Civil Lines"]
+    "Manipur": {},
+    "Meghalaya": {},
+    "Mizoram": {},
+    "Nagaland": {},
+    "Odisha": {},
+    "Punjab": {},
+    "Rajasthan": {
+        "Jaipur": ["Jaipur Pink City", "Tonk Road", "Malviya Nagar"],
+        "Udaipur": ["Udaipur City", "NH8 Highway Halt"]
     },
-    "Karnataka": {
-        "Bengaluru": ["Indiranagar", "Koramangala", "Whitefield", "Jayanagar", "Yelahanka", "Electronic City"],
-        "Mysuru": ["Mysore City", "Gokulam", "Vidyaranyapuram"]
-    },
+    "Sikkim": {},
     "Tamil Nadu": {
         "Chennai": ["Adyar central", "Adyar", "OMR Tech Corridor", "T Nagar", "Velachery", "Mylapore"],
         "Krishnagiri": ["Krishnagiri Town", "Hosur"]
@@ -803,21 +900,23 @@ const INDIAN_GEOGRAPHY = {
     "Telangana": {
         "Hyderabad": ["Gachibowli", "Shamshabad", "Madhapur", "Secunderabad", "Banjara Hills"]
     },
+    "Tripura": {},
+    "Uttar Pradesh": {},
+    "Uttarakhand": {},
     "West Bengal": {
         "Kolkata": ["Salt Lake Sector V", "New Town Eco Park", "Howrah", "Park Street", "Alipore"]
     },
-    "Gujarat": {
-        "Ahmedabad": ["Bodakdev", "SG Highway", "Satellite", "Navrangpura"],
-        "Surat": ["Surat Diamond Bourse", "Adajan", "Varachha"]
+    "Andaman and Nicobar Islands": {},
+    "Chandigarh": {},
+    "Dadra and Nagar Haveli and Daman and Diu": {},
+    "Delhi": {
+        "New Delhi": ["Connaught Place", "Chanakyapuri", "Dwarka", "Saket"],
+        "North Delhi": ["Rohini", "Model Town", "Civil Lines"]
     },
-    "Kerala": {
-        "Ernakulam": ["Kochi Infopark", "Kakkanad", "Aluva"],
-        "Thiruvananthapuram": ["Trivandrum Central", "MG Road"]
-    },
-    "Rajasthan": {
-        "Jaipur": ["Jaipur Pink City", "Tonk Road", "Malviya Nagar"],
-        "Udaipur": ["Udaipur City", "NH8 Highway Halt"]
-    }
+    "Jammu and Kashmir": {},
+    "Ladakh": {},
+    "Lakshadweep": {},
+    "Puducherry": {}
 };
 
 const GLOBAL_GEOGRAPHY = {
@@ -871,6 +970,10 @@ function portalController() {
         uniqueStates: [],
         uniqueDistricts: [],
         uniqueTowns: [],
+        townSearchQuery: '',
+        townSuggestions: [],
+        loadingTownSuggestions: false,
+        showTownSuggestions: false,
         filteredStationsCount: 0,
         routeForm: {
             origin: '',
@@ -1205,6 +1308,9 @@ function portalController() {
                     }
                 }
             });
+            if (this.selectedState !== 'ALL') {
+                states.add(this.selectedState);
+            }
             this.uniqueStates = Array.from(states).sort();
 
             // If selectedState is not in uniqueStates anymore (due to country change), reset it
@@ -1228,6 +1334,9 @@ function portalController() {
                         districts.add(parsed.district);
                     }
                 });
+            }
+            if (this.selectedDistrict !== 'ALL') {
+                districts.add(this.selectedDistrict);
             }
             this.uniqueDistricts = Array.from(districts).sort();
 
@@ -1255,6 +1364,9 @@ function portalController() {
                         towns.add(parsed.town);
                     }
                 });
+            }
+            if (this.selectedTown !== 'ALL') {
+                towns.add(this.selectedTown);
             }
             this.uniqueTowns = Array.from(towns).sort();
 
@@ -1402,6 +1514,121 @@ function portalController() {
             }
         },
 
+        async fetchTownSuggestions() {
+            const query = this.townSearchQuery.trim();
+            if (query.length < 3) {
+                this.townSuggestions = [];
+                return;
+            }
+            this.loadingTownSuggestions = true;
+            try {
+                let qParts = [query];
+                if (this.selectedDistrict !== 'ALL') qParts.push(this.selectedDistrict);
+                if (this.selectedState !== 'ALL') qParts.push(this.selectedState);
+                
+                let searchStr = qParts.join(', ');
+                let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchStr)}&limit=8&addressdetails=1`;
+                
+                if (this.selectedCountry !== 'ALL') {
+                    const countryCode = COUNTRY_CODES[this.selectedCountry];
+                    if (countryCode) {
+                        url += `&countrycodes=${countryCode}`;
+                    }
+                }
+                const response = await fetch(url, {
+                    headers: { 'User-Agent': 'GoBharatEV-Charging-Locator-App' }
+                });
+                if (!response.ok) throw new Error("API response not OK");
+                const data = await response.json();
+                this.townSuggestions = data.map(item => {
+                    const addr = item.address || {};
+                    const name = item.name || addr.city || addr.town || addr.village || addr.suburb || addr.hamlet || addr.road || "Unknown Location";
+                    return {
+                        place_id: item.place_id,
+                        name: name,
+                        display_name: item.display_name,
+                        lat: parseFloat(item.lat),
+                        lon: parseFloat(item.lon),
+                        address: addr
+                    };
+                });
+            } catch (err) {
+                console.error("Error fetching town suggestions:", err);
+                this.townSuggestions = [];
+            } finally {
+                this.loadingTownSuggestions = false;
+            }
+        },
+
+        selectTownSuggestion(s) {
+            this.townSearchQuery = s.name;
+            this.townSuggestions = [];
+            this.showTownSuggestions = false;
+            
+            this.map.setView([s.lat, s.lon], 14);
+            
+            if (s.address) {
+                const addr = s.address;
+                
+                if (addr.country) {
+                    const matchedCountry = ALL_COUNTRIES.find(c => c.toLowerCase() === addr.country.toLowerCase());
+                    if (matchedCountry) {
+                        this.selectedCountry = matchedCountry;
+                    }
+                }
+                
+                this.updateFilters();
+                
+                const stateName = addr.state || addr.region || addr.territory;
+                if (stateName) {
+                    let match = this.uniqueStates.find(st => st.toLowerCase() === stateName.toLowerCase());
+                    if (!match) {
+                        this.uniqueStates.push(stateName);
+                        this.uniqueStates.sort();
+                        match = stateName;
+                    }
+                    this.selectedState = match;
+                }
+                
+                this.updateFilters();
+                
+                const districtName = addr.county || addr.district || addr.city_district || addr.state_district;
+                if (districtName) {
+                    let match = this.uniqueDistricts.find(d => d.toLowerCase() === districtName.toLowerCase());
+                    if (!match) {
+                        this.uniqueDistricts.push(districtName);
+                        this.uniqueDistricts.sort();
+                        match = districtName;
+                    }
+                    this.selectedDistrict = match;
+                }
+                
+                this.updateFilters();
+                
+                const townName = addr.city || addr.town || addr.village || addr.suburb || addr.hamlet || addr.neighbourhood;
+                if (townName) {
+                    let match = this.uniqueTowns.find(t => t.toLowerCase() === townName.toLowerCase());
+                    if (!match) {
+                        this.uniqueTowns.push(townName);
+                        this.uniqueTowns.sort();
+                        match = townName;
+                    }
+                    this.selectedTown = match;
+                } else {
+                    const fallbackName = s.name;
+                    if (fallbackName) {
+                        let match = this.uniqueTowns.find(t => t.toLowerCase() === fallbackName.toLowerCase());
+                        if (!match) {
+                            this.uniqueTowns.push(fallbackName);
+                            this.uniqueTowns.sort();
+                            match = fallbackName;
+                        }
+                        this.selectedTown = match;
+                    }
+                }
+            }
+        },
+
         onCountryChange() {
             if (this.isorangeLayer) {
                 this.map.removeLayer(this.isorangeLayer);
@@ -1410,6 +1637,8 @@ function portalController() {
             this.selectedState = 'ALL';
             this.selectedDistrict = 'ALL';
             this.selectedTown = 'ALL';
+            this.townSearchQuery = '';
+            this.townSuggestions = [];
             this.updateFilters();
             this.zoomToFilteredStations();
         },
@@ -1421,6 +1650,8 @@ function portalController() {
             }
             this.selectedDistrict = 'ALL';
             this.selectedTown = 'ALL';
+            this.townSearchQuery = '';
+            this.townSuggestions = [];
             this.updateFilters();
             this.zoomToFilteredStations();
         },
@@ -1431,6 +1662,8 @@ function portalController() {
                 this.isorangeLayer = null;
             }
             this.selectedTown = 'ALL';
+            this.townSearchQuery = '';
+            this.townSuggestions = [];
             this.updateFilters();
             this.zoomToFilteredStations();
         },
@@ -1440,6 +1673,8 @@ function portalController() {
                 this.map.removeLayer(this.isorangeLayer);
                 this.isorangeLayer = null;
             }
+            this.townSearchQuery = '';
+            this.townSuggestions = [];
             this.updateFilters();
             this.zoomToFilteredStations();
         },
