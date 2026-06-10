@@ -52,7 +52,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme), session: Session
     except JWTError:
         raise credentials_exception
         
-    user = session.get(User, user_id)
+    from uuid import UUID
+    try:
+        user_uuid = UUID(user_id)
+    except ValueError:
+        raise credentials_exception
+        
+    user = session.get(User, user_uuid)
     if user is None:
         raise credentials_exception
     return user

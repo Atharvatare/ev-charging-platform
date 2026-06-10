@@ -11,15 +11,47 @@ from app.ws.connection_manager import manager
 
 router = APIRouter(prefix="/api/stations", tags=["Charging Stations"])
 
-@router.get("/", response_model=List[Station])
+@router.get("/")
 def list_stations(session: Session = Depends(get_session)):
     """Retrieves all EV charging stations with pre-loaded relations."""
     stations = session.exec(select(Station)).all()
-    # Simple trick to resolve relationships eagerly for schema output
-    for st in stations:
-        st.ports
-        st.solar_insights
-    return stations
+    
+    serialized = []
+    for station in stations:
+        ports = [
+            {
+                "id": p.id,
+                "connector_type": p.connector_type,
+                "power_kw": p.power_kw,
+                "price_per_kwh": p.price_per_kwh,
+                "status": p.status
+            }
+            for p in station.ports
+        ]
+        
+        solar = None
+        if station.solar_insights:
+            si = station.solar_insights[0]
+            solar = {
+                "id": si.id,
+                "solar_output_kw": si.solar_output_kw,
+                "battery_storage_kwh": si.battery_storage_kwh,
+                "renewable_percentage": si.renewable_percentage,
+                "updated_at": si.updated_at
+            }
+            
+        serialized.append({
+            "id": station.id,
+            "name": station.name,
+            "address": station.address,
+            "latitude": station.latitude,
+            "longitude": station.longitude,
+            "rating": station.rating,
+            "ports": ports,
+            "solar_insights": solar
+        })
+        
+    return serialized
 
 @router.get("/nearby")
 def get_nearby_stations(
@@ -49,11 +81,31 @@ def get_nearby_stations(
         ORDER BY distance_meters ASC
     """)
     
-    results = session.execute(query_str, {
-        "user_lng": longitude,
-        "user_lat": latitude,
-        "radius": radius_meters
-    }).fetchall()
+    try:
+        results = session.execute(query_str, {
+            "user_lng": longitude,
+            "user_lat": latitude,
+            "radius": radius_meters
+        }).fetchall()
+    except Exception as e:
+        # Fallback for SQLite or databases without PostGIS
+        import math
+        
+        def haversine_meters(lat1, lon1, lat2, lon2):
+            R = 6371000.0
+            phi1, phi2 = math.radians(lat1), math.radians(lat2)
+            dphi = math.radians(lat2 - lat1)
+            dlam = math.radians(lon2 - lon1)
+            a = math.sin(dphi/2.0)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlam/2.0)**2
+            return 2.0 * R * math.atan2(math.sqrt(a), math.sqrt(1-a))
+
+        stations = session.exec(select(Station)).all()
+        results = []
+        for s in stations:
+            dist = haversine_meters(s.latitude, s.longitude, latitude, longitude)
+            if dist <= radius_meters:
+                results.append((s.id, s.name, s.address, s.latitude, s.longitude, s.rating, dist))
+        results.sort(key=lambda r: r[6])
     
     nearby = []
     for row in results:
