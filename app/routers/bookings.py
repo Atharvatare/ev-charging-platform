@@ -42,6 +42,7 @@ def list_active_reservations(
             "station_name": station.name if station else "Unknown Station",
             "connector_type": port.connector_type if port else "Unknown",
             "power_kw": port.power_kw if port else 0.0,
+            "price_per_kwh": port.price_per_kwh if port else 0.0,
             "start_time": res.start_time,
             "end_time": res.end_time,
             "qr_code": res.qr_code,

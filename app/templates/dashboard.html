@@ -343,6 +343,7 @@ function dashboardController() {
         ocppPower: 150.0,
         ocppEnergy: 0.0,
         ocppCost: 0.0,
+        ocppPrice: 18.5,
         ocppTimer: null,
         ocppComplete: false,
         ocppFault: null,
@@ -570,6 +571,8 @@ function dashboardController() {
             this.ocppPower = 150.0;
             this.ocppEnergy = 0.0;
             this.ocppCost = 0.0;
+            const matchedRes = this.reservations.find(r => r.id === resId);
+            this.ocppPrice = matchedRes && matchedRes.price_per_kwh ? matchedRes.price_per_kwh : 18.5;
             this.ocppComplete = false;
             this.ocppFault = null;
             this.ocppHistory = [];
@@ -647,7 +650,7 @@ function dashboardController() {
                         }
                         
                         this.ocppEnergy += 0.45;
-                        this.ocppCost += 0.45 * 18.5; // standard rate ₹18.50 per unit
+                        this.ocppCost += 0.45 * this.ocppPrice; // dynamic rate per unit
                         
                         this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower, temp: this.batteryTemp });
                         this.drawOcppChart();
@@ -862,9 +865,9 @@ function dashboardController() {
                                     this.throttlingActive = false;
                                     this.ocppPower = targetPower;
                                 }
-                                this.ocppEnergy += 0.45;
-                                this.ocppCost += 0.45 * 18.5;
-                                this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower, temp: this.batteryTemp });
+                                 this.ocppEnergy += 0.45;
+                                 this.ocppCost += 0.45 * this.ocppPrice;
+                                 this.ocppHistory.push({ soc: this.ocppSoc, power: this.ocppPower, temp: this.batteryTemp });
                                 this.drawOcppChart();
                             } else {
                                 this.stopOcppCharging();
