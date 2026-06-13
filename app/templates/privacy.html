@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}GoBharat EV - Privacy Policy{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto pt-20 pb-12 px-6 animate-fade-in">
+
+    <!-- Header Section -->
+    <div class="text-center max-w-2xl mx-auto mb-12 border-b border-neutral-900 pb-8">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyberBlue/10 border border-cyberBlue/20 text-cyberBlue text-[10px] font-bold uppercase tracking-widest mb-3">
+            <i class="fa-solid fa-user-shield"></i> Data Confidentiality
+        </div>
+        <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight text-white mb-3">
+            Privacy <span class="text-cyberBlue glow-text-blue">Policy</span>
+        </h1>
+        <p class="text-neutral-400 text-xs md:text-sm">
+            Last updated: June 13, 2026. Your privacy and coordinate security are our highest priority.
+        </p>
+    </div>
+
+    <!-- Content Sections -->
+    <div class="space-y-6">
+        
+        <!-- Section 1 -->
+        <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 hover:border-cyberBlue/10 transition-all duration-300">
+            <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <span class="text-cyberBlue font-mono">01.</span> Data Collection & Profile Information
+            </h3>
+            <p class="text-neutral-400 text-xs leading-relaxed">
+                We collect essential driver information including full name, phone number, email ID, and password during registration. Passwords are securely hashed using state-of-the-art bcrypt-based cryptographic encryption models before persistence. We do not store plaintext credentials.
+            </p>
+        </div>
+
+        <!-- Section 2 -->
+        <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 hover:border-cyberBlue/10 transition-all duration-300">
+            <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <span class="text-cyberBlue font-mono">02.</span> Telemetry Tracking & Location Coordinates
+            </h3>
+            <p class="text-neutral-400 text-xs leading-relaxed">
+                To coordinate optimal routing and charger lockout periods, our map locator monitors geographic bounding boxes and coordinate searches. WebSocket telemetry streams client connection events securely. Location data is analyzed strictly in memory to render charger markers and path lines, and is not sold, shared, or compiled for marketing profiles.
+            </p>
+        </div>
+
+        <!-- Section 3 -->
+        <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 hover:border-cyberBlue/10 transition-all duration-300">
+            <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <span class="text-cyberBlue font-mono">03.</span> Driver Support Tickets Registry
+            </h3>
+            <p class="text-neutral-400 text-xs leading-relaxed">
+                All driver support tickets submitted are saved persistently in the platform's database. When displaying tickets on public dashboard registries (such as the Support Hub queue), driver emails are partially masked (e.g. <code>dri***@ev.com</code>) to prevent scraping, unauthorized exposure, and spam.
+            </p>
+        </div>
+
+        <!-- Section 4 -->
+        <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 hover:border-cyberBlue/10 transition-all duration-300">
+            <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <span class="text-cyberBlue font-mono">04.</span> Global Compliance Standards
+            </h3>
+            <p class="text-neutral-400 text-xs leading-relaxed">
+                GoBharat EV adheres to regional and global privacy protection mandates:
+            </p>
+            <ul class="list-disc list-inside text-neutral-400 text-xs mt-2 space-y-1.5 pl-2">
+                <li><strong>GDPR (Europe):</strong> European users retain the right to download or permanently delete their profiles and reservations from our SQLite/PostgreSQL ledgers.</li>
+                <li><strong>DPDP Act (India):</strong> Strictly requires explicit user authorization before telemetry indexing or SMS notification routing is enabled.</li>
+                <li><strong>CCPA (California):</strong> Restricts third-party data tracking and ensures full user visibility into all stored wallet top-ups.</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

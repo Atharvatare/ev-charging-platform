@@ -111,6 +111,16 @@ def get_support_hub_page(request: Request):
     """Serves the driver help and corporate support ticketing center."""
     return templates.TemplateResponse(request, "support.html", {"request": request})
 
+@app.get("/terms")
+def get_terms_page(request: Request):
+    """Serves the corporate Terms of Service."""
+    return templates.TemplateResponse(request, "terms.html", {"request": request})
+
+@app.get("/privacy")
+def get_privacy_page(request: Request):
+    """Serves the corporate Privacy Policy."""
+    return templates.TemplateResponse(request, "privacy.html", {"request": request})
+
 @app.get("/login")
 def get_login_and_register_page(request: Request):
     """Serves the stunning corporate and driver login and registration page."""

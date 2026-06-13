@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}GoBharat EV - Terms of Service{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto pt-20 pb-12 px-6 animate-fade-in">
+
+    <!-- Header Section -->
+    <div class="text-center max-w-2xl mx-auto mb-12 border-b border-neutral-900 pb-8">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyberGreen/10 border border-cyberGreen/20 text-cyberGreen text-[10px] font-bold uppercase tracking-widest mb-3">
+            <i class="fa-solid fa-scale-balanced"></i> Legal Framework
+        </div>
+        <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight text-white mb-3">
+            Terms of <span class="text-cyberGreen glow-text-green">Service</span>
+        </h1>
+        <p class="text-neutral-400 text-xs md:text-sm">
+            Last updated: June 13, 2026. Please read these terms carefully before utilizing our global EV charging platform.
+        </p>
+    </div>
+
+    <!-- Content Sections -->
+    <div class="space-y-6">
+        
+        <!-- Section 1 -->
+        <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 hover:border-cyberGreen/10 transition-all duration-300">
+            <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <span class="text-cyberGreen font-mono">01.</span> Acceptance of Terms
+            </h3>
+            <p class="text-neutral-400 text-xs leading-relaxed">
+                By registering an account, logging in, or using the GoBharat EV web application (including our interactive maps, A* routing simulator, and reservation ledger), you agree to be bound by these Terms of Service. If you do not agree, you must immediately cease all operations on this platform.
+            </p>
+        </div>
+
+        <!-- Section 2 -->
+        <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 hover:border-cyberGreen/10 transition-all duration-300">
+            <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <span class="text-cyberGreen font-mono">02.</span> Topography-Aware Routing & Solver Limitations
+            </h3>
+            <p class="text-neutral-400 text-xs leading-relaxed">
+                Our platform utilizes physics-based elevation solvers (A* search with altitude-sensitive battery degradation matrices) to predict state-of-charge (SOC) at arrival nodes. While our algorithms calculate regen captures and surface friction slip limits, actual energy usage may vary based on weather, driving style, payload, and battery health. GoBharat EV provides these calculations for planning purposes and is not liable for vehicle lockout, battery depletion, or highway stranding.
+            </p>
+        </div>
+
+        <!-- Section 3 -->
+        <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 hover:border-cyberGreen/10 transition-all duration-300">
+            <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <span class="text-cyberGreen font-mono">03.</span> Simulated Financial Wallet & Deposits
+            </h3>
+            <p class="text-neutral-400 text-xs leading-relaxed font-sans">
+                The wallet ledger, credit card top-ups via Stripe Sandbox, and Indian UPI qr-code mock scans are purely simulated. No real currency is charged, processed, or settled. Any funds deposited represent test credits used exclusively for simulated port lockouts, charger sessions, and virtual V2G (Vehicle-to-Grid) virtual power plant settlements.
+            </p>
+        </div>
+
+        <!-- Section 4 -->
+        <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 hover:border-cyberGreen/10 transition-all duration-300">
+            <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <span class="text-cyberGreen font-mono">04.</span> Real-Time Telemetry & WebSockets
+            </h3>
+            <p class="text-neutral-400 text-xs leading-relaxed">
+                By maintaining active websocket connections to the <code>/ws</code> telemetry stream, you consent to receive live charger state broadcasts and dispatch mock heartbeats. Simulated OCPP message telemetry is streamed to active map HUD overlays to demonstrate grid balancing.
+            </p>
+        </div>
+
+        <!-- Section 5 -->
+        <div class="card glass-panel border border-neutral-800 rounded-2xl p-6 hover:border-cyberGreen/10 transition-all duration-300">
+            <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <span class="text-cyberGreen font-mono">05.</span> Support ticketing & Conduct
+            </h3>
+            <p class="text-neutral-400 text-xs leading-relaxed">
+                Tickets submitted through our Support Hub are logged in our database registry. Users agree to submit truthful requests. GoBharat EV reserves the right to delete, resolve, or block submissions that contain malicious scripts, spam, or abusive language.
+            </p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

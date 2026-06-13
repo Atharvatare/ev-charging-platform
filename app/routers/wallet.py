@@ -11,6 +11,7 @@ router = APIRouter(prefix="/api/wallet", tags=["Wallet & Billing"])
 
 class DepositRequest(BaseModel):
     amount: float
+    currency: str = "INR"
 
 @router.get("/transactions", response_model=List[WalletTransaction])
 def get_wallet_ledger(
@@ -41,16 +42,35 @@ def deposit_funds(
             detail="Deposit amount must be greater than zero."
         )
 
+    # Conversion rates mapping currency to database base currency (INR)
+    # 1 INR = 0.012 USD -> 1 USD = 1 / 0.012 = 83.3333 INR
+    # 1 INR = 0.011 EUR -> 1 EUR = 1 / 0.011 = 90.9091 INR
+    rates_to_inr = {
+        "INR": 1.0,
+        "USD": 1.0 / 0.012,
+        "EUR": 1.0 / 0.011
+    }
+    
+    currency_code = req.currency.upper()
+    if currency_code not in rates_to_inr:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported currency code: {req.currency}. Supported: INR, USD, EUR."
+        )
+
+    # Calculate converted value in base database currency (INR)
+    inr_amount = req.amount * rates_to_inr[currency_code]
+
     # 1. Update user balance in DB
-    current_user.wallet_balance += req.amount
+    current_user.wallet_balance += inr_amount
     session.add(current_user)
     
     # 2. Record ledger transaction
     transaction = WalletTransaction(
         user_id=current_user.id,
-        amount=req.amount,
+        amount=inr_amount,
         transaction_type="DEPOSIT",
-        description="Stripe Deposit - Wallet Top-up"
+        description=f"Stripe Deposit - Wallet Top-up ({req.amount:.2f} {currency_code})"
     )
     
     session.add(transaction)
@@ -58,6 +78,6 @@ def deposit_funds(
     session.refresh(current_user)
     
     return {
-        "message": f"Successfully deposited ${req.amount:.2f} via Stripe Sandbox.",
+        "message": f"Successfully deposited {req.amount:.2f} {currency_code} via Stripe Sandbox.",
         "new_balance": current_user.wallet_balance
     }
