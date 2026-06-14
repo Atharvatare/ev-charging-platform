@@ -705,9 +705,29 @@
 
                         if (response.ok) {
                             const data = await response.json();
+                            let replyText = data.reply;
+                            
+                            // Parse map actions from the AI reply
+                            const centerMatch = replyText.match(/\[ACTION:CENTER:([\d\.-]+),([\d\.-]+)\]/);
+                            const routeMatch = replyText.match(/\[ACTION:ROUTE:([^,\]]+),([^,\]]+)\]/);
+                            
+                            if (centerMatch) {
+                                const lat = parseFloat(centerMatch[1]);
+                                const lng = parseFloat(centerMatch[2]);
+                                window.dispatchEvent(new CustomEvent('gobharat-map-center', { detail: { lat, lng } }));
+                                replyText = replyText.replace(/\[ACTION:CENTER:[\d\.-]+,[\d\.-]+\]/, '');
+                            }
+                            
+                            if (routeMatch) {
+                                const origin = routeMatch[1];
+                                const dest = routeMatch[2];
+                                window.dispatchEvent(new CustomEvent('gobharat-map-route', { detail: { origin, dest } }));
+                                replyText = replyText.replace(/\[ACTION:ROUTE:[^,\]]+,[^,\]]+\]/, '');
+                            }
+
                             this.messages.push({
                                 sender: 'ai',
-                                text: data.reply
+                                text: replyText
                             });
                         } else {
                             if (response.status === 401) {

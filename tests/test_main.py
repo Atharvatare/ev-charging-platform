@@ -315,6 +315,18 @@ def test_persistent_endpoints():
         assert chatbot_res_bat.status_code == 200
         assert "wallet balance" in chatbot_res_bat.json()["reply"]
 
+        # Test Chatbot map focus action
+        chatbot_payload_focus = {"message": "please focus on Nagpur flagship hub"}
+        chatbot_res_focus = client.post("/api/chatbot/ask", json=chatbot_payload_focus, headers=headers)
+        assert chatbot_res_focus.status_code == 200
+        assert "[ACTION:CENTER:21.2333,78.9167]" in chatbot_res_focus.json()["reply"]
+
+        # Test Chatbot routing action
+        chatbot_payload_route = {"message": "plan route from BKC to Lower Parel"}
+        chatbot_res_route = client.post("/api/chatbot/ask", json=chatbot_payload_route, headers=headers)
+        assert chatbot_res_route.status_code == 200
+        assert "[ACTION:ROUTE:" in chatbot_res_route.json()["reply"]
+
         # 12. Test Bookings Reserve with OSM dynamic port ID (POST /api/bookings/reserve)
         import uuid
         mock_port_uuid = str(uuid.uuid4())

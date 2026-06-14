@@ -26,6 +26,76 @@ def query_chatbot(
     from app.models.ticket import SupportTicket
     from app.models.station import Station
     
+    # 0. Check for Map Centering / Focus Commands
+    city_coordinates = {
+        "nagpur": (21.2333, 78.9167, "Nagpur Flagship Command Hub"),
+        "mumbai": (19.0600, 72.8600, "Mumbai BKC Hub"),
+        "pune": (18.5913, 73.7386, "Pune Hinjawadi IT Park"),
+        "delhi": (28.6304, 77.2177, "Delhi Connaught Place"),
+        "gurgaon": (28.4950, 77.0878, "Gurgaon Cyber City"),
+        "lonavala": (18.7500, 73.4000, "Lonavala Expressway Stop"),
+        "chennai": (13.0067, 80.2500, "Chennai Adyar Hub"),
+        "bengaluru": (12.9716, 77.5946, "Bengaluru Whitefield Hub"),
+        "bangalore": (12.9716, 77.5946, "Bengaluru Whitefield Hub"),
+        "hyderabad": (17.3850, 78.4867, "Hyderabad Gachibowli Hub"),
+        "jaipur": (26.9124, 75.7873, "Jaipur Pink City Terminal"),
+        "kolkata": (22.5726, 88.3639, "Kolkata Salt Lake Sector V"),
+    }
+    
+    if any(k in msg for k in ["focus", "center", "zoom", "show", "locate", "find", "where is"]):
+        for city, (lat, lng, display) in city_coordinates.items():
+            if city in msg:
+                return {
+                    "reply": (
+                        f"📍 **Map Focus Triggered:** Centering view on **{display}** "
+                        f"({lat}, {lng}).<br/>[ACTION:CENTER:{lat},{lng}]"
+                    )
+                }
+
+    # Check for Routing/Planning Commands
+    node_keywords = {
+        "gateway": "Gateway_of_India",
+        "parel": "Lower_Parel",
+        "bkc": "BKC_Hub",
+        "reclamation": "Bandra_Reclamation",
+        "andheri": "Andheri_West",
+        "powai": "Powai_Lake",
+        "vashi": "Navi_Mumbai_Vashi",
+        "chembur": "Chembur_Junction",
+        "lonavala": "Lonavala_Expressway_Stop",
+        "pune": "Pune_Aundh",
+        "toll east": "Expressway_Toll_East",
+        "toll west": "Expressway_Toll_West",
+    }
+    
+    if any(k in msg for k in ["route", "plan", "path", "solve", "go from"]):
+        matched_nodes = []
+        for kw, node_id in node_keywords.items():
+            if kw in msg:
+                if node_id not in matched_nodes:
+                    matched_nodes.append(node_id)
+        
+        if len(matched_nodes) >= 2:
+            origin = matched_nodes[0]
+            dest = matched_nodes[1]
+            if origin != dest:
+                return {
+                    "reply": (
+                        f"🌐 **Route Planner Triggered:** Plotting elevation-aware path from "
+                        f"**{origin.replace('_', ' ')}** to **{dest.replace('_', ' ')}**.<br/>"
+                        f"[ACTION:ROUTE:{origin},{dest}]"
+                    )
+                }
+        elif len(matched_nodes) == 1:
+            dest = matched_nodes[0]
+            origin = "Gateway_of_India" if dest != "Gateway_of_India" else "Lower_Parel"
+            return {
+                "reply": (
+                    f"🌐 **Route Planner Triggered:** Plotting path from **{origin.replace('_', ' ')}** "
+                    f"to **{dest.replace('_', ' ')}**.<br/>[ACTION:ROUTE:{origin},{dest}]"
+                )
+            }
+
     # 1. Greet / Identity
     if any(k in msg for k in ["hello", "hi", "hey", "greetings"]):
         return {

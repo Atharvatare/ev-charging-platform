@@ -1263,7 +1263,27 @@ function portalController() {
                         color: borderCol,
                         fillColor: fillCol
                     });
-                }
+            });
+
+            window.addEventListener('gobharat-map-center', (e) => {
+                const { lat, lng } = e.detail;
+                this.map.setView([lat, lng], 13, { animate: true });
+                setTimeout(() => {
+                    this.stationMarkers.forEach(m => {
+                        const mLat = m.getLatLng().lat;
+                        const mLng = m.getLatLng().lng;
+                        if (Math.abs(mLat - lat) < 0.005 && Math.abs(mLng - lng) < 0.005) {
+                            m.openPopup();
+                        }
+                    });
+                }, 500);
+            });
+
+            window.addEventListener('gobharat-map-route', (e) => {
+                const { origin, dest } = e.detail;
+                this.routeForm.origin = origin;
+                this.routeForm.destination = dest;
+                this.solvePath();
             });
 
             L.control.zoom({ position: 'bottomright' }).addTo(this.map);
