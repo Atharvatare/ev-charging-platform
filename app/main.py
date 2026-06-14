@@ -247,11 +247,23 @@ async def websocket_telemetry_endpoint(websocket: WebSocket):
             data = await websocket.receive_text()
             print(f"WS Telemetry Received from client: {data}")
             
-            # Echo telemetry logs back or broadcast event
-            await manager.broadcast({
-                "type": "TELEMETRY_LOG",
-                "message": f"Broadcast telemetry event logged: {data}"
-            })
+            try:
+                import json
+                payload = json.loads(data)
+                if isinstance(payload, dict):
+                    # Broadcast structured message directly to all connected admin/client channels
+                    await manager.broadcast(payload)
+                else:
+                    await manager.broadcast({
+                        "type": "TELEMETRY_LOG",
+                        "message": f"Broadcast telemetry event logged: {data}"
+                    })
+            except Exception:
+                # Fallback to standard logging broadcast
+                await manager.broadcast({
+                    "type": "TELEMETRY_LOG",
+                    "message": f"Broadcast telemetry event logged: {data}"
+                })
             
     except WebSocketDisconnect:
         manager.disconnect(websocket)

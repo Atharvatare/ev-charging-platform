@@ -63,6 +63,43 @@
             opacity: 0.8;
         }
     }
+
+    /* Pulsing vehicle pointer style */
+    .custom-vehicle-marker {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .custom-vehicle-marker .pulsing-dot {
+        width: 14px;
+        height: 14px;
+        background-color: #22c55e;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #22c55e, 0 0 20px #22c55e;
+        position: relative;
+        z-index: 10;
+    }
+    .custom-vehicle-marker .pulsing-ring {
+        position: absolute;
+        width: 32px;
+        height: 32px;
+        border: 2px solid #22c55e;
+        border-radius: 50%;
+        animation: markerRingPulse 1.5s infinite ease-out;
+        opacity: 0;
+        z-index: 5;
+    }
+    @keyframes markerRingPulse {
+        0% {
+            transform: scale(0.4);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(1.2);
+            opacity: 0;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -456,6 +493,31 @@
                             </button>
                         </div>
 
+                        <!-- Active Voice Navigation Control -->
+                        <div class="bg-neutral-900/40 border border-neutral-800/50 p-4 rounded-xl space-y-3">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-neutral-400 uppercase">
+                                <span>🗣️ Active Route HUD</span>
+                                <span class="text-cyberBlue glow-text-blue font-extrabold" x-text="navigationActive ? 'Active' : 'Offline'"></span>
+                            </div>
+                            
+                            <!-- Toggle Button -->
+                            <button @click="navigationActive ? stopNavigationMode() : startNavigationMode()" 
+                                    class="btn btn-xs btn-block border-none text-white font-extrabold rounded-lg py-2.5 flex items-center justify-center gap-1.5 transition-all"
+                                    :class="navigationActive ? 'bg-cyberPink hover:bg-cyberPink/80 animate-pulse' : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:brightness-110 shadow-[0_0_10px_rgba(6,182,212,0.15)]'">
+                                <i class="fa-solid" :class="navigationActive ? 'fa-circle-stop' : 'fa-location-arrow'"></i>
+                                <span x-text="navigationActive ? 'Stop Navigation HUD' : 'Start Voice Navigation'"></span>
+                            </button>
+                            
+                            <!-- Voice Options Toggle -->
+                            <div class="flex items-center justify-between text-[10px] text-neutral-400 pt-1">
+                                <span>Voice Guidance (TTS)</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" x-model="voiceEnabled" class="sr-only peer">
+                                    <div class="w-7 h-4 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-400 after:border-neutral-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-cyberBlue peer-checked:after:bg-white"></div>
+                                </label>
+                            </div>
+                        </div>
+
                         <!-- Step-by-Step Telemetry Ledger -->
                         <div>
                             <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-3 block">Segment Telemetry Logs</span>
@@ -563,6 +625,87 @@
     <!-- RIGHT FULL SCREEN MAP CANVAS -->
     <div class="flex-grow relative">
         <div id="map"></div>
+
+        <!-- Active Voice Navigation HUD Overlay -->
+        <div x-show="navigationActive" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 translate-y-4"
+             class="absolute bottom-6 left-6 right-6 lg:left-auto lg:right-6 lg:w-96 z-[1000]">
+             
+            <div class="glass-panel border border-neutral-800/80 rounded-2xl p-5 shadow-[0_0_25px_rgba(6,182,212,0.15)] bg-neutral-950/90 backdrop-blur-md space-y-4">
+                <!-- HUD Header -->
+                <div class="flex items-center justify-between border-b border-neutral-900 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyberGreen opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-cyberGreen"></span>
+                        </span>
+                        <span class="text-xs font-bold text-white uppercase tracking-wider">Voice Navigation HUD</span>
+                    </div>
+                    <button @click="stopNavigationMode()" class="text-neutral-400 hover:text-cyberPink text-[10px] uppercase font-bold tracking-wider transition-colors">
+                        <i class="fa-solid fa-power-off mr-1"></i> Disconnect
+                    </button>
+                </div>
+
+                <!-- Live Instruction Panel -->
+                <div class="bg-neutral-900/50 border border-neutral-800/60 p-3.5 rounded-xl flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-cyberBlue/10 flex items-center justify-center text-cyberBlue shrink-0 shadow-[0_0_8px_rgba(6,182,212,0.1)]">
+                        <i class="fa-solid fa-location-arrow text-sm animate-pulse"></i>
+                    </div>
+                    <div class="space-y-0.5">
+                        <span class="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">Current Instruction</span>
+                        <p class="text-xs font-semibold text-white leading-relaxed" x-text="navigationInstruction || 'Calculating telemetry route...'"></p>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center text-[10px] text-neutral-400 font-bold uppercase">
+                        <span>Route Progress</span>
+                        <span class="text-white" x-text="routeResult ? Math.round((navigationIndex / (routeResult.telemetry.length - 1)) * 100) + '%' : '0%'"></span>
+                    </div>
+                    <div class="w-full bg-neutral-900 rounded-full h-1.5 overflow-hidden border border-neutral-800">
+                        <div class="bg-gradient-to-r from-cyberBlue to-cyberGreen h-full transition-all duration-300" 
+                             :style="routeResult ? `width: ${(navigationIndex / (routeResult.telemetry.length - 1)) * 100}%` : 'width: 0%'"></div>
+                    </div>
+                </div>
+
+                <!-- HUD Grid Metrics (SoC, Speed, Remaining Dist) -->
+                <div class="grid grid-cols-3 gap-2">
+                    <!-- SoC Card -->
+                    <div class="bg-neutral-900/40 border border-neutral-850 p-2.5 rounded-xl text-center">
+                        <span class="text-[8px] font-bold text-neutral-400 uppercase tracking-widest block mb-0.5">Battery SoC</span>
+                        <div class="flex items-center justify-center gap-1">
+                            <i class="fa-solid" :class="navigationSoc > 50 ? 'fa-battery-three-quarters text-cyberGreen' : (navigationSoc > 20 ? 'fa-battery-quarter text-cyberOrange' : 'fa-battery-empty text-cyberPink animate-pulse')"></i>
+                            <span class="text-xs font-extrabold text-white" x-text="navigationSoc + '%'"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Speed Card -->
+                    <div class="bg-neutral-900/40 border border-neutral-850 p-2.5 rounded-xl text-center">
+                        <span class="text-[8px] font-bold text-neutral-400 uppercase tracking-widest block mb-0.5">Sim Speed</span>
+                        <span class="text-xs font-extrabold text-cyberBlue glow-text-blue" x-text="navigationSpeed + ' km/h'"></span>
+                    </div>
+                    
+                    <!-- Remaining Dist Card -->
+                    <div class="bg-neutral-900/40 border border-neutral-850 p-2.5 rounded-xl text-center">
+                        <span class="text-[8px] font-bold text-neutral-400 uppercase tracking-widest block mb-0.5">Remaining</span>
+                        <span class="text-xs font-extrabold text-cyberGreen glow-text-green" x-text="navigationRemainingDist.toFixed(1) + ' km'"></span>
+                    </div>
+                </div>
+
+                <!-- Environmental Telemetry Header/Stats -->
+                <div class="flex justify-between items-center text-[9px] text-neutral-400 font-semibold px-1">
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-temperature-three-quarters text-neutral-500"></i> Temp: <span class="text-white" x-text="routeForm.temperature_c + '°C'"></span></span>
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-cloud-showers-heavy text-neutral-500"></i> Weather: <span class="text-white capitalize" x-text="routeForm.rain === 'none' ? 'Clear' : routeForm.rain"></span></span>
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-wind text-neutral-500"></i> Wind: <span class="text-white" x-text="routeForm.wind_speed_kmh + ' km/h'"></span></span>
+                </div>
+            </div>
+        </div>
 
         <!-- Zoom Tip Overlay banner -->
         <div x-show="currentZoom < 12" 
@@ -993,6 +1136,16 @@ function portalController() {
         regenSlipTriggered: false,
         regenExplanation: 'Dry asphalt allows maximum kinetic energy recapture (Traction coefficient μ = 0.85). Normal regenerative operations.',
         routeResult: null,
+        navigationActive: false,
+        navigationTimer: null,
+        navigationIndex: 0,
+        voiceEnabled: true,
+        navigationSpeed: 0,
+        navigationRemainingDist: 0,
+        navigationSoc: 100,
+        navigationInstruction: '',
+        vehicleMarker: null,
+        ws: null,
         showCompareTab: false,
         compareLoading: false,
         comparisonData: [],
@@ -1867,6 +2020,231 @@ function portalController() {
             }
         },
 
+        speak(text) {
+            if (!this.voiceEnabled) return;
+            try {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.0;
+                    const voices = window.speechSynthesis.getVoices();
+                    const englishVoice = voices.find(v => v.lang.includes('en'));
+                    if (englishVoice) {
+                        utterance.voice = englishVoice;
+                    }
+                    window.speechSynthesis.speak(utterance);
+                }
+            } catch (err) {
+                console.error("Speech Synthesis error:", err);
+            }
+        },
+
+        startNavigationMode() {
+            if (!this.routeResult || !this.routeResult.telemetry || this.routeResult.telemetry.length === 0) {
+                alert("Please compute a route plan before starting voice navigation.");
+                return;
+            }
+            
+            this.stopNavigationMode();
+            this.navigationActive = true;
+            this.navigationIndex = 0;
+            this.navigationSoc = parseFloat(this.routeForm.startSoc || 100);
+            this.navigationRemainingDist = parseFloat(this.routeResult.total_distance_km);
+            
+            const firstPt = this.routeResult.telemetry[0];
+            this.map.setView([firstPt.lat, firstPt.lng], 14);
+
+            const vehicleIcon = L.divIcon({
+                className: 'custom-vehicle-marker',
+                html: `<div class="pulsing-ring"></div><div class="pulsing-dot"></div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+            this.vehicleMarker = L.marker([firstPt.lat, firstPt.lng], { icon: vehicleIcon }).addTo(this.map);
+
+            this.navigationInstruction = `Starting voice navigation. Depart from ${firstPt.node.replace(/_/g, ' ')}. Initial battery at ${this.navigationSoc} percent.`;
+            this.speak(this.navigationInstruction);
+
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify({
+                    type: "VEHICLE_DISPATCH",
+                    vehicle_id: "NEXON-EV-DISPATCH",
+                    driver_name: localStorage.getItem('user_email') || 'Guest Driver',
+                    lat: firstPt.lat,
+                    lng: firstPt.lng,
+                    soc: this.navigationSoc,
+                    speed: 0,
+                    current_node: firstPt.node,
+                    destination: this.routeResult.telemetry[this.routeResult.telemetry.length - 1].node,
+                    distance_remaining_km: this.navigationRemainingDist,
+                    status: 'started'
+                }));
+            }
+
+            let chargeWaitTicks = 0;
+
+            this.navigationTimer = setInterval(() => {
+                const telemetry = this.routeResult.telemetry;
+                const currentPt = telemetry[this.navigationIndex];
+                
+                if (currentPt.charging_stop && chargeWaitTicks < 2) {
+                    chargeWaitTicks++;
+                    this.navigationSpeed = 0;
+                    const targetSoc = 90;
+                    if (this.navigationSoc < targetSoc) {
+                        this.navigationSoc = Math.min(targetSoc, this.navigationSoc + 15);
+                    }
+                    this.navigationInstruction = `Charging at ${currentPt.node.replace(/_/g, ' ')}. Battery now at ${this.navigationSoc} percent.`;
+                    
+                    if (chargeWaitTicks === 1) {
+                        this.speak(this.navigationInstruction);
+                    }
+                    
+                    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                        this.ws.send(JSON.stringify({
+                            type: "VEHICLE_DISPATCH",
+                            vehicle_id: "NEXON-EV-DISPATCH",
+                            driver_name: localStorage.getItem('user_email') || 'Guest Driver',
+                            lat: currentPt.lat,
+                            lng: currentPt.lng,
+                            soc: this.navigationSoc,
+                            speed: 0,
+                            current_node: currentPt.node,
+                            destination: telemetry[telemetry.length - 1].node,
+                            distance_remaining_km: this.navigationRemainingDist,
+                            status: 'charging'
+                        }));
+                    }
+                    return;
+                }
+
+                chargeWaitTicks = 0;
+                this.navigationIndex++;
+                
+                if (this.navigationIndex >= telemetry.length) {
+                    this.navigationIndex = telemetry.length - 1;
+                    const finalPt = telemetry[this.navigationIndex];
+                    this.navigationSpeed = 0;
+                    this.navigationSoc = finalPt.soc;
+                    this.navigationRemainingDist = 0;
+                    this.navigationInstruction = `Destination reached. Arrived at ${finalPt.node.replace(/_/g, ' ')}. Remaining battery is ${this.navigationSoc} percent.`;
+                    this.speak(this.navigationInstruction);
+                    
+                    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                        this.ws.send(JSON.stringify({
+                            type: "VEHICLE_DISPATCH",
+                            vehicle_id: "NEXON-EV-DISPATCH",
+                            driver_name: localStorage.getItem('user_email') || 'Guest Driver',
+                            lat: finalPt.lat,
+                            lng: finalPt.lng,
+                            soc: this.navigationSoc,
+                            speed: 0,
+                            current_node: finalPt.node,
+                            destination: finalPt.node,
+                            distance_remaining_km: 0,
+                            status: 'completed'
+                        }));
+                    }
+                    
+                    clearInterval(this.navigationTimer);
+                    this.navigationTimer = null;
+                    return;
+                }
+
+                const pt = telemetry[this.navigationIndex];
+                const prevPt = telemetry[this.navigationIndex - 1];
+
+                this.map.panTo([pt.lat, pt.lng]);
+                if (this.vehicleMarker) {
+                    this.vehicleMarker.setLatLng([pt.lat, pt.lng]);
+                }
+
+                this.navigationSoc = pt.soc;
+                
+                let distRemaining = 0;
+                for (let k = this.navigationIndex; k < telemetry.length - 1; k++) {
+                    const p1 = telemetry[k];
+                    const p2 = telemetry[k+1];
+                    const d = Math.sqrt(Math.pow(p2.lat - p1.lat, 2) + Math.pow(p2.lng - p1.lng, 2)) * 111.3;
+                    distRemaining += d;
+                }
+                this.navigationRemainingDist = Math.min(distRemaining, this.routeResult.total_distance_km * (1 - (this.navigationIndex / (telemetry.length - 1))));
+                
+                this.navigationSpeed = 65 + Math.floor(Math.random() * 15);
+                if (pt.charging_stop) {
+                    this.navigationSpeed = 0;
+                }
+
+                let instruction = `Continue towards ${pt.node.replace(/_/g, ' ')}.`;
+                const elevDelta = pt.elev - prevPt.elev;
+                
+                if (pt.charging_stop) {
+                    instruction = `Approaching charging station ${pt.node.replace(/_/g, ' ')}. Stopping for energy top up.`;
+                } else if (elevDelta > 8) {
+                    instruction = `Elevation climb of ${Math.round(elevDelta)} meters detected. Energy consumption rate increased.`;
+                } else if (elevDelta < -8) {
+                    instruction = `Elevation descent of ${Math.round(Math.abs(elevDelta))} meters. Regenerative energy recapture active.`;
+                } else if (pt.soc < 20) {
+                    instruction = `Caution: Battery capacity low at ${pt.soc} percent. Drive efficiently.`;
+                } else if (this.routeForm.rain && this.routeForm.rain !== 'none' && Math.random() > 0.7) {
+                    instruction = `Rain conditions active. Aerodynamic drag factor adjusted.`;
+                } else if (this.navigationIndex === telemetry.length - 1) {
+                    instruction = `Approaching destination, ${pt.node.replace(/_/g, ' ')}.`;
+                }
+
+                this.navigationInstruction = instruction;
+                this.speak(instruction);
+
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify({
+                        type: "VEHICLE_DISPATCH",
+                        vehicle_id: "NEXON-EV-DISPATCH",
+                        driver_name: localStorage.getItem('user_email') || 'Guest Driver',
+                        lat: pt.lat,
+                        lng: pt.lng,
+                        soc: this.navigationSoc,
+                        speed: this.navigationSpeed,
+                        current_node: pt.node,
+                        destination: telemetry[telemetry.length - 1].node,
+                        distance_remaining_km: this.navigationRemainingDist,
+                        status: pt.charging_stop ? 'charging' : 'navigating'
+                    }));
+                }
+
+            }, 2500);
+        },
+
+        stopNavigationMode() {
+            if (this.navigationTimer) {
+                clearInterval(this.navigationTimer);
+                this.navigationTimer = null;
+            }
+            if (this.vehicleMarker) {
+                this.map.removeLayer(this.vehicleMarker);
+                this.vehicleMarker = null;
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            
+            if (this.navigationActive && this.ws && this.ws.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify({
+                    type: "VEHICLE_DISPATCH",
+                    vehicle_id: "NEXON-EV-DISPATCH",
+                    driver_name: localStorage.getItem('user_email') || 'Guest Driver',
+                    status: 'stopped'
+                }));
+            }
+            
+            this.navigationActive = false;
+            this.navigationIndex = 0;
+            this.navigationSpeed = 0;
+            this.navigationRemainingDist = 0;
+            this.navigationSoc = 100;
+            this.navigationInstruction = '';
+        },
+
         shareRouteToWhatsapp() {
             if (!this.routeResult) return;
             const originText = this.routeForm.origin.replace(/_/g, ' ');
@@ -1904,9 +2282,9 @@ function portalController() {
             console.log("Portal WS connecting:", wsUri);
             
             try {
-                const ws = new WebSocket(wsUri);
+                this.ws = new WebSocket(wsUri);
                 
-                ws.onmessage = (event) => {
+                this.ws.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
                         if (data.type === 'PORT_STATUS_UPDATE') {
@@ -1918,7 +2296,7 @@ function portalController() {
                     }
                 };
 
-                ws.onerror = (err) => {
+                this.ws.onerror = (err) => {
                     console.warn("WebSocket connection error. Falling back to periodic API polling...", err);
                     if (!this.pollingInterval) {
                         this.pollingInterval = setInterval(() => {
@@ -1928,7 +2306,7 @@ function portalController() {
                     }
                 };
 
-                ws.onclose = () => {
+                this.ws.onclose = () => {
                     console.log("Portal WS closed.");
                 };
             } catch (e) {
